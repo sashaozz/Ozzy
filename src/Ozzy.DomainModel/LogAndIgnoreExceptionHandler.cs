@@ -1,0 +1,24 @@
+﻿using System;
+using Disruptor;
+using Ozzy.Core;
+
+namespace Ozzy.DomainModel
+{
+    public class LogAndIgnoreExceptionHandler : IExceptionHandler
+    {
+        public void HandleEventException(Exception ex, long sequence, object evt)
+        {
+            Logger<IDomainModelTracing>.Log.ProcessDomainEventEntryException(evt as DomainEventEntry, sequence, ex);
+        }
+
+        public void HandleOnStartException(Exception ex)
+        {
+            Logger<IDomainModelTracing>.Log.EventsProcessorStartException(ex);
+        }
+
+        public void HandleOnShutdownException(Exception ex)
+        {
+            Logger<IDomainModelTracing>.Log.EventsProcessorStopException(ex);
+        }
+    }
+}
