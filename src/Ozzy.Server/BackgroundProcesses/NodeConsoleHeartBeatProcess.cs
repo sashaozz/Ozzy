@@ -6,19 +6,29 @@ using StackExchange.Redis;
 
 namespace Ozzy.Server.BackgroundProcesses
 {
-    public class NodeConsoleHeartBeatProcess : PeriodicAction, IBackgroundProcess
+    public class NodeConsoleHeartBeatProcess : PeriodicAction, IBackgroundProcess, ISingleInstanceProcess
     {
-        public NodeConsoleHeartBeatProcess()
-        {
-        }
 
-        public bool IsRunning => base.IsStarted();
+        public bool IsRunning => base.IsStarted;
 
-        public string Name => this.GetType().Name;
+        public string Name => "process1";
 
-        protected override async Task ActionAsync(CancellationToken token)
+        protected override async Task ActionAsync(CancellationTokenSource cts)
         {
             Console.WriteLine("ping");
+        }
+    }
+
+    public class NodeConsoleHeartBeatProcess2 : PeriodicAction, IBackgroundProcess, ISingleInstanceProcess
+    {
+
+        public bool IsRunning => base.IsStarted;
+
+        public string Name => "process1";
+
+        protected override async Task ActionAsync(CancellationTokenSource cts)
+        {
+            Console.WriteLine("pong");
         }
     }
 }

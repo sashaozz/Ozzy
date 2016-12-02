@@ -1,10 +1,12 @@
-﻿namespace Ozzy.Server
+﻿using System.Threading.Tasks;
+
+namespace Ozzy.Server
 {
     public class MultiInstanceProcess : BackgroundProcessBase
     {
-        protected override void StartInternal()
+        protected override Task StartInternal()
         {
-            base.StartInternal();
+            return base.StartInternal();
         }
     }
 }

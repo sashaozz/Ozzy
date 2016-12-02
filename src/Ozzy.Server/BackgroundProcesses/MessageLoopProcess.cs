@@ -1,4 +1,5 @@
 ﻿using Ozzy.DomainModel;
+using System.Threading.Tasks;
 
 namespace Ozzy.Server.BackgroundProcesses
 {
@@ -10,9 +11,11 @@ namespace Ozzy.Server.BackgroundProcesses
             _eventsManager = eventsManager;
         }
 
-        protected override void StartInternal()
+        protected override Task StartInternal()
         {
             _eventsManager.Start();
+            //todo : fix returning Task
+            return Task.CompletedTask;
         }
         protected override void StopInternal()
         {

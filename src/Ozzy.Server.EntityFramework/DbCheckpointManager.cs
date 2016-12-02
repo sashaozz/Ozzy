@@ -1,6 +1,7 @@
-﻿using System.Linq;
+﻿using Ozzy.DomainModel;
+using System.Linq;
 
-namespace Ozzy.DomainModel
+namespace Ozzy.Server.EntityFramework
 {
     public class DbCheckpointManager : ICheckpointManager
     {

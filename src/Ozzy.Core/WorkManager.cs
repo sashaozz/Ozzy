@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Ozzy.Core
 {
-    public abstract class WorkManager : StartStopManager
+    public abstract class WorkManager : BackgroundTask
     {
         internal class Worker
         {
@@ -21,7 +21,7 @@ namespace Ozzy.Core
         private readonly int _newWorkPeriod;
         private readonly int _moreWorkersPeriod;
 
-        protected WorkManager(int maxWorkers, int newWorkPeriod = 1000, int moreWorkersPeriod=60000)
+        protected WorkManager(int maxWorkers, int newWorkPeriod = 1000, int moreWorkersPeriod = 60000)
         {
             Guard.Assert(maxWorkers > 0, nameof(maxWorkers), "maxWorkers should be greater than 0");
             Guard.Assert(newWorkPeriod > 0, nameof(maxWorkers), "newWorkPeriod should be greater than 0");
@@ -30,22 +30,25 @@ namespace Ozzy.Core
             _moreWorkersPeriod = moreWorkersPeriod;
         }
 
-        public virtual void Work(CancellationToken stopRequestedToken)
+        protected virtual void Work(CancellationToken stopRequestedToken)
         {
             //do nothing
         }
 
-        public virtual Task WorkAsync(CancellationToken stopRequestedToken)
+        protected virtual Task WorkAsync(CancellationToken stopRequestedToken)
         {
             Work(stopRequestedToken);
             return Task.FromResult(0);
         }
 
         private readonly List<Worker> _workers = new List<Worker>();
+        private TaskCompletionSource<bool> _tcs;
+        private PeriodicAction _newWorkSupervisor;
+        private PeriodicAction _needMoreWorkersSupervisor;
 
-        protected override void StartInternal()
+        protected override Task StartInternal()
         {
-            var newWorkSupervisor = new PeriodicAction(token =>
+            _newWorkSupervisor = new PeriodicAction(token =>
             {
                 CleanWorkers();
                 if (!_workers.Any())
@@ -54,13 +57,12 @@ namespace Ozzy.Core
                 }
                 return Task.CompletedTask;
             }, _newWorkPeriod);
-            newWorkSupervisor.Start();
+            _newWorkSupervisor.Start();
 
 
             if (_moreWorkersPeriod > 0)
             {
-
-                var needMoreWorkersSupervisor = new PeriodicAction(token =>
+                _needMoreWorkersSupervisor = new PeriodicAction(token =>
                 {
                     CleanWorkers();
                     if (_workers.All(w => w.IsHardWorking))
@@ -69,17 +71,20 @@ namespace Ozzy.Core
                     }
                     return Task.CompletedTask;
                 }, _moreWorkersPeriod);
-                needMoreWorkersSupervisor.Start();
-            }                       
+                _needMoreWorkersSupervisor.Start();
+            }
+            return base.StartInternal();
         }
 
-        protected override void StopInternal(int timeout)
+        protected override void StopInternal()
         {
             try
             {
-                Task.WaitAll(_workers.Select(w => w.WorkTask).ToArray(), timeout);
+                _newWorkSupervisor?.Stop();
+                _needMoreWorkersSupervisor?.Stop();
+                Task.WhenAll(_workers.Select(w => w.WorkTask).ToArray()).ContinueWith(t => RunningTaskCompletionSource.TrySetResult(true));
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 Logger<ICommonEvents>.Log.Exception(e);
             }

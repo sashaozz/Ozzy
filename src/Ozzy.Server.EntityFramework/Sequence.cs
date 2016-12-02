@@ -1,4 +1,4 @@
-﻿namespace Ozzy.DomainModel
+﻿namespace Ozzy.Server.EntityFramework
 {
     /// <summary>
     /// Именнованная последовательность, описывающая позицию обработчика в очереди доменных событий. 

@@ -22,6 +22,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SampleApplication", "src\Sa
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ozzy.Core.Tests", "test\Ozzy.Core.Tests\Ozzy.Core.Tests.csproj", "{5A525D00-394F-45F4-B0AA-41355AB7AF86}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ozzy.Server.Redis", "src\Ozzy.Server.Redis\Ozzy.Server.Redis.csproj", "{559F6789-05B5-499C-8559-2250CF196773}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ozzy.Server.EntityFramework", "src\Ozzy.Server.EntityFramework\Ozzy.Server.EntityFramework.csproj", "{8D2DC0E0-1176-4270-BC75-71D98715E8F0}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -48,6 +52,14 @@ Global
 		{5A525D00-394F-45F4-B0AA-41355AB7AF86}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5A525D00-394F-45F4-B0AA-41355AB7AF86}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5A525D00-394F-45F4-B0AA-41355AB7AF86}.Release|Any CPU.Build.0 = Release|Any CPU
+		{559F6789-05B5-499C-8559-2250CF196773}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{559F6789-05B5-499C-8559-2250CF196773}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{559F6789-05B5-499C-8559-2250CF196773}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{559F6789-05B5-499C-8559-2250CF196773}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8D2DC0E0-1176-4270-BC75-71D98715E8F0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8D2DC0E0-1176-4270-BC75-71D98715E8F0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8D2DC0E0-1176-4270-BC75-71D98715E8F0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8D2DC0E0-1176-4270-BC75-71D98715E8F0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -58,5 +70,7 @@ Global
 		{43B0DC60-31A9-4A36-9466-6BFCA9F1C033} = {D3B5D9E2-A945-4289-A898-9A0050B667DA}
 		{40281237-D673-4DC5-A76D-0EB0D5DC12AC} = {D3B5D9E2-A945-4289-A898-9A0050B667DA}
 		{5A525D00-394F-45F4-B0AA-41355AB7AF86} = {0D135C0C-A60B-454A-A2F4-CD74A30E04B0}
+		{559F6789-05B5-499C-8559-2250CF196773} = {D3B5D9E2-A945-4289-A898-9A0050B667DA}
+		{8D2DC0E0-1176-4270-BC75-71D98715E8F0} = {D3B5D9E2-A945-4289-A898-9A0050B667DA}
 	EndGlobalSection
 EndGlobal

@@ -1,18 +1,23 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 using Ozzy.Core;
+using Ozzy.DomainModel;
 
-namespace Ozzy.DomainModel
+namespace Ozzy.Server.EntityFramework
 {
-    public class EntityDistributedLock : EntityBase<string>
+    public class EntityDistributedLockRecord : EntityBase<string>
     {
-        public EntityDistributedLock(string name)
+        private TimeSpan _expiration;
+
+        public EntityDistributedLockRecord(string name, TimeSpan expiration,  Guid lockId)
         {
             Guard.ArgumentNotNullOrEmptyString(name, nameof(name));
-            LockId = Guid.NewGuid();
-            LockDateTime = DateTime.UtcNow;
+            _expiration = expiration;
+            LockId = lockId;
+            LockDateTime = DateTime.UtcNow.Add(_expiration);
             Name = name;
         }
+        protected EntityDistributedLockRecord() { }
 
         [Key]
         public string Name { get; private set; }
@@ -23,10 +28,10 @@ namespace Ozzy.DomainModel
         {
             return LockDateTime > DateTime.UtcNow;
         }
-        public void Acquire()
+        public void Acquire(TimeSpan expiry)
         {
             LockId = Guid.NewGuid();
-            LockDateTime = DateTime.UtcNow;            
+            LockDateTime = DateTime.UtcNow.Add(expiry);
         }
     }
 }

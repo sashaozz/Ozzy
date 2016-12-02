@@ -4,17 +4,17 @@ using System.Threading.Tasks;
 using Ozzy.Core;
 using StackExchange.Redis;
 
-namespace Ozzy.Server.BackgroundProcesses
+namespace Ozzy.Server.Redis.BackgroundProcesses
 {
     public class NodeHeartBeatProcess : PeriodicAction, IBackgroundProcess
     {
         private readonly OzzyNode _node;
         private readonly IConnectionMultiplexer _redis;
 
-        public  NodeHeartBeatProcess(OzzyNode node, IConnectionMultiplexer redis)
+        public  NodeHeartBeatProcess(OzzyNode node, RedisClient redis)
         {
             _node = node;
-            _redis = redis;
+            _redis = redis.Redis;
         }
 
         public bool IsRunning => base.IsStarted;

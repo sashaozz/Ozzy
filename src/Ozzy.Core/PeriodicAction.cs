@@ -8,12 +8,11 @@ namespace Ozzy.Core
     /// Класс для создания периодических действий.
     /// Класс не блокирует тред, периодические действия выполняются в момент наступления на треде из тредпула.
     /// </summary>
-    public class PeriodicAction : StartStopManager
+    public class PeriodicAction : BackgroundTask
     {
-        private readonly Func<CancellationToken, Task> _asyncAction;
+        private readonly Func<CancellationTokenSource, Task> _asyncAction;
         private readonly int _interval;
         private int _doingAction = 0;
-        private CancellationToken _token;
 
         protected PeriodicAction(int interval = 5000)
         {
@@ -21,7 +20,7 @@ namespace Ozzy.Core
             _interval = interval;
             _asyncAction = ActionAsync;
         }
-        protected virtual Task ActionAsync(CancellationToken token)
+        protected virtual Task ActionAsync(CancellationTokenSource cts)
         {
             //do nothing
             return Task.CompletedTask;
@@ -32,7 +31,7 @@ namespace Ozzy.Core
         /// </summary>        
         /// <param name="action"></param>
         /// <param name="interval">Интервал в миллисекундах, через который будет выполняться действие</param>
-        public PeriodicAction(Func<CancellationToken, Task> action, int interval = 5000)
+        public PeriodicAction(Func<CancellationTokenSource, Task> action, int interval = 5000)
         {
             Guard.ArgumentNotNull(action, nameof(action));
             Guard.ArgumentNotNegativeValue(interval, nameof(interval));
@@ -40,10 +39,9 @@ namespace Ozzy.Core
             _interval = interval;
         }
 
-        protected override void StartInternal()
-        {
-            _token = StopRequested.Token;
-            TimerLoopAsync();
+        protected override Task StartInternal()
+        {            
+            return TimerLoopAsync();
         }
 
         /// <summary>
@@ -55,7 +53,7 @@ namespace Ozzy.Core
             return DoActionAsync();
         }
 
-        private async void TimerLoopAsync()
+        private async Task TimerLoopAsync()
         {
             if (StopRequested.IsCancellationRequested)
             {
@@ -63,7 +61,7 @@ namespace Ozzy.Core
             }
             while (!StopRequested.IsCancellationRequested)
             {
-                await Task.Delay(_interval, _token);
+                await Task.Delay(_interval, StopRequested.Token);
                 await DoActionAsync();
             }
         }
@@ -74,7 +72,7 @@ namespace Ozzy.Core
             {
                 try
                 {
-                    await _asyncAction(_token);
+                    await _asyncAction(StopRequested);
                 }
                 catch (Exception e)
                 {

@@ -5,9 +5,11 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Ozzy.Core;
+using Ozzy.DomainModel;
 
-namespace Ozzy.DomainModel
+namespace Ozzy.Server.EntityFramework
 {
+
     /// <summary>
     /// Дата-контекст для агрегатов определенной доменной модели. Данный класс получает и сохраняет агрегаты, определенные в доменной модели.
     /// При сохранении агрегата автоматиески сохраняются и публикуются все его доменные события.
@@ -17,6 +19,8 @@ namespace Ozzy.DomainModel
     {
         protected readonly IFastEventPublisher FastEventPublisher;        
         private readonly List<DomainEventRecord> _eventsToSave = new List<DomainEventRecord>();
+        private DbContextOptions<AggregateDbContext> _options;
+
         /// <summary>
         /// Создает новый дата-контекст для агрегатов без быстрого канала публикации
         /// </summary>
@@ -31,6 +35,7 @@ namespace Ozzy.DomainModel
         /// <param name="fastEventPublisher">Быстрый канал публикации событий</param>
         public AggregateDbContext(DbContextOptions<AggregateDbContext> options, IFastEventPublisher fastEventPublisher) : base(options)
         {
+            _options = options;
             if (fastEventPublisher == null) throw new ArgumentNullException(nameof(fastEventPublisher));
             FastEventPublisher = fastEventPublisher;            
         }
@@ -40,7 +45,7 @@ namespace Ozzy.DomainModel
         /// </summary>
         public DbSet<DomainEventRecord> DomainEvents { get; set; }
 
-        public DbSet<EntityDistributedLock> DistributedLocks { get; set; }
+        public DbSet<EntityDistributedLockRecord> DistributedLocks { get; set; }
 
         /// <summary>
         /// Слушатели событий в данном контексте и номера их последних обработанных сообщений
@@ -142,6 +147,11 @@ namespace Ozzy.DomainModel
             _eventsToSave.Clear();
 
             return result;
+        }
+
+        public AggregateDbContext Clone()
+        {
+            return new AggregateDbContext(_options, FastEventPublisher);
         }
     }
 }

@@ -4,75 +4,91 @@ using System.Threading.Tasks;
 
 namespace Ozzy.Core
 {
-    public class StartStopManager : IDisposable
+    public interface IBackgroundTask : IDisposable
     {
-        private readonly Action _startAction;
-        private readonly Action _stopAction;
-        protected CancellationTokenSource StopRequested;
-        protected TaskCompletionSource<bool> RunningTaskCompletionSource;
-        private readonly int _stopTimeout;
+        Task Start();
+        Task Stop();
+
+    }
+    public class BackgroundTask : IBackgroundTask
+    {
         // 0-notstarted, 1-starting, 2-started, 3-stopping
         private int _stage;
+        //private readonly Func<Task> _startAction = () => Task.CompletedTask;
+        //private readonly Action _stopAction = () => { };
+        protected CancellationTokenSource StopRequested;
+        protected Task RunningTask;
+        protected TaskCompletionSource<bool> RunningTaskCompletionSource;
+        public bool IsStopped  => _stage < 2;
+        public bool IsStarted => _stage > 2;
+        public bool IsStopping => _stage == 3;
+        public bool IsStarting => _stage == 1;
 
-        public StartStopManager(Action startAction, Action stopAction)
-        {
-            _startAction = startAction;
-            _stopAction = stopAction;
-        }
+        //public StartStopManager(Func<Task> startAction, Action stopAction)
+        //{
+        //    _startAction = startAction;
+        //    _stopAction = stopAction;
+        //}
 
-        protected StartStopManager(int stopTimeout = 1000)
-        {
-            _stopTimeout = stopTimeout;
-        }
+        //protected StartStopManager()
+        //{
+        //}
 
         public Task Start()
         {
             if (Interlocked.CompareExchange(ref _stage, 1, 0) == 0)
             {
-                RunningTaskCompletionSource = new TaskCompletionSource<bool>();
-                StopRequested = new CancellationTokenSource();         
-                StartInternal();
+                StopRequested = new CancellationTokenSource();
+                RunningTaskCompletionSource = new TaskCompletionSource<bool>();           
+                RunningTask = StartInternal() ?? RunningTaskCompletionSource.Task;
+                RunningTask.ContinueWith(t => { Interlocked.CompareExchange(ref _stage, 0, 2); });
                 Interlocked.Exchange(ref _stage, 2);
-                return RunningTaskCompletionSource.Task;
             }
-            throw new InvalidOperationException("Already Started");
+            //todo: log ("Already Started");
+            return RunningTask;
         }
 
-        public void Stop()
+        public Task Stop()
         {
             if (Interlocked.CompareExchange(ref _stage, 3, 2) == 2)
             {
                 try
                 {
-                    StopRequested.Cancel();
-                    StopInternal(_stopTimeout);
-                    RunningTaskCompletionSource?.TrySetResult(true);
+                    StopInternal();
+                    StopRequested.Cancel();                    
                 }
                 catch (Exception e)
                 {
                     //todo : log
-                    RunningTaskCompletionSource?.TrySetException(e);
                 }
                 finally
                 {
                     Interlocked.Exchange(ref _stage, 0);
-                }                
-                return;
+                }
             }
-            throw new InvalidOperationException("Not Started");
+            //todo: log ("Not Started");
+            return RunningTask;
         }
 
-        protected virtual void StartInternal()
+        //protected virtual Task StartInternal()
+        //{
+        //    return _startAction();
+        //}
+
+        //protected virtual void StopInternal()
+        //{
+        //    _stopAction();
+        //}
+
+        protected virtual Task StartInternal()
         {
-            _startAction();
+            return RunningTask;
         }
 
-        protected virtual void StopInternal(int timeout)
+        protected virtual void StopInternal()
         {
-            _stopAction();
+            RunningTaskCompletionSource.SetResult(true);
         }
-
-        public bool IsStarted() => _stage > 2;
         public void Dispose()
         {
             Stop();

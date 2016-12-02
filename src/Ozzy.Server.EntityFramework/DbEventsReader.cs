@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
+using Ozzy.DomainModel;
 
-
-namespace Ozzy.DomainModel
+namespace Ozzy.Server.EntityFramework
 {
     /// <summary>
     /// Реализация IPeristedEventsReader на основе дата-контекста AggregateDbContext

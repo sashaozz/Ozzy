@@ -1,12 +1,10 @@
-﻿using System.Threading.Tasks;
+﻿using Ozzy.Core;
 
 namespace Ozzy.Server
 {
-    public interface IBackgroundProcess
+    public interface IBackgroundProcess : IBackgroundTask
     {
         bool IsRunning { get; }
-        string Name { get; }
-        Task Start();
-        void Stop();
+        string Name { get; }        
     }
 }

@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Ozzy.DomainModel;
 
 namespace Ozzy.Server.Configuration
 {
@@ -19,8 +20,8 @@ namespace Ozzy.Server.Configuration
 
         public static IOzzyServiceCollectionBuilder AddOzzy(this IServiceCollection services)
         {
-            services.AddSingleton<OzzyNode>();
-            var builder = new OzzyServiceCollectionBuilder(services);
+            services.AddSingleton<OzzyNode>();                        
+            var builder = new OzzyServiceCollectionBuilder(services);            
             return builder;
         }
 

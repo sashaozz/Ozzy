@@ -5,6 +5,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Ozzy.Server.BackgroundProcesses;
 using Ozzy.Server.Configuration;
+using Microsoft.EntityFrameworkCore;
+using Ozzy.Server.EntityFramework;
 
 namespace SampleApplication
 {
@@ -27,10 +29,17 @@ namespace SampleApplication
         {
             // Add framework services.
             services.AddMvc();
+            services.AddDbContext<TransientAggregateDbContext>(options => {
+                options.UseSqlServer("Data Source=.\\SQLEXPRESS;Initial Catalog=test;Integrated Security=True;");
+            }, ServiceLifetime.Transient);
+            services.AddDbContext<AggregateDbContext>(options => {
+                options.UseSqlServer("Data Source=.\\SQLEXPRESS;Initial Catalog=test;Integrated Security=True;");
+            }, ServiceLifetime.Transient);
             services.AddOzzy()
-                .AddBackgroundProcesses(new[]{
-                    typeof(NodeConsoleHeartBeatProcess)
-                });
+                .AddBackgroundProcess<NodeConsoleHeartBeatProcess>()
+                .AddBackgroundProcess<NodeConsoleHeartBeatProcess2>()
+                .UseRedis(Configuration.GetSection("OzzyOptions"))
+                .UseEFDistributedLockService();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
