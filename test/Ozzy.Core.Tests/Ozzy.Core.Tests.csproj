@@ -1,6 +1,6 @@
 ﻿<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" />
-    <PropertyGroup>
+  <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp1.0</TargetFramework>
   </PropertyGroup>
@@ -8,7 +8,7 @@
     <Compile Include="**\*.cs" />
     <EmbeddedResource Include="**\*.resx" />
   </ItemGroup>
-   <ItemGroup>
+  <ItemGroup>
     <PackageReference Include="Microsoft.NETCore.App">
       <Version>1.0.1</Version>
     </PackageReference>
@@ -28,6 +28,10 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\Ozzy.Core\Ozzy.Core.csproj" />
+    <ProjectReference Include="..\..\src\Ozzy.DomainModel\Ozzy.DomainModel.csproj" />
+    <ProjectReference Include="..\..\src\Ozzy.Server.EntityFramework\Ozzy.Server.EntityFramework.csproj" />
+    <ProjectReference Include="..\..\src\Ozzy.Server.Redis\Ozzy.Server.Redis.csproj" />
+    <ProjectReference Include="..\..\src\Ozzy.Server\Ozzy.Server.csproj" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

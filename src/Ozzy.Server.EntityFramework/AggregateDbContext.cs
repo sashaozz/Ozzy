@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Ozzy.Core;
 using Ozzy.DomainModel;
+using Ozzy.Server.FeatureFlags;
 
 namespace Ozzy.Server.EntityFramework
 {
@@ -19,7 +20,7 @@ namespace Ozzy.Server.EntityFramework
     {
         protected readonly IFastEventPublisher FastEventPublisher;        
         private readonly List<DomainEventRecord> _eventsToSave = new List<DomainEventRecord>();
-        private DbContextOptions<AggregateDbContext> _options;
+        protected DbContextOptions<AggregateDbContext> _options;
 
         /// <summary>
         /// Создает новый дата-контекст для агрегатов без быстрого канала публикации
@@ -44,9 +45,8 @@ namespace Ozzy.Server.EntityFramework
         /// Доменные события доменной модели
         /// </summary>
         public DbSet<DomainEventRecord> DomainEvents { get; set; }
-
         public DbSet<EntityDistributedLockRecord> DistributedLocks { get; set; }
-
+        public DbSet<FeatureFlagRecord> FeatureFlags { get; set; }
         /// <summary>
         /// Слушатели событий в данном контексте и номера их последних обработанных сообщений
         /// </summary>
@@ -55,11 +55,14 @@ namespace Ozzy.Server.EntityFramework
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Ignore<EmptyEventRecord>();
-            modelBuilder.Entity<DomainEventRecord>();
+
             modelBuilder.Entity<DomainEventRecord>().HasKey(r => r.Sequence);
 
             modelBuilder.Entity<Sequence>().HasKey(c => c.Name);
-            modelBuilder.Entity<Sequence>().Property(c => c.Name).IsRequired(); ;
+            modelBuilder.Entity<Sequence>().Property(c => c.Name).IsRequired();
+            
+            modelBuilder.Entity<FeatureFlagRecord>().Ignore(r => r.Configuration);
+            modelBuilder.Entity<FeatureFlagRecord>().Ignore(r => r.Events);
 
             base.OnModelCreating(modelBuilder);
         }
@@ -149,9 +152,19 @@ namespace Ozzy.Server.EntityFramework
             return result;
         }
 
-        public AggregateDbContext Clone()
+        public virtual AggregateDbContext Clone()
         {
             return new AggregateDbContext(_options, FastEventPublisher);
+        }
+
+        protected List<IDomainEvent> EventsList { get; set; } = new List<IDomainEvent>();
+
+        public void AddDomainEvent(IDomainEvent domainEvent)
+        {
+            Guard.ArgumentNotNull(domainEvent, nameof(domainEvent));
+            var record = new DomainEventRecord(domainEvent);
+            DomainEvents.Add(record);
+            _eventsToSave.Add(record);
         }
     }
 }

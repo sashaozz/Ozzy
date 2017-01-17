@@ -2,12 +2,19 @@
 using System.Threading;
 using System.Threading.Tasks;
 using Ozzy.Core;
-using StackExchange.Redis;
+using Ozzy.Server.FeatureFlags;
+using Ozzy.Server;
 
-namespace Ozzy.Server.BackgroundProcesses
+namespace SampleApplication
 {
     public class NodeConsoleHeartBeatProcess : PeriodicAction, IBackgroundProcess, ISingleInstanceProcess
     {
+        private IFeatureFlagService _ffService;
+
+        public NodeConsoleHeartBeatProcess(IFeatureFlagService ffService)
+        {
+            _ffService = ffService;
+        }
 
         public bool IsRunning => base.IsStarted;
 
@@ -15,12 +22,21 @@ namespace Ozzy.Server.BackgroundProcesses
 
         protected override async Task ActionAsync(CancellationTokenSource cts)
         {
-            Console.WriteLine("ping");
+            if (_ffService.IsEnabled<ConsoleLogFeature>())
+            {
+                Console.WriteLine("ping");
+            }
         }
     }
 
     public class NodeConsoleHeartBeatProcess2 : PeriodicAction, IBackgroundProcess, ISingleInstanceProcess
     {
+        private IFeatureFlagService _ffService;
+
+        public NodeConsoleHeartBeatProcess2(IFeatureFlagService ffService)
+        {
+            _ffService = ffService;
+        }
 
         public bool IsRunning => base.IsStarted;
 
@@ -28,7 +44,10 @@ namespace Ozzy.Server.BackgroundProcesses
 
         protected override async Task ActionAsync(CancellationTokenSource cts)
         {
-            Console.WriteLine("pong");
+            if (_ffService.IsEnabled<ConsoleLogFeature>())
+            {
+                Console.WriteLine("pong");
+            }
         }
     }
 }

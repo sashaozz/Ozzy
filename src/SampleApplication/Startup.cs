@@ -3,10 +3,10 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Ozzy.Server.BackgroundProcesses;
 using Ozzy.Server.Configuration;
 using Microsoft.EntityFrameworkCore;
 using Ozzy.Server.EntityFramework;
+using Ozzy.Server.Api.Configuration;
 
 namespace SampleApplication
 {
@@ -29,17 +29,23 @@ namespace SampleApplication
         {
             // Add framework services.
             services.AddMvc();
-            services.AddDbContext<TransientAggregateDbContext>(options => {
+            services.AddCors();
+            services.AddDbContext<TransientAggregateDbContext>(options =>
+            {
                 options.UseSqlServer("Data Source=.\\SQLEXPRESS;Initial Catalog=test;Integrated Security=True;");
             }, ServiceLifetime.Transient);
-            services.AddDbContext<AggregateDbContext>(options => {
+            services.AddDbContext<AggregateDbContext>(options =>
+            {
                 options.UseSqlServer("Data Source=.\\SQLEXPRESS;Initial Catalog=test;Integrated Security=True;");
             }, ServiceLifetime.Transient);
-            services.AddOzzy()
+            var buider = services.AddOzzy()
                 .AddBackgroundProcess<NodeConsoleHeartBeatProcess>()
                 .AddBackgroundProcess<NodeConsoleHeartBeatProcess2>()
                 .UseRedis(Configuration.GetSection("OzzyOptions"))
-                .UseEFDistributedLockService();
+                .UseEFDistributedLockService()
+                .UseEFFeatureFlagService()
+                .AddFeatureFlag<ConsoleLogFeature>()
+                .AddApi();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -48,17 +54,20 @@ namespace SampleApplication
             loggerFactory.AddConsole(Configuration.GetSection("Logging"));
             loggerFactory.AddDebug();
 
-            if (env.IsDevelopment())
-            {
-                app.UseDeveloperExceptionPage();
-                app.UseBrowserLink();
-            }
-            else
-            {
-                app.UseExceptionHandler("/Home/Error");
-            }
+            //if (env.IsDevelopment())
+            //{
+            //    app.UseDeveloperExceptionPage();
+            //    app.UseBrowserLink();
+            //}
+            //else
+            //{
+            //    app.UseExceptionHandler("/Home/Error");
+            //}
 
-            app.UseStaticFiles();
+            //app.UseStaticFiles();
+
+            app.UseCors(builder =>
+                builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
 
             app.UseMvc(routes =>
             {
@@ -67,7 +76,8 @@ namespace SampleApplication
                     template: "{controller=Home}/{action=Index}/{id?}");
             });
 
-            app.UseOzzy();
+            app.UseOzzy()                
+                .Start();
         }
     }
 }

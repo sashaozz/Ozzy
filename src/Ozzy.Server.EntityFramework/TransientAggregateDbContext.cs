@@ -12,5 +12,10 @@ namespace Ozzy.Server.EntityFramework
         public TransientAggregateDbContext(DbContextOptions<AggregateDbContext> options, IFastEventPublisher publisher) : base(options, publisher)
         {
         }
+
+        public override AggregateDbContext Clone()
+        {
+            return new TransientAggregateDbContext(_options, FastEventPublisher);
+        }
     }
 }

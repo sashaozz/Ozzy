@@ -2,7 +2,7 @@
 
 namespace Ozzy.Server.Configuration
 {
-    public interface IOzzyServiceCollectionBuilder
+    public interface IOzzyBuilder
     {
         IServiceCollection Services { get; }
     }

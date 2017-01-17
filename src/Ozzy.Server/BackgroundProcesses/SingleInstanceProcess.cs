@@ -17,15 +17,16 @@ namespace Ozzy.Server.BackgroundProcesses
             Name = innerProcess.Name;
         }
 
-        protected override Task StartInternal()
+        protected override async Task StartInternal()
         {
-            _dlock = _lockService.CreateLock(this.Name,
+            _dlock = await _lockService.CreateLockAsync(this.Name,
                 TimeSpan.FromMinutes(1),
                 TimeSpan.MaxValue,
                 TimeSpan.FromSeconds(60),
+                StopRequested.Token,
                 () =>
                 {
-                    _innerProcess.Stop();
+                    _innerProcess.Stop().Wait();
                     if (!IsStopping || !IsStopped)
                     {
                         StartInternal();
@@ -34,9 +35,15 @@ namespace Ozzy.Server.BackgroundProcesses
 
             if (_dlock.IsAcquired)
             {
-                _innerProcess.Start().ContinueWith(t => _dlock.Dispose());
+                await _innerProcess.Start();//.ContinueWith(t => _dlock.Dispose());
+                _dlock.Dispose();
             }
-            return base.StartInternal();
+            else
+            {
+                //todo: log task was not started!
+            }
+
+            await base.StartInternal();
         }
 
         protected override void StopInternal()

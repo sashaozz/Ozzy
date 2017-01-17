@@ -11,5 +11,9 @@ namespace Ozzy.Server.EntityFramework
         public ScopedAggregateDbContext(DbContextOptions<AggregateDbContext> options, IFastEventPublisher publisher) : base(options, publisher)
         {
         }
+        public override AggregateDbContext Clone()
+        {
+            return new ScopedAggregateDbContext(_options, FastEventPublisher);
+        }
     }
 }

@@ -1,26 +1,26 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Ozzy.Server.BackgroundProcesses;
-using StackExchange.Redis;
+using Ozzy.Server.FeatureFlags;
 using System;
 using System.Reflection;
 
 namespace Ozzy.Server.Configuration
 {
-    public static class OzzyServiceCollectionBuilderExtensions
+    public static class OzzyBuilderExtensions
     {
-        public static IOzzyServiceCollectionBuilder DoSomething(this IOzzyServiceCollectionBuilder builder)
+        public static IOzzyBuilder DoSomething(this IOzzyBuilder builder)
         {
             return builder;
         }
 
-        public static IOzzyServiceCollectionBuilder Configure(this IOzzyServiceCollectionBuilder builder, IConfiguration configuration) 
+        public static IOzzyBuilder Configure(this IOzzyBuilder builder, IConfiguration configuration) 
         {
             builder.Services.Configure<OzzyOptions>(configuration);
             return builder;
         }
 
-        public static IOzzyServiceCollectionBuilder AddBackgroundProcess<T>(this IOzzyServiceCollectionBuilder builder) where T : class, IBackgroundProcess
+        public static IOzzyBuilder AddBackgroundProcess<T>(this IOzzyBuilder builder) where T : class, IBackgroundProcess
         {
 
             if (typeof(ISingleInstanceProcess).IsAssignableFrom(typeof(T)))
@@ -37,7 +37,19 @@ namespace Ozzy.Server.Configuration
             return builder;
         }
 
-        public static IOzzyServiceCollectionBuilder AddBackgroundProcesses(this IOzzyServiceCollectionBuilder builder, Type[] processes)
+        public static IOzzyBuilder AddFeatureFlag<TFeature>(this IOzzyBuilder builder) where TFeature : FeatureFlag
+        {
+            builder.Services.AddSingleton<TFeature>();
+            return builder;
+        }
+
+        public static IOzzyBuilder AddFeatureFlag<TFeature>(this IOzzyBuilder builder, Func<IServiceProvider, TFeature> implementationFactory) where TFeature : FeatureFlag
+        {
+            builder.Services.AddSingleton<TFeature>(implementationFactory);
+            return builder;
+        }
+
+        public static IOzzyBuilder AddBackgroundProcesses(this IOzzyBuilder builder, Type[] processes)
         {
             foreach (var proc in processes)
             {
@@ -46,7 +58,7 @@ namespace Ozzy.Server.Configuration
             return builder;
         }
 
-        public static IOzzyServiceCollectionBuilder AddEntityDbContext(this IOzzyServiceCollectionBuilder builder, Type[] processes)
+        public static IOzzyBuilder AddEntityDbContext(this IOzzyBuilder builder, Type[] processes)
         {
             foreach (var proc in processes)
             {

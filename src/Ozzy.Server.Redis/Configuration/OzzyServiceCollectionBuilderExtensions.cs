@@ -11,13 +11,13 @@ namespace Ozzy.Server.Configuration
     public static class OzzyServiceCollectionBuilderExtensions
     {        
 
-        public static IOzzyServiceCollectionBuilder UseRedis(this IOzzyServiceCollectionBuilder builder, Func<IConnectionMultiplexer> redisFactory)
+        public static IOzzyBuilder UseRedis(this IOzzyBuilder builder, Func<IConnectionMultiplexer> redisFactory)
         {
             builder.Services.AddSingleton<RedisClient>(sc => new RedisClient(redisFactory));
             return builder;
         }
 
-        public static IOzzyServiceCollectionBuilder UseRedis(this IOzzyServiceCollectionBuilder builder, IConfiguration conf)
+        public static IOzzyBuilder UseRedis(this IOzzyBuilder builder, IConfiguration conf)
         {
             builder.Services.Configure<RedisConnectionOptions>(conf.GetSection("RedisConnection"));
             builder.Services.AddSingleton<RedisClient>(sc => new RedisClient(sc.GetService<IOptions<RedisConnectionOptions>>()));
