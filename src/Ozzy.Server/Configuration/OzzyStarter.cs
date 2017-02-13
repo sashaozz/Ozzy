@@ -4,6 +4,12 @@ using Microsoft.AspNetCore.Builder;
 
 namespace Ozzy.Server.Configuration
 {
+    public interface IOzzyStarter
+    {
+        IApplicationBuilder Builder { get; }
+        void Start();
+    }
+
     public class OzzyStarter : IOzzyStarter
     {
         private IOzzyNode _node;

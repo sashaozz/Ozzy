@@ -24,7 +24,7 @@ namespace SampleApplication
         {
             if (_ffService.IsEnabled<ConsoleLogFeature>())
             {
-                Console.WriteLine("ping");
+                OzzyLogger<ICommonEvents>.Log.TraceInformationalEvent("process 1");
             }
         }
     }
@@ -46,7 +46,7 @@ namespace SampleApplication
         {
             if (_ffService.IsEnabled<ConsoleLogFeature>())
             {
-                Console.WriteLine("pong");
+                OzzyLogger<ICommonEvents>.Log.TraceInformationalEvent("process 2");
             }
         }
     }

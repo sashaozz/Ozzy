@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using Ozzy.DomainModel;
+using Ozzy.Core;
 
 namespace Ozzy.Server.EntityFramework
 {
@@ -11,21 +12,32 @@ namespace Ozzy.Server.EntityFramework
     /// </summary>
     public class DbEventsReader : IPeristedEventsReader
     {
-        private readonly AggregateDbContext _dbContext;
-        public DbEventsReader(AggregateDbContext dbContext)
+        private readonly Func<AggregateDbContext> _dbContext;
+        public DbEventsReader(Func<AggregateDbContext> dbContext)
         {
-            if (dbContext == null) throw new ArgumentNullException(nameof(dbContext));
+            Guard.ArgumentNotNull(dbContext, nameof(dbContext));
             _dbContext = dbContext;
         }
 
         public List<DomainEventRecord> GetEvents(long checkpoint, int maxEvents)
         {
-            return _dbContext.DomainEvents
-                .AsNoTracking()
-                .Where(e => e.Sequence > checkpoint)
-                .OrderBy(e => e.Sequence)
-                .Take(maxEvents)
-                .ToList();
+            using (var context = _dbContext())
+            {
+                return context.DomainEvents
+                    .AsNoTracking()
+                    .Where(e => e.Sequence > checkpoint)
+                    .OrderBy(e => e.Sequence)
+                    .Take(maxEvents)
+                    .ToList();
+            }
+        }
+
+        public long GetMaxSequence()
+        {
+            using (var context = _dbContext())
+            {
+                return context.DomainEvents.Max(de => de.Sequence);
+            }
         }
     }
 }

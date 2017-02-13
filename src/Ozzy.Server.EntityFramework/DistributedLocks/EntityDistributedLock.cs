@@ -31,7 +31,8 @@ namespace Ozzy.Server.EntityFramework
             Expiry = expiration;
             ExpirationTime = record.LockDateTime;           
 
-            _timer = new PeriodicAction(cts => ExtendLockAsync(cts), expiration.Milliseconds);
+            _timer = new PeriodicAction(cts => ExtendLockAsync(cts), Convert.ToInt32(expiration.TotalMilliseconds));
+            _timer.Start();
         }
 
         public EntityDistributedLock()

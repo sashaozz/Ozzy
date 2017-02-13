@@ -8,7 +8,7 @@ using System;
 
 namespace Ozzy.Server.Configuration
 {
-    public static class OzzyServiceCollectionBuilderExtensions
+    public static class OzzyBuilderExtensions
     {        
 
         public static IOzzyBuilder UseRedis(this IOzzyBuilder builder, Func<IConnectionMultiplexer> redisFactory)

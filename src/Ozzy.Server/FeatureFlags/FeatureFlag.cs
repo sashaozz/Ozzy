@@ -5,14 +5,16 @@ namespace Ozzy.Server.FeatureFlags
 {
     public class FeatureFlag
     {
-        public string Code { get; protected set; }
+        public string Id { get; protected set; }
+        public int Version { get;protected set; }
         public FeatureFlagConfiguration Configuration { get; private set; }
 
         public FeatureFlag(string code)
         {
             Guard.ArgumentNotNullOrEmptyString(code, nameof(code));
-            Code = code;
+            Id = code;
             Configuration = new FeatureFlagConfiguration(false);
+            Version = 0;
         }
         
         public string GetVariation()
@@ -26,9 +28,10 @@ namespace Ozzy.Server.FeatureFlags
             return Configuration.IsEnabled;
         }
 
-        public virtual void UpdateConfiguration(FeatureFlagConfiguration configuration)
+        public virtual void UpdateConfiguration(FeatureFlagConfiguration configuration, int version)
         {
             //todo: implement versioning
+            if (version <= Version) return;
             Configuration = configuration;
         }
     }
@@ -37,7 +40,7 @@ namespace Ozzy.Server.FeatureFlags
     {
         public FeatureFlag() : base("temp")
         {
-            Code = this.GetType().FullName;
+            Id = this.GetType().FullName;
         }
 
         public virtual new TVariation GetVariation()

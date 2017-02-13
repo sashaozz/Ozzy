@@ -10,11 +10,11 @@ namespace Ozzy.Server.EntityFramework
 {
     public class EntityDistributedLockService : IDistributedLockService
     {
-        private readonly TransientAggregateDbContext _dbContext;
+        private readonly Func<AggregateDbContext> _dbContextFactory;
 
-        public EntityDistributedLockService(TransientAggregateDbContext dbContext)
+        public EntityDistributedLockService(Func<AggregateDbContext> dbContextFactory)
         {
-            _dbContext = dbContext;
+            _dbContextFactory = dbContextFactory;
         }
 
         public IDistributedLock CreateLock(string name, TimeSpan expiry, Action expirationAction = null)
@@ -24,7 +24,7 @@ namespace Ozzy.Server.EntityFramework
             try
             {
                 var guid = Guid.NewGuid();
-                var context = _dbContext.Clone();
+                var context = _dbContextFactory();
                 var dlock = context.DistributedLocks.SingleOrDefault(l => l.Name == name)
                     ?? new EntityDistributedLockRecord(name, expiry, guid);
                 if (dlock.LockId == guid || !dlock.IsAcquired())
@@ -52,7 +52,7 @@ namespace Ozzy.Server.EntityFramework
             try
             {
                 var guid = Guid.NewGuid();
-                var context = _dbContext.Clone();
+                var context = _dbContextFactory();
                 var dlock = context.DistributedLocks.SingleOrDefault(l => l.Name == name);
                 if (dlock == null)
                 {
@@ -131,7 +131,7 @@ namespace Ozzy.Server.EntityFramework
             try
             {
                 var guid = Guid.NewGuid();
-                var context = _dbContext.Clone();
+                var context = _dbContextFactory();
                 var dlock = await context.DistributedLocks.SingleOrDefaultAsync(l => l.Name == name);
                 if (dlock == null)
                 {

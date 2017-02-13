@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Ozzy.Core;
 using Ozzy.DomainModel;
 using System;
 using System.Linq;
@@ -7,22 +8,24 @@ namespace Ozzy.Server.EntityFramework
 {
     public class EfDataRepository<TItem, TId> : IDataRepository<TItem,TId> where TItem : GenericDataRecord<TId>
     {
-        private TransientAggregateDbContext _db;
+        private Func<AggregateDbContext> _dbFactory;
         private Func<AggregateDbContext, DbSet<TItem>> _dbSetProvider;
 
-        public EfDataRepository(TransientAggregateDbContext db, Func<AggregateDbContext, DbSet<TItem>> dbSetProvider)
+        public EfDataRepository(Func<AggregateDbContext> dbFactory, Func<AggregateDbContext, DbSet<TItem>> dbSetProvider)
         {
-            _db = db;
+            Guard.ArgumentNotNull(dbFactory, nameof(dbFactory));
+            Guard.ArgumentNotNull(dbSetProvider, nameof(dbSetProvider));
+            _dbFactory = dbFactory;
             _dbSetProvider = dbSetProvider;
 
         }
         public void Create(TItem item)
         {
-            using (var db = _db.Clone())
+            using (var db = _dbFactory())
             {
                 var dbSet = _dbSetProvider(db);
                 dbSet.Add(item);
-                db.AddDomainEvent(new DataRecordCreatedEvent()
+                db.AddDomainEvent(new DataRecordCreatedEvent<TItem>()
                 {
                     RecordType = item.GetType(),
                     RecordValue = item
@@ -33,12 +36,12 @@ namespace Ozzy.Server.EntityFramework
 
         public IQueryable<TItem> Query()
         {
-            return _dbSetProvider(_db).AsNoTracking();
+            return _dbSetProvider(_dbFactory()).AsNoTracking();
         }
 
         public void Remove(TItem item)
         {
-            using (var db = _db.Clone())
+            using (var db = _dbFactory())
             {
                 var dbSet = _dbSetProvider(db);
                 dbSet.Remove(item);
@@ -48,7 +51,7 @@ namespace Ozzy.Server.EntityFramework
 
         public void Remove(TId id)
         {
-            using (var db = _db.Clone())
+            using (var db = _dbFactory())
             {
                 var dbSet = _dbSetProvider(db);
                 var item = dbSet.Single(i => i.Id.Equals(id));
@@ -59,20 +62,17 @@ namespace Ozzy.Server.EntityFramework
 
         public void Update(TItem item)
         {
-            using (var db = _db.Clone())
+            using (var db = _dbFactory())
             { 
                 var dbSet = _dbSetProvider(db);
                 var existingItem = dbSet.Find(item.Id);
-                //if (item.Version <= existingItem.Version)
-                //{
-                //    throw new InvalidOperationException("version is too low");
-                //}
                 db.Entry(existingItem).CurrentValues.SetValues(item);
-                //db.Entry(existingItem).State = EntityState.Detached;
-                //dbSet.Attach(item);
-                //db.Entry(item).State = EntityState.Modified;
-                //db.Entry(item).Property(i => i.Version).OriginalValue = existingItem.Version;
-                
+                db.AddDomainEvent(new DataRecordUpdatedEvent<TItem>()
+                {
+                    RecordType = item.GetType(),
+                    RecordValue = item
+                });                
+
                 db.SaveChanges();
             }
         }

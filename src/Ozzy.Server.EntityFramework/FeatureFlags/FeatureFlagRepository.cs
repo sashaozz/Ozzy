@@ -7,7 +7,8 @@ namespace Ozzy.Server.FeatureFlags
 
     public class FeatureFlagRepository : EfDataRepository<FeatureFlagRecord, string>, IFeatureFlagRepository
     {
-        public FeatureFlagRepository(TransientAggregateDbContext db, Func<AggregateDbContext, DbSet<FeatureFlagRecord>> dbSetProvider) : base(db, dbSetProvider)
+        public FeatureFlagRepository(Func<AggregateDbContext> dbFactory, Func<AggregateDbContext, DbSet<FeatureFlagRecord>> dbSetProvider) 
+            : base(dbFactory, dbSetProvider)
         {
         }
     }

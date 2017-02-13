@@ -86,7 +86,7 @@ namespace Ozzy.Core
             }
             catch (Exception e)
             {
-                Logger<ICommonEvents>.Log.Exception(e);
+                OzzyLogger<ICommonEvents>.Log.Exception(e);
             }
         }
 

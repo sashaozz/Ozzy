@@ -1,6 +1,7 @@
 ﻿using Ozzy.Core;
 using System;
 using System.Collections.Concurrent;
+using System.Linq;
 
 namespace Ozzy.Server.FeatureFlags
 {
@@ -17,23 +18,6 @@ namespace Ozzy.Server.FeatureFlags
             _serviceProvider = serviceProvider;
         }
 
-        //protected virtual void RegisterFeatureFlag<TFeature>() where TFeature : FeatureFlag
-        //{
-        //    var type = typeof(TFeature);
-        //    RegisterFeatureFlag(type.FullName, type);
-        //}
-        //protected virtual void RegisterFeatureFlag(string code, Type type)
-        //{
-        //    Guard.ArgumentNotNullOrEmptyString(code, nameof(code));
-        //    Guard.ArgumentNotNull(type, nameof(type));           
-        //    if (!_flags.ContainsKey(code))
-        //    {
-        //        var flag = CreateFlag(code, type);
-        //        var newState = _ffRepository.Create(code, flag.Configuration);
-        //        flag.UpdateConfiguration(newState);
-        //        _flags.TryAdd(code, flag);
-        //    }
-        //}
         protected virtual FeatureFlag CreateFlag(string code, Type type)
         {
             Guard.ArgumentNotNullOrEmptyString(code, nameof(code));
@@ -64,11 +48,15 @@ namespace Ozzy.Server.FeatureFlags
             _flags.TryGetValue(code, out var flag);
             if (flag == null)
             {
-                return CreateFlag(code, type) as TFeature;
+                flag = CreateFlag(code, type);
+                var existedFlag = _ffRepository.Query().FirstOrDefault(f => f.Id == code);                
+                if (existedFlag != null)
+                {
+                    flag.UpdateConfiguration(existedFlag.Configuration, existedFlag.Version);
+                }
             }
             return flag as TFeature;
         }
-        
 
         public bool IsEnabled<TFeature>() where TFeature : FeatureFlag
         {
@@ -80,7 +68,7 @@ namespace Ozzy.Server.FeatureFlags
             _flags.TryGetValue(code, out var flag);
             if (flag == null)
             {
-                 return CreateFlag(code, typeof(FeatureFlag));
+                return CreateFlag(code, typeof(FeatureFlag));
             }
             return flag;
         }
@@ -95,6 +83,12 @@ namespace Ozzy.Server.FeatureFlags
         {
             var flag = GetFeatureFlag(code);
             return flag == null ? defaultValue : flag.GetVariation();
+        }
+
+        public void SetFlagState(string code, FeatureFlagConfiguration state, int version)
+        {
+            var flag = GetFeatureFlag(code);
+            flag.UpdateConfiguration(state, version);
         }
     }
 }

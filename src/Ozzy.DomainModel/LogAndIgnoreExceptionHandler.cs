@@ -8,17 +8,17 @@ namespace Ozzy.DomainModel
     {
         public void HandleEventException(Exception ex, long sequence, object evt)
         {
-            Logger<IDomainModelTracing>.Log.ProcessDomainEventEntryException(evt as DomainEventEntry, sequence, ex);
+            OzzyLogger<IDomainModelTracing>.Log.ProcessDomainEventEntryException(evt as DomainEventEntry, sequence, ex);
         }
 
         public void HandleOnStartException(Exception ex)
         {
-            Logger<IDomainModelTracing>.Log.EventsProcessorStartException(ex);
+            OzzyLogger<IDomainModelTracing>.Log.EventsProcessorStartException(ex);
         }
 
         public void HandleOnShutdownException(Exception ex)
         {
-            Logger<IDomainModelTracing>.Log.EventsProcessorStopException(ex);
+            OzzyLogger<IDomainModelTracing>.Log.EventsProcessorStopException(ex);
         }
     }
 }

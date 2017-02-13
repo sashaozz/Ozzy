@@ -4,7 +4,7 @@ using EventSourceProxy;
 
 namespace Ozzy.Core
 {
-    public class Logger<T> where T : class, ICommonEvents
+    public class OzzyLogger<T> where T : class, ICommonEvents
     {
         private static readonly Lazy<T> _log = new Lazy<T>(EventSourceImplementer.GetEventSourceAs<T>);
 

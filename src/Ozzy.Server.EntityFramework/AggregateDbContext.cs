@@ -16,17 +16,22 @@ namespace Ozzy.Server.EntityFramework
     /// При сохранении агрегата автоматиески сохраняются и публикуются все его доменные события.
     /// Возможна дополнительная пуликацию соытий через быстрый канал публикации.
     /// </summary>
-    public class AggregateDbContext : DbContext
+    public class AggregateDbContext : DbContext, IOzzyDomainModel
     {
-        protected readonly IFastEventPublisher FastEventPublisher;        
+        protected readonly IFastEventPublisher FastEventPublisher;
         private readonly List<DomainEventRecord> _eventsToSave = new List<DomainEventRecord>();
-        protected DbContextOptions<AggregateDbContext> _options;
+
+        public AggregateDbContext(IExtensibleOptions<AggregateDbContext> options)
+            : this(options.GetDbContextOptions(), options.GetFastEventPublisher())
+        {
+        }
 
         /// <summary>
         /// Создает новый дата-контекст для агрегатов без быстрого канала публикации
         /// </summary>
         /// <param name="options">Параметры подключения к БД</param>
-        public AggregateDbContext(DbContextOptions<AggregateDbContext> options) : this(options, NullEventsPublisher.Instance)
+        public AggregateDbContext(DbContextOptions options) 
+            : this(options, NullEventsPublisher.Instance)
         {
         }
         /// <summary>
@@ -34,11 +39,11 @@ namespace Ozzy.Server.EntityFramework
         /// </summary>
         /// <param name="options">Параметры подключения к БД</param>
         /// <param name="fastEventPublisher">Быстрый канал публикации событий</param>
-        public AggregateDbContext(DbContextOptions<AggregateDbContext> options, IFastEventPublisher fastEventPublisher) : base(options)
+        public AggregateDbContext(DbContextOptions options, IFastEventPublisher fastEventPublisher) 
+            : base(options)
         {
-            _options = options;
-            if (fastEventPublisher == null) throw new ArgumentNullException(nameof(fastEventPublisher));
-            FastEventPublisher = fastEventPublisher;            
+            Guard.ArgumentNotNull(fastEventPublisher, nameof(fastEventPublisher));
+            FastEventPublisher = fastEventPublisher;
         }
 
         /// <summary>
@@ -60,7 +65,7 @@ namespace Ozzy.Server.EntityFramework
 
             modelBuilder.Entity<Sequence>().HasKey(c => c.Name);
             modelBuilder.Entity<Sequence>().Property(c => c.Name).IsRequired();
-            
+
             modelBuilder.Entity<FeatureFlagRecord>().Ignore(r => r.Configuration);
             modelBuilder.Entity<FeatureFlagRecord>().Ignore(r => r.Events);
 
@@ -78,13 +83,13 @@ namespace Ozzy.Server.EntityFramework
                 .SelectMany(dee => dee.Events.Select(ev => new DomainEventRecord(ev)))
                 .ToList();
 
-            Logger<IDomainModelTracing>.TraceVerboseMessageIfEnabled(() => $"Saving {domainEvents.Count} domain events");
+            OzzyLogger<IDomainModelTracing>.TraceVerboseMessageIfEnabled(() => $"Saving {domainEvents.Count} domain events");
             DomainEvents.AddRange(domainEvents);
             _eventsToSave.AddRange(domainEvents);
             foreach (var entity in domainEventEntities)
-            {                
-                entity.Events.Clear();                
-            }           
+            {
+                entity.Events.Clear();
+            }
 
             var removedEntitiesEvents = ChangeTracker.Entries<IEntity>()
                 .Where(dbe => dbe.State == EntityState.Deleted)
@@ -94,7 +99,7 @@ namespace Ozzy.Server.EntityFramework
                 .Select(domainEvent => new DomainEventRecord(domainEvent))
                 .ToList();
 
-            Logger<IDomainModelTracing>.TraceVerboseMessageIfEnabled(() => $"Saving {removedEntitiesDomainEvents.Count} entity removed events");
+            OzzyLogger<IDomainModelTracing>.TraceVerboseMessageIfEnabled(() => $"Saving {removedEntitiesDomainEvents.Count} entity removed events");
             DomainEvents.AddRange(removedEntitiesDomainEvents);
             _eventsToSave.AddRange(removedEntitiesDomainEvents);
         }
@@ -105,7 +110,7 @@ namespace Ozzy.Server.EntityFramework
         /// <returns></returns>
         public override int SaveChanges()
         {
-            Logger<IDomainModelTracing>.Log.TraceVerboseEvent("Start saving changes to context");
+            OzzyLogger<IDomainModelTracing>.Log.TraceVerboseEvent("Start saving changes to context");
             SaveDomainEvents();
             var result = base.SaveChanges();
 
@@ -113,12 +118,12 @@ namespace Ozzy.Server.EntityFramework
             {
                 try
                 {
-                    Logger<IDomainModelTracing>.Log.TracePublishToFastChannel(record);
+                    OzzyLogger<IDomainModelTracing>.Log.TracePublishToFastChannel(record);
                     FastEventPublisher.Publish(record);
                 }
                 catch (Exception e)
                 {
-                    Logger<IDomainModelTracing>.Log.PublishToFastChannelException(e);
+                    OzzyLogger<IDomainModelTracing>.Log.PublishToFastChannelException(e);
                 }
             }
             _eventsToSave.Clear();
@@ -132,29 +137,24 @@ namespace Ozzy.Server.EntityFramework
         /// <returns></returns>
         public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken)
         {
-            Logger<IDomainModelTracing>.Log.TraceVerboseEvent("Start saving changes to context");
+            OzzyLogger<IDomainModelTracing>.Log.TraceVerboseEvent("Start saving changes to context");
             SaveDomainEvents();
             var result = await base.SaveChangesAsync(cancellationToken);
             foreach (var record in _eventsToSave)
             {
                 try
                 {
-                    Logger<IDomainModelTracing>.Log.TracePublishToFastChannel(record);
+                    OzzyLogger<IDomainModelTracing>.Log.TracePublishToFastChannel(record);
                     FastEventPublisher.Publish(record);
                 }
                 catch (Exception e)
                 {
-                    Logger<IDomainModelTracing>.Log.PublishToFastChannelException(e);
+                    OzzyLogger<IDomainModelTracing>.Log.PublishToFastChannelException(e);
                 }
             }
             _eventsToSave.Clear();
 
             return result;
-        }
-
-        public virtual AggregateDbContext Clone()
-        {
-            return new AggregateDbContext(_options, FastEventPublisher);
         }
 
         protected List<IDomainEvent> EventsList { get; set; } = new List<IDomainEvent>();

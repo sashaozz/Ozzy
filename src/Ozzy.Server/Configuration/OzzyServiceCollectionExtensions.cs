@@ -1,9 +1,8 @@
-﻿using System;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Ozzy.Server.FeatureFlags;
+using Ozzy.DomainModel;
 
 namespace Ozzy.Server.Configuration
 {
@@ -27,17 +26,10 @@ namespace Ozzy.Server.Configuration
             return builder;
         }
 
-        public static IOzzyBuilder AddOzzy(this IServiceCollection services, Action<OzzyOptions> setupAction)
+        public static OzzyDomainBuilder<TDomain> AddOzzyDomain<TDomain>(this IServiceCollection services) where TDomain : IOzzyDomainModel
         {
-            services.Configure(setupAction);
-            return services.AddOzzy();
-        }
-
-        public static IOzzyBuilder AddOzzy(this IServiceCollection services, IConfiguration configuration)
-        {
-            services.AddOptions();
-            services.Configure<OzzyOptions>(configuration);
-            return services.AddOzzy();
+            var builder = new OzzyDomainBuilder<TDomain>(services);
+            return builder;
         }
     }
 }

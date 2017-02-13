@@ -77,7 +77,7 @@ namespace Ozzy.Core
                 catch (Exception e)
                 {
                     //todo: add exception message
-                    Logger<ICommonEvents>.Log.Exception(e);
+                    OzzyLogger<ICommonEvents>.Log.Exception(e);
                 }
                 Interlocked.Exchange(ref _doingAction, 0);
             }

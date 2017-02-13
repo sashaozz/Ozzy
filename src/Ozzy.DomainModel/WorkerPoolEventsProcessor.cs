@@ -21,22 +21,13 @@ namespace Ozzy.DomainModel
         /// текущей записи в очереди доменных событий, обработанной данным обработчиком</param>
         /// <param name="handler">Обработчик доменных событий</param>
         /// <param name="poolSize">Размер пула</param>
-        public WorkerPoolEventsProcessor(ICheckpointManager checkpointManager, IDomainEventHandler handler, int poolSize)
+        public WorkerPoolEventsProcessor(ICheckpointManager checkpointManager, int poolSize)
             : base(checkpointManager)
         {
             _poolSize = poolSize;
-            _workers = GetWorkers(handler);
+            _workers = GetWorkers();
             CreateWorkerPool();
-        }
-
-        public WorkerPoolEventsProcessor(ICheckpointManager checkpointManager, params IDomainEventHandler[] handlers)
-            : base(checkpointManager)
-        {
-            _poolSize = handlers.Length;
-            _workers = GetWorkers(handlers);
-            CreateWorkerPool();
-        }
-
+        }       
         protected override void ProcessEvent(DomainEventEntry data)
         {
             var cursor = _ringBuffer.Next();
@@ -64,41 +55,14 @@ namespace Ozzy.DomainModel
             return result;
         }
 
-        public IWorkHandler<DomainEventEntry>[] GetWorkers(IDomainEventHandler handler)
+        public IWorkHandler<DomainEventEntry>[] GetWorkers()
         {
             IWorkHandler<DomainEventEntry>[] array = new IWorkHandler<DomainEventEntry>[_poolSize];
             for (int i = 0; i < _poolSize; i++)
             {
-                array[i] = new WorkHandler(handler);                                    
+                array[i] = this;                                    
             }
             return array;
-        }
-
-        public IWorkHandler<DomainEventEntry>[] GetWorkers(IDomainEventHandler[] handlers)
-        {
-            IWorkHandler<DomainEventEntry>[] array = new IWorkHandler<DomainEventEntry>[handlers.Length];
-            for (int i = 0; i < handlers.Length; i++)
-            {
-                array[i] = new WorkHandler(handlers[i]);
-            }
-            return array;
-        }
-
-        public class WorkHandler : IWorkHandler<DomainEventEntry>
-        {
-            private readonly IDomainEventHandler _handler;
-
-            public WorkHandler(IDomainEventHandler handler)
-            {
-                _handler = handler;
-            }
-
-            public void OnEvent(DomainEventEntry evt)
-            {
-
-                Logger<IDomainModelTracing>.Log.ProcessDomainEventEntry(evt);
-                _handler.HandleEvent(evt.Value);
-            }
-        }
+        }        
     }
 }

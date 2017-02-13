@@ -24,7 +24,7 @@ namespace Ozzy.DomainModel
         void Polling(int count);
         [Event(108, Level = EventLevel.Error, Message = "Exception during polling events from from durable store")]
         void PollException(Exception exception);
-        [Event(109, Level = EventLevel.Error, Message = "Exception during polling events from from durable store")]
+        [Event(109, Level = EventLevel.Error, Message = "Exception during polling events from from durable store : {0}")]
         void ProcessPollEvent(Exception exception);
         [Event(110, Level = EventLevel.Error, Message = "Exception during processing polled event")]
         void ProcessPollEventException(Exception exception);

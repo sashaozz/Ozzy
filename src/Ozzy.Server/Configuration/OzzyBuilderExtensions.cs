@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Ozzy.DomainModel;
 using Ozzy.Server.BackgroundProcesses;
 using Ozzy.Server.FeatureFlags;
 using System;
@@ -8,18 +9,7 @@ using System.Reflection;
 namespace Ozzy.Server.Configuration
 {
     public static class OzzyBuilderExtensions
-    {
-        public static IOzzyBuilder DoSomething(this IOzzyBuilder builder)
-        {
-            return builder;
-        }
-
-        public static IOzzyBuilder Configure(this IOzzyBuilder builder, IConfiguration configuration) 
-        {
-            builder.Services.Configure<OzzyOptions>(configuration);
-            return builder;
-        }
-
+    {        
         public static IOzzyBuilder AddBackgroundProcess<T>(this IOzzyBuilder builder) where T : class, IBackgroundProcess
         {
 
@@ -33,19 +23,47 @@ namespace Ozzy.Server.Configuration
             {
                 builder.Services.AddSingleton<IBackgroundProcess, T>();
             }
-            
+
+            return builder;
+        }
+
+        public static IOzzyBuilder AddBackgroundMessageLoopProcess<TLoop>(this IOzzyBuilder builder) where TLoop : DomainEventsManager
+        {
+            //todo check types with reflection 
+            //todo walk base types up to loop base type
+            var domainModelType = typeof(TLoop).GetTypeInfo().BaseType.GetGenericArguments()[0];
+            var backgroundProcessType = typeof(MessageLoopProcess<,>).MakeGenericType(typeof(TLoop), domainModelType);
+
+            builder.Services.AddSingleton(typeof(IBackgroundProcess), backgroundProcessType);
+            return builder;
+        }
+
+
+        public static IOzzyBuilder AddDomainModel(this IOzzyBuilder builder, string domain)
+        {
+            return builder;
+        }
+
+        public static IOzzyBuilder AddFeatureFlags(this IOzzyBuilder builder)
+        {
+            return builder;
+        }
+
+        public static IOzzyBuilder AddMessageLoop(this IOzzyBuilder builder)
+        {
+            builder.AddBackgroundProcess<MessageLoopProcess>();
             return builder;
         }
 
         public static IOzzyBuilder AddFeatureFlag<TFeature>(this IOzzyBuilder builder) where TFeature : FeatureFlag
         {
-            builder.Services.AddSingleton<TFeature>();
+            builder.Services.AddTransient<TFeature>();
             return builder;
         }
 
         public static IOzzyBuilder AddFeatureFlag<TFeature>(this IOzzyBuilder builder, Func<IServiceProvider, TFeature> implementationFactory) where TFeature : FeatureFlag
         {
-            builder.Services.AddSingleton<TFeature>(implementationFactory);
+            builder.Services.AddTransient(implementationFactory);
             return builder;
         }
 

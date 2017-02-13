@@ -11,5 +11,7 @@ namespace Ozzy.Server.FeatureFlags
         FeatureFlag GetFeatureFlag(string code);
         bool IsEnabled(string code, bool defaultValue = false);
         string GetVariation(string code, string defaultValue = null);
+
+        void SetFlagState(string code, FeatureFlagConfiguration state, int version);
     }
 }

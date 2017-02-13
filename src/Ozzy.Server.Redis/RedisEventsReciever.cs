@@ -3,43 +3,66 @@ using System.IO;
 using ProtoBuf;
 using StackExchange.Redis;
 using Ozzy.DomainModel;
+using Ozzy.Core;
 
 namespace Ozzy.Server.Redis
 {
-    public class RedisEventsReciever : IDisposable
+    public class RedisEventsReciever : IFastEventReciever
     {
-        private readonly string _channel;
-        
-        private readonly ISubscriber _subscriber;
+        private string _channel;
+        private ISubscriber _subscriber;
+        private RedisClient _redis;
+        private Action<DomainEventRecord> _consumerAction;
 
-        public RedisEventsReciever(RedisClient redis, Action<DomainEventRecord> consumerAction, string channel = "fast-events-bus")
+        public RedisEventsReciever(RedisClient redis, Action<DomainEventRecord> consumerAction = null, string channel = "DomainEventsManager-fast-channel")
         {
-            
-            if (redis == null) throw new ArgumentNullException(nameof(redis));
-            if (consumerAction == null) throw new ArgumentNullException(nameof(consumerAction));
+            Guard.ArgumentNotNull(redis, nameof(redis));
+            Guard.ArgumentNotNull(consumerAction, nameof(consumerAction));
+            Guard.ArgumentNotNullOrEmptyString(channel, nameof(channel));
 
+            _redis = redis;
             _channel = channel;
-            _subscriber = redis.Redis.GetSubscriber();
+            _consumerAction = consumerAction;
+        }
+
+        public void UseAction(Action<DomainEventRecord> consumerAction)
+        {
+            Guard.ArgumentNotNull(consumerAction, nameof(consumerAction));
+            _consumerAction = consumerAction;
+        }
+
+        public virtual void Recieve(DomainEventRecord message)
+        {
+            _consumerAction?.Invoke(message);
+        }
+
+        public void Dispose()
+        {
+            StopRecieving();
+        }
+
+        public void StartRecieving()
+        {
+            _subscriber = _redis.Redis.GetSubscriber();
             _subscriber.SubscribeAsync(_channel, (ch, message) =>
             {
-                DomainEventRecord data;                
+                DomainEventRecord data;
                 using (var stream = new MemoryStream(message))
                 {
-                    data = Serializer.Deserialize<DomainEventRecord>(stream);                    
+                    data = Serializer.Deserialize<DomainEventRecord>(stream);
                 }
                 if (data == null)
                 {
                     //todo: add logging
                     return;
                 }
-                consumerAction(data);
-
+                Recieve(data);
             });
         }
 
-        public void Dispose()
+        public void StopRecieving()
         {
-            _subscriber.Unsubscribe(_channel);            
-        }
+            _subscriber.Unsubscribe(_channel);
+        }        
     }
 }
