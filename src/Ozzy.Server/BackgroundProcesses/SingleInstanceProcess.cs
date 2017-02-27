@@ -20,35 +20,41 @@ namespace Ozzy.Server.BackgroundProcesses
         protected override async Task StartInternal()
         {
             _dlock = await _lockService.CreateLockAsync(this.Name,
-                TimeSpan.FromMinutes(1),
+                TimeSpan.FromSeconds(2),
                 TimeSpan.MaxValue,
-                TimeSpan.FromSeconds(60),
+                TimeSpan.FromSeconds(2),
                 StopRequested.Token,
                 () =>
-                {
-                    _innerProcess.Stop().Wait();
-                    if (!IsStopping || !IsStopped)
+                {                    
+                    // if process was not stopped from outside, restart it so it can try to acquire lock again
+                    if (!StopRequested.IsCancellationRequested)                    
                     {
-                        StartInternal();
-                    }                    
+                        try
+                        {
+                            Stop().Wait();
+                        }
+                        catch(Exception e)
+                        {
+                            //todo : log 
+                        }
+                        Start();
+                    }
                 });
 
             if (_dlock.IsAcquired)
             {
-                await _innerProcess.Start();//.ContinueWith(t => _dlock.Dispose());
-                _dlock.Dispose();
+                await _innerProcess.Start();
+                await Stop();
             }
             else
             {
                 //todo: log task was not started!
             }
-
-            await base.StartInternal();
         }
 
         protected override void StopInternal()
-        {
-            _innerProcess.Stop();
+        {            
+            _innerProcess.Stop().Wait();
             _dlock.Dispose();
             base.StopInternal();
         }

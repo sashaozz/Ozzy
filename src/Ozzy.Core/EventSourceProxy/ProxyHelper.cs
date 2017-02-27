@@ -121,7 +121,8 @@ namespace EventSourceProxy
 					parameterMapping.CleanTargetType,
 					parameter.Converter,
 					serializationProvider,
-					serializationProviderField);
+					serializationProviderField,
+                    parameter.TransformMethod);
 				return;
 			}
 
@@ -155,7 +156,8 @@ namespace EventSourceProxy
 						parameterMapping.CleanTargetType,
 						parameter.Converter,
 						serializationProvider,
-						serializationProviderField);
+						serializationProviderField,
+                        parameter.TransformMethod);
 
 					var method = typeof(Dictionary<string, string>).GetTypeInfo().GetMethod("Add");
 					il.Emit(OpCodes.Call, method);
@@ -202,7 +204,8 @@ namespace EventSourceProxy
 			Type targetType,
 			LambdaExpression converter,
 			TraceSerializationProvider serializationProvider,
-			FieldBuilder serializationProviderField)
+			FieldBuilder serializationProviderField,
+            MethodInfo transformMethod = null)
 		{
 			ILGenerator mIL = methodBuilder.GetILGenerator();
 
@@ -210,19 +213,27 @@ namespace EventSourceProxy
 			if (i >= 0)
 				mIL.Emit(OpCodes.Ldarg, i + 1);
 
-			//// if a converter is passed in, then define a static method and use it to convert
-			//if (converter != null)
-			//{
-			//	MethodBuilder mb = typeBuilder.DefineMethod(Guid.NewGuid().ToString(), MethodAttributes.Static | MethodAttributes.Public, converter.ReturnType, converter.Parameters.Select(p => p.Type).ToArray());
-			//	converter.CompileToMethod(mb);
-			//	mIL.Emit(OpCodes.Call, mb);
+            // if a converter is passed in, then define a static method and use it to convert
+            //if (converter != null)
+            //{
+            //    MethodBuilder mb = typeBuilder.DefineMethod(Guid.NewGuid().ToString(), MethodAttributes.Static | MethodAttributes.Public, converter.ReturnType, converter.Parameters.Select(p => p.Type).ToArray());
+            //    converter.CompileToMethod(mb);
+            //    mIL.Emit(OpCodes.Call, mb);
 
-			//	// the object on the stack is now the return type. we may need to convert it further
-			//	sourceType = converter.ReturnType;
-			//}
+            //    // the object on the stack is now the return type. we may need to convert it further
+            //    sourceType = converter.ReturnType;
+            //}
 
-			// if the source type is a reference to the target type, we have to dereference it
-			if (sourceType.IsByRef && sourceType.GetElementType() == targetType)
+            if (transformMethod != null)
+            {
+                mIL.Emit(OpCodes.Call, transformMethod);
+
+                // the object on the stack is now the return type. we may need to convert it further
+                sourceType = transformMethod.ReturnType;
+            }
+
+            // if the source type is a reference to the target type, we have to dereference it
+            if (sourceType.IsByRef && sourceType.GetElementType() == targetType)
 			{
 				sourceType = sourceType.GetElementType();
 				mIL.Emit(OpCodes.Ldobj, sourceType);
@@ -240,18 +251,18 @@ namespace EventSourceProxy
 
 			// for fundamental types, just convert them with ToString and be done with it
 			var underlyingType = Nullable.GetUnderlyingType(sourceType) ?? sourceType;
-			if (!sourceType.IsGenericParameter && (underlyingType.GetTypeInfo().IsEnum || (underlyingType.GetTypeInfo().IsValueType && underlyingType.GetTypeInfo().Assembly == typeof(string).GetTypeInfo().Assembly)))
-			{
-				// convert the argument to a string with ToString
-				LocalBuilder lb = mIL.DeclareLocal(sourceType);
-				mIL.Emit(OpCodes.Stloc, lb.LocalIndex);
-				mIL.Emit(OpCodes.Ldloca, lb.LocalIndex);
-				mIL.Emit(OpCodes.Call, sourceType.GetTypeInfo().GetMethod("ToString", Type.EmptyTypes));
-				return;
-			}
+            if (!sourceType.IsGenericParameter && (underlyingType.GetTypeInfo().IsEnum || (underlyingType.GetTypeInfo().IsValueType && underlyingType.GetTypeInfo().Assembly == typeof(string).GetTypeInfo().Assembly)))
+            {
+                // convert the argument to a string with ToString
+                LocalBuilder lb = mIL.DeclareLocal(sourceType);
+                mIL.Emit(OpCodes.Stloc, lb.LocalIndex);
+                mIL.Emit(OpCodes.Ldloca, lb.LocalIndex);
+                mIL.Emit(OpCodes.Call, sourceType.GetTypeInfo().GetMethod("ToString", Type.EmptyTypes));
+                return;
+            }
 
-			// non-fundamental types use the object serializer
-			var context = new TraceSerializationContext(invocationContext, i);
+            // non-fundamental types use the object serializer
+            var context = new TraceSerializationContext(invocationContext, i);
 			context.EventLevel = serializationProvider.GetEventLevelForContext(context);
 			if (context.EventLevel != null)
 			{

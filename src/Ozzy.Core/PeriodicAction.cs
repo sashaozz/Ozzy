@@ -10,17 +10,24 @@ namespace Ozzy.Core
     /// </summary>
     public class PeriodicAction : BackgroundTask
     {
-        private readonly Func<CancellationTokenSource, Task> _asyncAction;
-        private readonly int _interval;
+        private readonly Func<CancellationToken, Task> _asyncAction;
         private int _doingAction = 0;
+        private DateTime _startTime;
+        private TimeSpan? _period;
+        private ICommonEvents _logger = OzzyLogger<ICommonEvents>.LogFor<PeriodicAction>();
 
-        protected PeriodicAction(int interval = 5000)
+        public int ActionInterval { get; protected set; }
+        public bool WaitForFirstInterval { get; protected set; }
+        
+
+        protected PeriodicAction(int interval = 5000, bool waitForFirstInterval = false)
         {
             Guard.ArgumentNotNegativeValue(interval, nameof(interval));
-            _interval = interval;
+            ActionInterval = interval;
             _asyncAction = ActionAsync;
+            WaitForFirstInterval = waitForFirstInterval;
         }
-        protected virtual Task ActionAsync(CancellationTokenSource cts)
+        protected virtual Task ActionAsync(CancellationToken cts)
         {
             //do nothing
             return Task.CompletedTask;
@@ -30,17 +37,20 @@ namespace Ozzy.Core
         /// Создает новый <see cref="PeriodicAction"/> в незапущенном состоянии
         /// </summary>        
         /// <param name="action"></param>
-        /// <param name="interval">Интервал в миллисекундах, через который будет выполняться действие</param>
-        public PeriodicAction(Func<CancellationTokenSource, Task> action, int interval = 5000)
+        /// <param name="actionInterval">Интервал в миллисекундах, через который будет выполняться действие</param>
+        public PeriodicAction(Func<CancellationToken, Task> action, int actionInterval = 5000, TimeSpan? period = null, bool waitForFirstInterval = false)
         {
             Guard.ArgumentNotNull(action, nameof(action));
-            Guard.ArgumentNotNegativeValue(interval, nameof(interval));
+            Guard.ArgumentNotNegativeValue(actionInterval, nameof(actionInterval));
             _asyncAction = action;
-            _interval = interval;
+            ActionInterval = actionInterval;
+            WaitForFirstInterval = waitForFirstInterval;
+            _period = period;
         }
 
         protected override Task StartInternal()
-        {            
+        {
+            _startTime = DateTime.UtcNow;
             return TimerLoopAsync();
         }
 
@@ -55,13 +65,23 @@ namespace Ozzy.Core
 
         private async Task TimerLoopAsync()
         {
+            if (_period.HasValue && _period != TimeSpan.MaxValue && _startTime.Add(_period.Value) < DateTime.UtcNow)
+            {
+                _logger.TraceVerboseEvent($"PeriodicAction reached its period of {_period} and will be stopped");
+                return;
+            }
             if (StopRequested.IsCancellationRequested)
             {
+                _logger.TraceVerboseEvent($"PeriodicAction canceled due to the Stop request");
                 return;
+            }
+            if (!WaitForFirstInterval)
+            {
+                await DoActionAsync();
             }
             while (!StopRequested.IsCancellationRequested)
             {
-                await Task.Delay(_interval, StopRequested.Token);
+                await Task.Delay(ActionInterval, StopRequested.Token);
                 await DoActionAsync();
             }
         }
@@ -72,12 +92,11 @@ namespace Ozzy.Core
             {
                 try
                 {
-                    await _asyncAction(StopRequested);
+                    await _asyncAction(StopRequested.Token);
                 }
                 catch (Exception e)
                 {
-                    //todo: add exception message
-                    OzzyLogger<ICommonEvents>.Log.Exception(e);
+                    //_logger.Exception(e, "Exception during PeriodicAction action execution");
                 }
                 Interlocked.Exchange(ref _doingAction, 0);
             }

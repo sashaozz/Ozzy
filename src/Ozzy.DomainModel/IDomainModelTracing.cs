@@ -28,7 +28,5 @@ namespace Ozzy.DomainModel
         void ProcessPollEvent(Exception exception);
         [Event(110, Level = EventLevel.Error, Message = "Exception during processing polled event")]
         void ProcessPollEventException(Exception exception);
-
-    }
-    
+    }    
 }

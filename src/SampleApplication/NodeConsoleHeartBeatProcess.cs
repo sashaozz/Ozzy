@@ -14,13 +14,15 @@ namespace SampleApplication
         public NodeConsoleHeartBeatProcess(IFeatureFlagService ffService)
         {
             _ffService = ffService;
+            ActionInterval = 1000;
+            
         }
 
         public bool IsRunning => base.IsStarted;
 
         public string Name => "process1";
 
-        protected override async Task ActionAsync(CancellationTokenSource cts)
+        protected override async Task ActionAsync(CancellationToken cts)
         {
             if (_ffService.IsEnabled<ConsoleLogFeature>())
             {
@@ -36,13 +38,14 @@ namespace SampleApplication
         public NodeConsoleHeartBeatProcess2(IFeatureFlagService ffService)
         {
             _ffService = ffService;
+            ActionInterval = 1000;
         }
 
         public bool IsRunning => base.IsStarted;
 
         public string Name => "process1";
 
-        protected override async Task ActionAsync(CancellationTokenSource cts)
+        protected override async Task ActionAsync(CancellationToken cts)
         {
             if (_ffService.IsEnabled<ConsoleLogFeature>())
             {

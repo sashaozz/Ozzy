@@ -8,25 +8,39 @@ using System.Threading.Tasks;
 
 namespace Ozzy.Server.Redis
 {
-    public class RedisEventLoopReciever<TLoop, TDomain> : EventLoopReciever<TLoop, TDomain>
-        where TLoop : DomainEventLoop<TDomain>
-        where TDomain : IOzzyDomainModel
+    public class RedisFastEventReciever : BackgroundTask,  IFastEventReciever
     {
         private string _channel;
         private ISubscriber _subscriber;
         private RedisClient _redis;
         private Action<DomainEventRecord> _consumerAction;
+        private DomainEventsManager _loop;
 
-        public RedisEventLoopReciever(RedisClient redis, IExtensibleOptions<TDomain> options, TLoop loop)
-            : base(options, loop)
+        public RedisFastEventReciever(RedisClient redis, DomainEventsManager loop, string channelName)            
         {
             Guard.ArgumentNotNull(redis, nameof(redis));
-            Guard.ArgumentNotNull(options, nameof(options));
             Guard.ArgumentNotNull(loop, nameof(loop));
+            Guard.ArgumentNotNullOrEmptyString(channelName, nameof(channelName));
 
             _redis = redis;
-            _channel = $"{options.OptionsType.FullName}-fast-channel";
-        }     
+            _loop = loop;
+            _channel = channelName;//$"{options.OptionsType.FullName}-fast-channel";
+        }
+
+        public void Recieve(DomainEventRecord message)
+        {
+            _loop.AddEventForProcessing(message);
+        }
+       
+        public void StartRecieving()
+        {
+            Start();
+        }
+
+        public void StopRecieving()
+        {
+            Stop();
+        }
 
         protected override Task StartInternal()
         {

@@ -1,26 +1,25 @@
 ﻿using Ozzy.DomainModel;
 using Ozzy.Core;
+using System;
 
 namespace Ozzy.Server.Redis
 {
-    public class RedisEventLoopRecieverFactory<TDomain> : IFastEventRecieverFactory<TDomain>
-        where TDomain : IOzzyDomainModel
+    public class RedisFastEventRecieverFactory : IFastEventRecieverFactory        
     {
         private RedisClient _redis;
-        private IExtensibleOptions<TDomain> _options;
+        private string _channelName;
 
-        public RedisEventLoopRecieverFactory(RedisClient redis, IExtensibleOptions<TDomain> options)
+        public RedisFastEventRecieverFactory(RedisClient redis, string channelName)
         {
             Guard.ArgumentNotNull(redis, nameof(redis));
+            Guard.ArgumentNotNullOrEmptyString(channelName, nameof(channelName));
             _redis = redis;
-            _options = options;
+            _channelName = channelName;
         }
 
-        public IFastEventReciever<TLoop> CreateReciever<TLoop>()
-            where TLoop : DomainEventLoop<TDomain>
+        public IFastEventReciever CreateReciever(DomainEventsManager loop)
         {
-            var loop = _options.GetService<TLoop>();
-            return new RedisEventLoopReciever<TLoop, TDomain>(_redis, _options, loop);
-        }       
+            return new RedisFastEventReciever(_redis, loop, _channelName);
+        }
     }
 }

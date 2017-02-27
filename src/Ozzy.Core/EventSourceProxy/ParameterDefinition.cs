@@ -40,12 +40,13 @@ namespace EventSourceProxy
 		/// <param name="alias">The name of the parameter.</param>
 		/// <param name="parameterInfo">The parameter to bind to.</param>
 		/// <param name="converter">An optional converter that converts the parameter to a desired result.</param>
-		public ParameterDefinition(string alias, ParameterInfo parameterInfo, LambdaExpression converter = null)
+		public ParameterDefinition(string alias, ParameterInfo parameterInfo, LambdaExpression converter = null, MethodInfo method = null)
 		{
 			if (alias == null) throw new ArgumentNullException("alias");
 
 			Alias = alias;
 			Converter = converter;
+            TransformMethod = method;
 
 			if (parameterInfo != null)
 			{
@@ -94,5 +95,6 @@ namespace EventSourceProxy
 		/// Gets an expression that converts the parameter to the intended logged value.
 		/// </summary>
 		public LambdaExpression Converter { get; private set; }
-	}
+        public MethodInfo TransformMethod { get; private set; }
+    }
 }

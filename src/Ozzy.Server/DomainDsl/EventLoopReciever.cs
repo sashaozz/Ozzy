@@ -1,18 +1,14 @@
 ﻿using Ozzy.DomainModel;
 using Ozzy.Core;
 
-namespace Ozzy.Server.Redis
+namespace Ozzy.Server
 {
-    public class EventLoopReciever<TLoop, TDomain> : BackgroundTask, IFastEventReciever<TLoop>
-        where TLoop : DomainEventLoop<TDomain>
-        where TDomain : IOzzyDomainModel
-    {
-        private IExtensibleOptions<TDomain> _options;
-        private TLoop _loop;
+    public class EventLoopReciever : BackgroundTask, IFastEventReciever       
+    {        
+        private DomainEventsManager _loop;
 
-        public EventLoopReciever(IExtensibleOptions<TDomain> options, TLoop loop)
-        {
-            _options = options;
+        public EventLoopReciever(DomainEventsManager loop)
+        {           
             _loop = loop;
         }
 

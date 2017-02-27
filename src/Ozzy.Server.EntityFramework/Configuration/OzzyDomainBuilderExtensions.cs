@@ -31,12 +31,7 @@ namespace Ozzy.Server.Configuration
             Action<IServiceProvider, EfOzzyDomainOptionsBuilder<TDomain>> optionsAction)
             where TDomain : AggregateDbContext
         {
-            var dbContextOptions = serviceProvider.GetRequiredService<DbContextOptions<TDomain>>();
-
-            //options = options.UpdateOption<CoreOzzyDomainOptionsExtension>(o =>
-            //{
-            //    o.ServiceCollection.TryAddSingleton<IFastEventPublisher>(sp => new RedisPubSubEventPublisher(sp.GetService<RedisClient>(), channelName));
-            //})
+            var dbContextOptions = serviceProvider.GetRequiredService<DbContextOptions<TDomain>>();           
 
             var extension = options.FindExtension<CoreOptionsExtension>();
 
@@ -45,8 +40,7 @@ namespace Ozzy.Server.Configuration
             extension.ServiceCollection.AddScoped<Func<IFastEventPublisher>>(sp => () => NullEventsPublisher.Instance);
             extension.ServiceCollection.AddSingleton<IPeristedEventsReader>(sp => new DbEventsReader(serviceProvider.GetRequiredService<Func<TDomain>>()));
             extension.ServiceCollection.AddScoped<Func<IPeristedEventsReader>>(sp => () => new DbEventsReader(serviceProvider.GetRequiredService<Func<TDomain>>()));
-
-            //options = optionsAction?.Invoke(serviceProvider, builder);
+            
             return options;
         }
     }

@@ -21,7 +21,7 @@ namespace Ozzy.Server.Redis.BackgroundProcesses
 
         public string Name => this.GetType().Name;
 
-        protected override async Task ActionAsync(CancellationTokenSource cts)
+        protected override async Task ActionAsync(CancellationToken cts)
         {
             var db = _redis.GetDatabase();
             await db.HashSetAsync("key1", "nodeId", _node.NodeId);

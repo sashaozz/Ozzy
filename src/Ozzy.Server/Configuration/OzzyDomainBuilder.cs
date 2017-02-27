@@ -58,6 +58,17 @@ namespace Ozzy.Server.Configuration
             OptionsSetUps.Add(action);
         }
 
+        public void RegisterOptionService(Action<IServiceProvider, IServiceCollection> registerAction)
+        {
+            Guard.ArgumentNotNull(registerAction, nameof(registerAction));
+            SetUpOptions((serviceProvider, options) =>
+            {
+                var extension = options.FindExtension<CoreOptionsExtension>();
+                registerAction(serviceProvider, extension.ServiceCollection);
+                return options;
+            });
+        }
+
         public OzzyDomainBuilder<TDomain> AddEventLoop<TLoop>() where TLoop : DomainEventLoop<TDomain>
         {
             Services.AddSingleton<TLoop>();

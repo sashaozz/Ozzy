@@ -53,7 +53,7 @@ namespace Ozzy.DomainModel
             _bufferCheckpointManager.SaveCheckpoint(checkpoint);
         }
 
-        private Task SendBufferToTarget(CancellationTokenSource token)
+        private Task SendBufferToTarget(CancellationToken token)
         {
             var buffer = _bufferCheckpointManager.GetCheckpoint();
             if (buffer > _lastSavedCheckpoint)

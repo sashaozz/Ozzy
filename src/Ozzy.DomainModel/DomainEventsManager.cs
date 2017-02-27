@@ -112,7 +112,7 @@ namespace Ozzy.DomainModel
         private void PollData(CancellationToken stopRequested)
         {
             var events = GetEventsFromDurableStore();
-            OzzyLogger<IDomainModelTracing>.Log.Polling(events.Count);
+            OzzyLogger<IDomainModelTracing>.LogFor<DomainEventsManager>().Polling(events.Count);
 
             foreach (var e in events)
             {

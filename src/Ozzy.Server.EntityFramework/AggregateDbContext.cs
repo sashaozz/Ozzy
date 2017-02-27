@@ -30,7 +30,7 @@ namespace Ozzy.Server.EntityFramework
         /// Создает новый дата-контекст для агрегатов без быстрого канала публикации
         /// </summary>
         /// <param name="options">Параметры подключения к БД</param>
-        public AggregateDbContext(DbContextOptions options) 
+        public AggregateDbContext(DbContextOptions options)
             : this(options, NullEventsPublisher.Instance)
         {
         }
@@ -39,11 +39,10 @@ namespace Ozzy.Server.EntityFramework
         /// </summary>
         /// <param name="options">Параметры подключения к БД</param>
         /// <param name="fastEventPublisher">Быстрый канал публикации событий</param>
-        public AggregateDbContext(DbContextOptions options, IFastEventPublisher fastEventPublisher) 
+        public AggregateDbContext(DbContextOptions options, IFastEventPublisher fastEventPublisher)
             : base(options)
         {
-            Guard.ArgumentNotNull(fastEventPublisher, nameof(fastEventPublisher));
-            FastEventPublisher = fastEventPublisher;
+            FastEventPublisher = fastEventPublisher ?? NullEventsPublisher.Instance;
         }
 
         /// <summary>
@@ -135,7 +134,7 @@ namespace Ozzy.Server.EntityFramework
         /// Асинхронно сохраняет изменения в доменной модели
         /// </summary>
         /// <returns></returns>
-        public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken)
+        public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default(CancellationToken))
         {
             OzzyLogger<IDomainModelTracing>.Log.TraceVerboseEvent("Start saving changes to context");
             SaveDomainEvents();

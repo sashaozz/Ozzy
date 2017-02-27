@@ -1,16 +1,18 @@
-﻿using System;
-using System.Linq;
-using Ozzy.Core;
-using System.Threading.Tasks;
+﻿using EventSourceProxy;
 using Microsoft.EntityFrameworkCore;
+using Ozzy.Core;
 using Ozzy.DomainModel;
+using Ozzy.Server.Events;
+using System;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Ozzy.Server.EntityFramework
 {
     public class EntityDistributedLockService : IDistributedLockService
     {
         private readonly Func<AggregateDbContext> _dbContextFactory;
+        private static IDistibutedLockEvents _logger = OzzyLogger<IDistibutedLockEvents>.LogFor<EntityDistributedLockService>();
 
         public EntityDistributedLockService(Func<AggregateDbContext> dbContextFactory)
         {
@@ -20,182 +22,100 @@ namespace Ozzy.Server.EntityFramework
         public IDistributedLock CreateLock(string name, TimeSpan expiry, Action expirationAction = null)
         {
             Guard.ArgumentNotNullOrEmptyString(name, nameof(name));
-            Guard.ArgumentNotNull(expiry, nameof(expiry));
-            try
-            {
-                var guid = Guid.NewGuid();
-                var context = _dbContextFactory();
-                var dlock = context.DistributedLocks.SingleOrDefault(l => l.Name == name)
-                    ?? new EntityDistributedLockRecord(name, expiry, guid);
-                if (dlock.LockId == guid || !dlock.IsAcquired())
-                {
-                    dlock.Acquire(expiry);
-                    context.SaveChanges();
-                    return new EntityDistributedLock(context, dlock, expiry, expirationAction);
-                }
-                else
-                {
-                    return new EntityDistributedLock();
-                }
-            }
-            catch (Exception e)
-            {
-                //todo : log exception
-                return new EntityDistributedLock(e);
-            }
+            var dlock = TryAquireLock(name, expiry, expirationAction).Result;
+            return dlock ?? new EntityDistributedLock(name);
         }
 
-        public IDistributedLock CreateLock(string name, TimeSpan expiry, TimeSpan wait, TimeSpan retry, Action expirationAction = null)
+        public IDistributedLock CreateLock(string name, TimeSpan expiry, TimeSpan wait, TimeSpan retry, CancellationToken cancellationToken, Action expirationAction = null)
         {
-            IDistributedLock result = new EntityDistributedLock();
+            Guard.ArgumentNotNullOrEmptyString(name, nameof(name));
+            IDistributedLock result = null;
             PeriodicAction timer = null;
-            try
+            timer = new PeriodicAction(async ct =>
             {
-                var guid = Guid.NewGuid();
-                var context = _dbContextFactory();
-                var dlock = context.DistributedLocks.SingleOrDefault(l => l.Name == name);
-                if (dlock == null)
+                var dlock = await TryAquireLock(name, expiry, expirationAction);
+                if (dlock != null)
                 {
-                    dlock = new EntityDistributedLockRecord(name, expiry, guid);
-                    context.DistributedLocks.Add(dlock);
+                    result = dlock;
+                    timer?.Stop();
                 }
-                    
-
-                //todo : add period 
-                timer = new PeriodicAction(cts =>
-                {
-                    try
-                    {
-                        context.Entry(dlock).Reload();
-                        if (!dlock.IsAcquired())
-                        {
-                            dlock.Acquire(expiry);
-                            context.SaveChanges();
-                            result = new EntityDistributedLock(context, dlock, expiry, expirationAction);
-                            cts.Cancel();
-                            return Task.CompletedTask;
-                        }
-                        else
-                        {
-                            return Task.CompletedTask;
-                        }
-                    }
-                    catch (DbUpdateConcurrencyException e)
-                    {
-                        //todo : log exception
-                        return Task.CompletedTask;
-                    }
-                    catch (Exception e)
-                    {
-                        //todo : log exception
-                        result = new EntityDistributedLock();
-                        cts.Cancel();
-                        return Task.CompletedTask;
-                    }
-                });
-
-                if (dlock.LockId == guid || !dlock.IsAcquired())
-                {
-                    dlock.Acquire(expiry);
-                    context.SaveChanges();
-                    return new EntityDistributedLock(context, dlock, expiry, expirationAction);
-                }
-                else
-                {
-                    timer?.Start().Wait();
-                    return result;
-                }
-            }
-            catch (DbUpdateConcurrencyException e)
+            }, Convert.ToInt32(retry.TotalMilliseconds), wait);
+            cancellationToken.Register(() => timer.Stop());
+            using (var scope = TraceContext.Begin())
             {
-                //todo : log exception
-                timer?.Start().Wait();
-                return result;
+                _logger.TraceVerboseEvent($"Starting trying to acquire lock {name} for {wait} each {retry}");
+                timer.Start().Wait();
+                return result ?? new EntityDistributedLock(name);
             }
-            catch (Exception e)
-            {
-                //todo : log exception
-            }
-            return result;
         }
 
-        public Task<IDistributedLock> CreateLockAsync(string name, TimeSpan expiry, Action expirationAction = null)
+        public async Task<IDistributedLock> CreateLockAsync(string name, TimeSpan expiry, Action expirationAction = null)
         {
-            throw new NotImplementedException();
+            Guard.ArgumentNotNullOrEmptyString(name, nameof(name));
+            var dlock = await TryAquireLock(name, expiry, expirationAction);
+            return dlock ?? new EntityDistributedLock(name);
         }
 
         public async Task<IDistributedLock> CreateLockAsync(string name, TimeSpan expiry, TimeSpan wait, TimeSpan retry, CancellationToken cancellationToken, Action expirationAction = null)
         {
-            IDistributedLock result = new EntityDistributedLock();
+            IDistributedLock result = null;
             PeriodicAction timer = null;
+            timer = new PeriodicAction(async ct =>
+            {
+                var dlock = await TryAquireLock(name, expiry, expirationAction);
+                if (dlock != null)
+                {
+                    result = dlock;
+                    timer?.Stop();
+                }
+            }, Convert.ToInt32(retry.TotalMilliseconds), wait);
+            cancellationToken.Register(() => timer.Stop());
+            using (var scope = TraceContext.Begin())
+            {
+                _logger.TraceVerboseEvent($"Starting trying to acquire lock {name} for {wait} each {retry}");
+                await timer.Start();
+                return result ?? new EntityDistributedLock(name);
+            }
+        }
+
+        private async Task<EntityDistributedLock> TryAquireLock(string name, TimeSpan expiry, Action expirationAction = null)
+        {
+            _logger.StartAcquireLock(name, expiry);
             try
             {
-                var guid = Guid.NewGuid();
-                var context = _dbContextFactory();
-                var dlock = await context.DistributedLocks.SingleOrDefaultAsync(l => l.Name == name);
-                if (dlock == null)
+                using (var context = _dbContextFactory())
                 {
-                    dlock = new EntityDistributedLockRecord(name, expiry, guid);
-                    await context.DistributedLocks.AddAsync(dlock);
-                }
-
-
-                //todo : add period 
-                timer = new PeriodicAction(cts =>
-                {
-                    try
+                    var dlock = await context.DistributedLocks.SingleOrDefaultAsync(l => l.Name == name);
+                    if (dlock == null)
                     {
-                        context.Entry(dlock).Reload();
-                        if (!dlock.IsAcquired())
+                        dlock = new EntityDistributedLockRecord(name, expiry, Guid.NewGuid());
+                        context.DistributedLocks.Add(dlock);
+                        dlock.Acquire(expiry);
+                        var updated = await context.SaveChangesAsync();
+                        if (updated > 0)
                         {
-                            dlock.Acquire(expiry);
-                            context.SaveChanges();
-                            result = new EntityDistributedLock(context, dlock, expiry, expirationAction);
-                            cts.Cancel();
-                            return Task.CompletedTask;
-                        }
-                        else
-                        {
-                            return Task.CompletedTask;
+                            _logger.LockIsAcquired(name, expiry);
+                            return new EntityDistributedLock(_dbContextFactory, dlock, expiry, expirationAction);
                         }
                     }
-                    catch (DbUpdateConcurrencyException e)
+                    if (!dlock.IsAcquired())
                     {
-                        //todo : log exception
-                        return Task.CompletedTask;
+                        dlock.Acquire(expiry);
+                        var updated = await context.SaveChangesAsync();
+                        if (updated > 0)
+                        {
+                            _logger.LockIsAcquired(name, expiry);
+                            return new EntityDistributedLock(_dbContextFactory, dlock, expiry, expirationAction);
+                        }
                     }
-                    catch (Exception e)
-                    {
-                        //todo : log exception
-                        result = new EntityDistributedLock();
-                        cts.Cancel();
-                        return Task.CompletedTask;
-                    }
-                });
-
-                if (dlock.LockId == guid || !dlock.IsAcquired())
-                {
-                    dlock.Acquire(expiry);
-                    await context.SaveChangesAsync(cancellationToken);
-                    return new EntityDistributedLock(context, dlock, expiry, expirationAction);
-                }
-                else
-                {
-                    await timer?.Start();
-                    return result;
                 }
             }
-            catch (DbUpdateConcurrencyException e)
+            catch (DbUpdateConcurrencyException ex)
             {
-                //todo : log exception
-                await timer?.Start();
-                return result;
+                _logger.TraceVerboseEvent($"Distributed Lock {name} was not captured due to concurency exception. Exception Message was : {ex.Message}");
             }
-            catch (Exception e)
-            {
-                //todo : log exception
-            }
-            return result;
+            _logger.LockIsNotAcquired(name, expiry);
+            return null;
         }
     }
 }

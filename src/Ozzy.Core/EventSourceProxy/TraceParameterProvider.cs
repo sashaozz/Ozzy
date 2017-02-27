@@ -114,7 +114,7 @@ namespace EventSourceProxy
 		/// <param name="parameterName">The name of the parameter.</param>
 		/// <param name="alias">The alias to use to output the parameter.</param>
 		/// <param name="converter">An optional expression to use to convert the parameter.</param>
-		private static void AddMapping(List<ParameterMapping> mappings, ParameterInfo parameterInfo, string parameterName, string alias, LambdaExpression converter)
+		private static void AddMapping(List<ParameterMapping> mappings, ParameterInfo parameterInfo, string parameterName, string alias, LambdaExpression converter, MethodInfo method = null)
 		{
 			// find the mapping that matches the name or create a new mapping
 			var mapping = mappings.FirstOrDefault(p => String.Compare(p.Name, parameterName, StringComparison.OrdinalIgnoreCase) == 0);
@@ -124,7 +124,7 @@ namespace EventSourceProxy
 				mappings.Add(mapping);
 			}
 
-			mapping.AddSource(parameterInfo, alias, converter);
+			mapping.AddSource(parameterInfo, alias, converter, method);
 		}
 
 		/// <summary>
@@ -194,9 +194,10 @@ namespace EventSourceProxy
 					// if the attribute is a TraceTransform then validate the usage and use the provided method
 					// to build an expression to apply to the trace value
 					var traceTransform = attribute as TraceTransformAttribute;
+                    MethodInfo method = null;
 					if (traceTransform != null)
 					{
-						var method = traceTransform.GetTransformMethod(input.Type);
+						method = traceTransform.GetTransformMethod(input.Type);
 						if (method == null)
 						{
 							var message = String.Format("{0}.GetTransformMethod() returned null.", attribute.GetType().Name);
@@ -238,7 +239,7 @@ namespace EventSourceProxy
 					if (expression != input)
 						lambda = Expression.Lambda(expression, input);
 
-					AddMapping(mappings, parameter, traceName, parameter.Name, lambda);
+					AddMapping(mappings, parameter, traceName, parameter.Name, lambda, method);
 				}
 			}
 

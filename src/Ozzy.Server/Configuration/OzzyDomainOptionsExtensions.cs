@@ -10,6 +10,12 @@ namespace Ozzy.Server
             return extension.ServiceProvider.GetService<IFastEventPublisher>();
         }
 
+        public static IFastEventPublisher GetFastEventPublisher<TDomain>(this IExtensibleOptions<TDomain> options)
+        {
+            var extension = options.FindExtension<CoreOptionsExtension>();
+            return extension.ServiceProvider.GetService<IFastEventPublisher>();
+        }
+
         public static IPeristedEventsReader GetPersistedEventsReader(this IExtensibleOptions options)
         {
             return options.GetService<IPeristedEventsReader>();

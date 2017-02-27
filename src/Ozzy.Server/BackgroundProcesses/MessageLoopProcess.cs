@@ -39,8 +39,8 @@ namespace Ozzy.Server.BackgroundProcesses
             _options = options;
             _loop = loop;//options.GetEventsLoop<TLoop>();
             _eventsReciever = _options
-                .GetService<IFastEventRecieverFactory<TDomain>>()
-                ?.CreateReciever<TLoop>();
+                .GetService<IFastEventRecieverFactory>()
+                ?.CreateReciever(loop);
         }
 
         protected override Task StartInternal()

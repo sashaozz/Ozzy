@@ -17,13 +17,19 @@ using Ozzy.Server;
 using Serilog;
 using Serilog.Events;
 using Serilog.Parsing;
+using Ozzy.Server.Events;
+using EventSourceProxy;
 
 namespace SampleApplication
 {
     public class Startup
     {
+        public IHostingEnvironment Environment { get; private set; }
+
         public Startup(IHostingEnvironment env)
         {
+            Environment = env;
+
             var builder = new ConfigurationBuilder()
                 .SetBasePath(env.ContentRootPath)
                 .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
@@ -53,12 +59,24 @@ namespace SampleApplication
 
             //var ozzyOptions = Configuration.GetSection("OzzyOptions");
             //services.ConfigureEntityFrameworkForOzzy(ozzyOptions);
-            //services.ConfigureRedisForOzzy(ozzyOptions);            
+            //services.ConfigureRedisForOzzy(ozzyOptions);
 
-            var domain = services
+            OzzyDomainBuilder<SampleDbContext> domain = null;
+            if (Environment.IsDevelopment())
+            {
+                domain = services
+                .AddEntityFrameworkOzzyDomain<SampleDbContext>()
+                .UseInMemoryFastChannel()
+                .AddEventLoop<SampleEventLoop>();
+            }
+            else
+            {
+                domain = services
                 .AddEntityFrameworkOzzyDomain<SampleDbContext>()
                 //.UseRedisFastChannel()
                 .AddEventLoop<SampleEventLoop>();
+            }
+
 
             var node = services
                 .AddOzzy()
@@ -74,31 +92,36 @@ namespace SampleApplication
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
-        {
-            loggerFactory
-                .AddConsole(Configuration.GetSection("Logging"))
-                .AddDebug();
+        {           
+            //loggerFactory
+            //    .AddConsole(Configuration.GetSection("Logging"))
+            //    .AddDebug();
 
             Log.Logger = new LoggerConfiguration()
-                .WriteTo.ColoredConsole()
+                .MinimumLevel.Verbose()
+                .WriteTo.ColoredConsole(LogEventLevel.Verbose, "{Timestamp:yyyy-MM-dd HH:mm:ss} [{Level}] {Message}{NewLine}{OzzyEvent}")
                 .CreateLogger();
 
             var listener = new ObservableEventListener();
             listener.EnableEvents(OzzyLogger<ICommonEvents>.LogEventSource, EventLevel.LogAlways);
-            listener.EnableEvents(OzzyLogger<IDomainModelTracing>.LogEventSource, EventLevel.LogAlways);
+            listener.EnableEvents(OzzyLogger<IDomainModelTracing>.LogEventSource, EventLevel.Informational);
+            listener.EnableEvents(OzzyLogger<IDistibutedLockEvents>.LogEventSource, EventLevel.LogAlways);
 
-            var log = loggerFactory.CreateLogger<SampleDbContext>();
+
+            var log = loggerFactory.CreateLogger<OzzyLoggerValue>();
             var parser = new MessageTemplateParser();
             listener.Subscribe(new SimpleEventObserver(e =>
             {
-                var logEntry = new LogEvent(DateTime.Now,
-                    LogEventLevel.Information,
+                var logEntry = new LogEvent(DateTime.UtcNow,
+                    GetSerilogLevel(e.Level),
                     null,
                     new MessageTemplate(new MessageTemplateToken[] { new TextToken(string.Format(e.Message, e.Payload.ToArray()), 0) }),
-                    e.Payload.Select((p, i) => new LogEventProperty(e.PayloadNames[i], new ScalarValue(p))));
+                    e.Payload.Select((p, i) => new LogEventProperty(e.PayloadNames[i], new ScalarValue(p))).Append(new LogEventProperty("OzzyEvent", new OzzyDictionaryValue(e)))
+                    );
                 Log.Logger.Write(logEntry);
-                //log.Log(LogLevel.Information, new EventId(), e, null, (s, ex) => string.Format(s.Message, s.Payload.ToArray()));
+                //log.Log(LogLevel.Information, new EventId(e.EventId), e, null, (s, ex) => string.Format(s.Message, s.Payload.ToArray()));
             }));
+
 
             //if (env.IsDevelopment())
             //{
@@ -129,5 +152,24 @@ namespace SampleApplication
 
             app.UseOzzy().Start();
         }
+        private LogEventLevel GetSerilogLevel(EventLevel level)
+        {
+            switch (level)
+            {
+                case EventLevel.Verbose:
+                    return LogEventLevel.Verbose;
+                case EventLevel.Informational:
+                    return LogEventLevel.Information;
+                case EventLevel.Warning:
+                    return LogEventLevel.Warning;
+                case EventLevel.Error:
+                    return LogEventLevel.Error;
+                case EventLevel.Critical:
+                    return LogEventLevel.Fatal;
+                default:
+                    return LogEventLevel.Information;
+            }
+        }
     }
+
 }
