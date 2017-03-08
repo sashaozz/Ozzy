@@ -80,7 +80,7 @@ namespace EventSourceProxy
         /// </summary>
         private static MethodInfo _isEnabled = typeof(EventSource).GetTypeInfo()
             .GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.InvokeMethod)
-            .Do(mi => GetMethodInfoWithParams("IsEnabled", mi, new[] { typeof(EventLevel), typeof(EventKeywords) }));        
+            .Do(mi => GetMethodInfoWithParams("IsEnabled", mi, new[] { typeof(EventLevel), typeof(EventKeywords) }));
 
         /// <summary>
         /// The type being implemented.
@@ -91,6 +91,7 @@ namespace EventSourceProxy
         /// The type builder being used for the new type.
         /// </summary>
         private TypeBuilder _typeBuilder;
+        private TypeBuilder _typeBuilder2;
 
         /// <summary>
         /// The field containing the context provider.
@@ -131,6 +132,10 @@ namespace EventSourceProxy
         /// The static field holding the invocation contexts at runtime.
         /// </summary>
         private FieldBuilder _invocationContextsField;
+        private FieldBuilder _tracingTypeField;
+        private FieldBuilder _tracingSourceField;
+        private string _typeName;
+        private Type _tt;
         #endregion
 
         #region Public Methods
@@ -139,8 +144,9 @@ namespace EventSourceProxy
         /// </summary>
         /// <param name="interfaceType">The type to implement.</param>
         /// <param name="parameterProvider">An optional parameter provider to use when building the type. Used for testing.</param>
-        public TypeImplementer(Type interfaceType, TraceParameterProvider parameterProvider = null)
+        public TypeImplementer(Type interfaceType, TraceParameterProvider parameterProvider = null, string typeName = null)
         {
+            _typeName = typeName;
             _interfaceType = interfaceType;
             _contextProvider = ProviderManager.GetProvider<TraceContextProvider>(interfaceType, typeof(TraceContextProviderAttribute), null);
             _serializationProvider = TraceSerializationProvider.GetSerializationProvider(interfaceType);
@@ -152,6 +158,7 @@ namespace EventSourceProxy
                 throw new InvalidOperationException("Context Providers can only be added to interface-based logs.");
 
             ImplementType();
+            ImplementProxyType();
         }
         #endregion
 
@@ -159,6 +166,7 @@ namespace EventSourceProxy
         /// Gets the EventSource created by this implementer.
         /// </summary>
         public EventSource EventSource { get; private set; }
+        public Func<string, object> EventSourceFactory { get; private set; }
 
         #region Helper Functions
         /// <summary>
@@ -218,11 +226,14 @@ namespace EventSourceProxy
             if (_interfaceType.GetTypeInfo().IsSubclassOf(typeof(EventSource)))
                 _typeBuilder = mb.DefineType(_interfaceType.FullName + "_Implemented", TypeAttributes.Class | TypeAttributes.Public, _interfaceType);
             else if (_interfaceType.GetTypeInfo().IsInterface)
-                _typeBuilder = mb.DefineType(_interfaceType.FullName + "_Implemented", TypeAttributes.Class | TypeAttributes.Public, typeof(EventSource), new Type[] { _interfaceType });
+                _typeBuilder = mb.DefineType(_interfaceType.FullName + "_Implemented", TypeAttributes.Class | TypeAttributes.Public, typeof(EventSource));//, new Type[] { _interfaceType });
             else
                 _typeBuilder = mb.DefineType(_interfaceType.FullName + "_Implemented", TypeAttributes.Class | TypeAttributes.Public, typeof(EventSource));
 
             var implementationAttribute = EventSourceImplementationAttribute.GetAttributeFor(_interfaceType);
+
+            // implement the fields and constructor
+            EmitFields();
 
             // add the constructor that calls the base with throwOnEventWriteErrors:
             var baseCtor =
@@ -230,10 +241,11 @@ namespace EventSourceProxy
                     .GetConstructors(BindingFlags.NonPublic | BindingFlags.Instance)
                     .Do(ctrs => GetConstructorInfoWithParams(ctrs, new[] { typeof(bool) }));
 
-            var emitter = _typeBuilder.DefineConstructor(MethodAttributes.Public, CallingConventions.Standard | CallingConventions.HasThis, new Type[0]).GetILGenerator();
+            var emitter = _typeBuilder.DefineConstructor(MethodAttributes.Public, CallingConventions.Standard | CallingConventions.HasThis, new Type[0] { }).GetILGenerator();
             emitter.Emit(OpCodes.Ldarg_0);
             emitter.Emit(implementationAttribute.ThrowOnEventWriteErrors ? OpCodes.Ldc_I4_1 : OpCodes.Ldc_I4_0);
             emitter.Emit(OpCodes.Call, baseCtor);
+
             emitter.Emit(OpCodes.Nop);
             emitter.Emit(OpCodes.Nop);
             emitter.Emit(OpCodes.Ret);
@@ -241,8 +253,7 @@ namespace EventSourceProxy
             // assign an EventSource attribute to the type so it gets the original name and guid
             _typeBuilder.SetCustomAttribute(EventSourceAttributeHelper.GetEventSourceAttributeBuilder(_interfaceType));
 
-            // implement the fields and constructor
-            EmitFields();
+
 
             // find all of the methods that need to be implemented
             var interfaceMethods = ProxyHelper.DiscoverMethods(_interfaceType);
@@ -310,12 +321,126 @@ namespace EventSourceProxy
             t.GetTypeInfo().GetField(_serializationProviderField.Name, BindingFlags.Static | BindingFlags.NonPublic).SetValue(null, _serializationProvider);
             t.GetTypeInfo().GetField(_contextProviderField.Name, BindingFlags.Static | BindingFlags.NonPublic).SetValue(null, _contextProvider);
 
+            _tt = t;
             // instantiate the singleton
-            EventSource = (EventSource)t.GetTypeInfo().GetConstructor(Type.EmptyTypes).Invoke(null);
+            EventSource = (EventSource)t.GetTypeInfo().GetConstructor(new Type[0] { }).Invoke(new object[] { });
+            //EventSourceFactory = typename => typename == null ? EventSource : (EventSource)t.GetTypeInfo().GetConstructor(new Type[1] { typeof(string) }).Invoke(new object[] { typename });
 
             // fill in the event source for all of the invocation contexts
             foreach (var context in _invocationContexts)
                 context.EventSource = EventSource;
+        }
+
+        private void ImplementProxyType()
+        {
+            // create a new assembly
+            AssemblyBuilder ab = AssemblyBuilder.DefineDynamicAssembly(new AssemblyName(ProxyHelper.AssemblyName), AssemblyBuilderAccess.Run);
+            ModuleBuilder mb = ab.DefineDynamicModule(ProxyHelper.AssemblyName);
+
+            // create a type based on EventSource and call the default constructor
+            if (_interfaceType.GetTypeInfo().IsSubclassOf(typeof(EventSource)))
+                _typeBuilder2 = mb.DefineType(_interfaceType.FullName + "_Implemented_Proxy", TypeAttributes.Class | TypeAttributes.Public, _interfaceType);
+            else if (_interfaceType.GetTypeInfo().IsInterface)
+                _typeBuilder2 = mb.DefineType(_interfaceType.FullName + "_Implemented_Proxy", TypeAttributes.Class | TypeAttributes.Public, typeof(Object), new Type[] { _interfaceType });
+            else
+                _typeBuilder2 = mb.DefineType(_interfaceType.FullName + "_Implemented_Proxy", TypeAttributes.Class | TypeAttributes.Public, typeof(Object));
+
+            //var implementationAttribute = EventSourceImplementationAttribute.GetAttributeFor(_interfaceType);
+
+            _tracingTypeField = _typeBuilder2.DefineField("_tracingTypeField", typeof(string), FieldAttributes.Private);
+            _tracingSourceField = _typeBuilder2.DefineField("_tracingSourceField", _tt, FieldAttributes.Private);
+
+            // implement the fields and constructor
+            //EmitFields();
+
+            // add the constructor that calls the base with throwOnEventWriteErrors:
+            //var baseCtor =
+            //    typeof(EventSource).GetTypeInfo()
+            //        .GetConstructors(BindingFlags.NonPublic | BindingFlags.Instance)
+            //        .Do(ctrs => GetConstructorInfoWithParams(ctrs, new[] { typeof(bool) }));
+
+            var emitter = _typeBuilder2.DefineConstructor(MethodAttributes.Public, CallingConventions.Standard | CallingConventions.HasThis, new Type[2] { typeof(string), _tt }).GetILGenerator();
+
+            emitter.Emit(OpCodes.Ldarg_0);
+            emitter.Emit(OpCodes.Ldarg_1);
+            emitter.Emit(OpCodes.Stfld, _tracingTypeField);
+
+            emitter.Emit(OpCodes.Ldarg_0);
+            emitter.Emit(OpCodes.Ldarg_2);
+            emitter.Emit(OpCodes.Stfld, _tracingSourceField);
+
+            emitter.Emit(OpCodes.Nop);
+            emitter.Emit(OpCodes.Nop);
+            emitter.Emit(OpCodes.Ret);
+
+            // assign an EventSource attribute to the type so it gets the original name and guid
+            //_typeBuilder.SetCustomAttribute(EventSourceAttributeHelper.GetEventSourceAttributeBuilder(_interfaceType));
+
+
+
+            // find all of the methods that need to be implemented
+            var interfaceMethods = ProxyHelper.DiscoverMethods(_interfaceType);
+
+            // find the first free event id, in case we need to assign some ourselves
+            int eventId = interfaceMethods
+                .Select(m => m.GetCustomAttribute<EventAttribute>())
+                .Where(a => a != null)
+                .Select(a => a.EventId)
+                .DefaultIfEmpty(0)
+                .Max() + 1;
+
+            foreach (MethodInfo interfaceMethod in interfaceMethods)
+            {
+                var invocationContext = new InvocationContext(interfaceMethod, InvocationContextTypes.MethodCall);
+                // calculate the method name
+                // if there is more than one method with the given name, then append an ID to it
+                var methodName = interfaceMethod.Name;
+                var matchingMethods = interfaceMethod.DeclaringType.GetTypeInfo().GetMethods().AsEnumerable().Where(im => String.Compare(im.Name, methodName, StringComparison.OrdinalIgnoreCase) == 0).ToArray();
+                if (matchingMethods.Length > 1)
+                    methodName += "_" + Array.IndexOf(matchingMethods, interfaceMethod).ToString(CultureInfo.InvariantCulture);
+
+                MethodBuilder m = _typeBuilder2.DefineMethod(methodName, MethodAttributes.Public | MethodAttributes.Virtual);
+              
+                ProxyHelper.CopyMethodSignature(interfaceMethod, m);
+                ProxyHelper.EmitDefaultValue(m.GetILGenerator(), m.ReturnType);
+
+                // for interface methods, implement a call to write event                    
+                ILGenerator mIL = m.GetILGenerator();
+                
+                var parameters = interfaceMethod.GetParameters();
+
+                mIL.Emit(OpCodes.Ldarg_0);
+                mIL.Emit(OpCodes.Ldfld, _tracingSourceField);
+                for (int i = 0; i < parameters.Length; i++)
+                {
+                    mIL.Emit(OpCodes.Ldarg, i + 1);
+                }
+
+                mIL.Emit(OpCodes.Ldarg_0);
+                mIL.Emit(OpCodes.Ldfld, _tracingTypeField);
+
+                // now that all of the parameters have been loaded, call the base method
+                mIL.Emit(OpCodes.Callvirt, _tt.GetTypeInfo().GetMethod("_" + interfaceMethod.Name));
+
+                mIL.Emit(OpCodes.Ret);
+
+                //// if this is an interface, then tell the system to map our method to the interface implementation
+                if (interfaceMethod.IsAbstract)
+                    _typeBuilder2.DefineMethodOverride(m, interfaceMethod);
+
+
+                // if we are generating an interface, add the complement methods
+                //if (implementationAttribute.ImplementComplementMethods && !_interfaceType.GetTypeInfo().IsSubclassOf(typeof(EventSource)))
+                //{
+                //    var faultedMethod = EmitMethodFaultedImpl(invocationContext, beginMethod, ref eventId, (EventKeywords)keywordForMethod);
+                //    EmitMethodCompletedImpl(invocationContext, beginMethod, ref eventId, (EventKeywords)keywordForMethod, faultedMethod);
+                //}
+            }
+
+            // create the type
+            Type t = _typeBuilder2.CreateTypeInfo().AsType();
+
+            EventSourceFactory = typename => t.GetTypeInfo().GetConstructor(new Type[2] { typeof(string), _tt }).Invoke(new object[] { typename, EventSource });
         }
 
         /// <summary>
@@ -362,6 +487,8 @@ namespace EventSourceProxy
             // if we are implementing an interface, then add an string context parameter
             if (SupportsContext(invocationContext))
                 parameterMapping.Add(new ParameterMapping(Context));
+
+            parameterMapping.Add(new ParameterMapping("sourceContext"));
 
             // calculate the method name
             // if there is more than one method with the given name, then append an ID to it
@@ -414,14 +541,34 @@ namespace EventSourceProxy
                 // we need to implement a wrapper method on the interface that calls into the base method
                 // and handles the bundling/unbundling of parameters
                 MethodBuilder im = _typeBuilder.DefineMethod("_" + methodName, MethodAttributes.Public | MethodAttributes.Virtual);
-                ProxyHelper.CopyMethodSignature(interfaceMethod, im);
+                ProxyHelper.CopyGenericSignature(interfaceMethod, im);
+
+                im.SetReturnType(interfaceMethod.ReturnType);
+
+                // copy the parameters and attributes
+                // it seems that we can use the source parameters directly because the target method is derived
+                // from the source method
+                var parameters = interfaceMethod.GetParameters().ToList();
+                //parameters.Add()
+                var types = parameters.Select(p => p.ParameterType).ToList();
+                types.Add(typeof(string));
+                im.SetParameters(types.ToArray());
+
+                for (int i = 0; i < parameters.Count; i++)
+                {
+                    var parameter = parameters[i];
+                    im.DefineParameter(i + 1, parameter.Attributes, parameter.Name);
+                }
+                var b = im.DefineParameter(parameters.Count + 1, ParameterAttributes.HasDefault, "sourceContext");
+                b.SetConstant(null);
+
                 ProxyHelper.EmitDefaultValue(im.GetILGenerator(), im.ReturnType);
                 if (EmitIsEnabled(im, eventAttribute))
                     EmitDirectProxy(invocationContext, im, m, parameterMapping);
 
                 // if this is an interface, then tell the system to map our method to the interface implementation
-                if (interfaceMethod.IsAbstract)
-                    _typeBuilder.DefineMethodOverride(im, interfaceMethod);
+                //if (interfaceMethod.IsAbstract)
+                //    _typeBuilder.DefineMethodOverride(im, interfaceMethod);
             }
             else
             {
@@ -748,16 +895,26 @@ namespace EventSourceProxy
                 }
                 else
                 {
-                    // there is no source, so get the context from the context provider
-                    // load the context provider
-                    mIL.Emit(OpCodes.Ldsfld, _contextProviderField);
+                    if (parameter.Name == "sourceContext")
+                    {
+                        mIL.Emit(OpCodes.Ldarg, i + 1);
+                    }
+                    else
+                    {
+                        // there is no source, so get the context from the context provider
+                        // load the context provider
+                        //mIL.Emit(OpCodes.Ldsfld, _contextProviderField);
 
-                    // get the invocation context from the array on the provider
-                    mIL.Emit(OpCodes.Ldsfld, _invocationContextsField);
-                    mIL.Emit(OpCodes.Ldc_I4, _invocationContexts.Count);
-                    mIL.Emit(OpCodes.Ldelem, typeof(InvocationContext));
-                    mIL.Emit(OpCodes.Callvirt, typeof(TraceContextProvider).GetTypeInfo().GetMethod("ProvideContext"));
-                    _invocationContexts.Add(invocationContext);
+                        //// get the invocation context from the array on the provider
+                        //mIL.Emit(OpCodes.Ldsfld, _invocationContextsField);
+                        //mIL.Emit(OpCodes.Ldc_I4, _invocationContexts.Count);
+                        //mIL.Emit(OpCodes.Ldelem, typeof(InvocationContext));
+                        //mIL.Emit(OpCodes.Callvirt, typeof(TraceContextProvider).GetTypeInfo().GetMethod("ProvideContext"));
+                        //_invocationContexts.Add(invocationContext);
+
+                        mIL.Emit(OpCodes.Ldstr, "asdsad");
+
+                    }
                 }
 
                 mIL.Emit(OpCodes.Stelem, typeof(object));
@@ -808,9 +965,17 @@ namespace EventSourceProxy
                 }
                 else
                 {
-                    // if this method supports context, then add a context parameter
-                    // note that we pass null in here and then build the context from within EmitCallWriteEvent
-                    mIL.Emit(OpCodes.Ldnull);
+                    if (parameter.Name == "sourceContext")
+                    {
+                        mIL.Emit(OpCodes.Ldarg, i + 1);
+                        //mIL.Emit(OpCodes.Ldnull);
+                    }
+                    else
+                    {
+                        // if this method supports context, then add a context parameter
+                        // note that we pass null in here and then build the context from within EmitCallWriteEvent
+                        mIL.Emit(OpCodes.Ldnull);
+                    }
                 }
             }
 

@@ -1,5 +1,6 @@
 ﻿using System;
 using Ozzy.Core;
+using System.Collections.Generic;
 
 namespace Ozzy.DomainModel
 {
@@ -9,6 +10,7 @@ namespace Ozzy.DomainModel
     public abstract class BaseEventsProcessor : IDomainEventsProcessor
     {
         protected ICheckpointManager CheckpointManager { get; set; }
+        protected Dictionary<Type, Action<object>> Handlers { get; set; } = new Dictionary<Type, Action<object>>();
 
         /// <summary>
         /// Конструктор обработчика доменных событий
@@ -17,7 +19,12 @@ namespace Ozzy.DomainModel
         /// текущей записи в очереди доменных событий, обработанной данным обработчиком</param>        
         protected BaseEventsProcessor(ICheckpointManager checkpointManager)
         {
-            CheckpointManager = checkpointManager;
+            CheckpointManager = checkpointManager;// ?? new InMemoryCheckpointManager();
+        }
+
+        protected void AddHandler<T>(Action<T> handler) where T : class, IDomainEvent
+        {
+            Handlers.Add(typeof(T), message => handler(message as T));
         }
 
         /// <summary>
@@ -31,13 +38,14 @@ namespace Ozzy.DomainModel
         {
             if (data?.Value == null || data.Value is EmptyEventRecord)
             {
-                Logger<IDomainModelTracing>.Log.TraceVerboseEvent($"Processing empty domain record at sequence {sequence}");
+                OzzyLogger<IDomainModelTracing>.Log.TraceVerboseEvent($"Processing empty domain record at sequence {sequence}");
                 CheckpointManager.SaveCheckpoint(sequence);
                 return;
             }
             try
             {
-               ProcessEvent(data);
+                OzzyLogger<IDomainModelTracing>.Log.ProcessDomainEventEntry(data);
+                ProcessEvent(data);
             }
             catch (Exception e)
             {
@@ -46,15 +54,33 @@ namespace Ozzy.DomainModel
             CheckpointManager.SaveCheckpoint(sequence);
         }
 
-        protected abstract void ProcessEvent(DomainEventEntry data);
+        public void OnEvent(DomainEventEntry record)
+        {
+            ProcessEvent(record);
+        }
+
+        protected virtual void ProcessEvent(DomainEventEntry record)
+        {
+            HandleEvent(record.Value);
+        }
+
+        protected virtual void HandleEvent(DomainEventRecord record)
+        {
+            var t = record.GetDomainEventType();
+            var handler = Handlers.GetValueOrDefault(t);
+            handler?.Invoke(record.GetDomainEvent());
+        }
+
         protected virtual void HandleException(DomainEventEntry data, long sequence, Exception exception)
         {
-            Logger<IDomainModelTracing>.Log.ProcessDomainEventEntryException(data, sequence, exception);
+            OzzyLogger<IDomainModelTracing>.Log.ProcessDomainEventEntryException(data, sequence, exception);
         }
 
         public long GetCheckpoint()
         {
             return CheckpointManager.GetCheckpoint();
-        }        
+        }
+
+
     }
 }

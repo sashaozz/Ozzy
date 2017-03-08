@@ -5,7 +5,7 @@ using Ozzy.Core;
 
 namespace Ozzy.Server
 {
-    public class OzzyNode : StartStopManager, IOzzyNode
+    public class OzzyNode : IOzzyNode
     {
         public List<IBackgroundProcess> BackgroundProcesses { get; }
         public OzzyNode(IEnumerable<IBackgroundProcess> backgroundTasks)
@@ -19,19 +19,15 @@ namespace Ozzy.Server
         {
             BackgroundProcesses.ForEach(bp => bp.Start());
         }
-        protected override void StartInternal()
+
+        public void Start()
         {
             JoinCluster();
         }
 
-        protected override void StopInternal(int timeout)
+        public void Stop()
         {
             BackgroundProcesses.ForEach(bp => bp.Stop());
-        }
-
-        void IOzzyNode.Start()
-        {
-            this.Start();
         }
     }
 }

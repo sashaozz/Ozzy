@@ -12,9 +12,9 @@ namespace Ozzy.Core.Tests
         {
             var eventHappened = false;
             var listener = new ObservableEventListener();
-            listener.EnableEvents(Logger<ICommonEvents>.LogEventSource, EventLevel.Informational);
+            listener.EnableEvents(OzzyLogger<ICommonEvents>.LogEventSource, EventLevel.Informational);
             listener.Subscribe(new SimpleEventObserver(e => eventHappened = true));
-            Logger<ICommonEvents>.Log.Exception(new Exception());
+            OzzyLogger<ICommonEvents>.Log.Exception(new Exception());
             Assert.True(eventHappened);
         }
 

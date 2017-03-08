@@ -18,8 +18,8 @@ namespace Ozzy.DomainModel
 
         //  0 - not started, 1 - starting, 2 - started 
         private int _stage;
-        private readonly IPeristedEventsReader _persistentPeristedEventsReader;
-        private readonly IEnumerable<IDomainEventsProcessor> _eventProcessors;
+        private readonly IPeristedEventsReader _persistedEventsReader;
+        private readonly List<IDomainEventsProcessor> _eventProcessors;
         private readonly int _bufferSize;
         private readonly int _pollTimeout;
         private readonly IWaitStrategy _waitStrategy;
@@ -30,22 +30,27 @@ namespace Ozzy.DomainModel
         private CancellationTokenSource _stopSupervisor;
         private ISequenceBarrier _barrier;
 
-
-        public DomainEventsManager(IPeristedEventsReader persistentPeristedEventsReader, IEnumerable<IDomainEventsProcessor> eventProcessors, 
+        public DomainEventsManager(IPeristedEventsReader persistedEventsReader,
+            IEnumerable<IDomainEventsProcessor> eventProcessors = null,
             int bufferSize = 16384,
             int pollTimeout = 2000,
             IWaitStrategy waitStrategy = null,
             IExceptionHandler exceptionHandler = null)
         {
-            Guard.ArgumentNotNull(persistentPeristedEventsReader, nameof(persistentPeristedEventsReader));
-            Guard.ArgumentNotNull(eventProcessors, nameof(eventProcessors));
-            _persistentPeristedEventsReader = persistentPeristedEventsReader;
-            _eventProcessors = eventProcessors;
+            Guard.ArgumentNotNull(persistedEventsReader, nameof(persistedEventsReader));
+            _persistedEventsReader = persistedEventsReader;
+            _eventProcessors = (eventProcessors ?? new List<IDomainEventsProcessor>()).ToList();
             _bufferSize = bufferSize;
             _pollTimeout = pollTimeout;
             _waitStrategy = waitStrategy ?? new BlockingWaitStrategy();
             _exceptionHandler = exceptionHandler ?? new LogAndIgnoreExceptionHandler();
-        }        
+        }
+
+        public void AddHandler(IDomainEventsProcessor processor)
+        {
+            if (_stage != 0) throw new InvalidOperationException("It is forbidden to add EventsProcessors after start");
+            this._eventProcessors.Add(processor);
+        }
 
         private bool Started()
         {
@@ -80,7 +85,7 @@ namespace Ozzy.DomainModel
         {
             var checkpoint = _ringBuffer.Cursor;
             var count = Convert.ToInt32(_ringBuffer.RemainingCapacity());
-            var events = _persistentPeristedEventsReader.GetEvents(checkpoint, count);
+            var events = _persistedEventsReader.GetEvents(checkpoint, count);
             if (!events.Any()) return events;
             // ожидается, что события получаются из IPeristedEventsReader уже отсортированными
             var sortedEvents = events;
@@ -107,7 +112,7 @@ namespace Ozzy.DomainModel
         private void PollData(CancellationToken stopRequested)
         {
             var events = GetEventsFromDurableStore();
-            Logger<IDomainModelTracing>.Log.Polling(events.Count);
+            OzzyLogger<IDomainModelTracing>.LogFor<DomainEventsManager>().Polling(events.Count);
 
             foreach (var e in events)
             {
@@ -120,13 +125,15 @@ namespace Ozzy.DomainModel
         }
 
 
-        public long  Start()
+        public long Start()
         {
+            OzzyLogger<IDomainModelTracing>.Log.TraceInformationalEvent("Start event loop");
+
             if (Interlocked.CompareExchange(ref _stage, 1, 0) == 0)
             {
                 var minCheckpoint = 0L;
                 var checkpoints = _eventProcessors.Select(e => e.GetCheckpoint()).ToList();
-                if (checkpoints.Any()) minCheckpoint = checkpoints.Min();
+                if (checkpoints.Any()) minCheckpoint = checkpoints.Min();                
 
                 _disruptor = new Disruptor<DomainEventEntry>(() => new DomainEventEntry(),
                     new MultiThreadedClaimStrategy(_bufferSize),
@@ -182,11 +189,11 @@ namespace Ozzy.DomainModel
                         }
                         catch (Exception e)
                         {
-                            Logger<IDomainModelTracing>.Log.PollException(e);
+                            OzzyLogger<IDomainModelTracing>.Log.PollException(e);
                         }
                     }
                 }
             }, token, TaskCreationOptions.None, TaskScheduler.Default);
-        }        
+        }
     }
 }

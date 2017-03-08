@@ -16,6 +16,7 @@ namespace SampleApplication
                 .UseContentRoot(Directory.GetCurrentDirectory())
                 .UseIISIntegration()
                 .UseStartup<Startup>()
+                .UseUrls("http://localhost:5000")
                 .Build();
 
             host.Run();

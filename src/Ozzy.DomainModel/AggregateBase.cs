@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using Newtonsoft.Json;
+using System.Collections.Generic;
 
 namespace Ozzy.DomainModel
 {
@@ -25,11 +26,12 @@ namespace Ozzy.DomainModel
         protected AggregateBase() : base()
         {
             Events = _events = new List<IDomainEvent>();
-        }        
+        }
 
         /// <summary>
         /// Список доменных событий, связанных с агрегатом.
         /// </summary>
+        [JsonIgnore]
         public List<IDomainEvent> Events { get; protected set; }
 
         /// <summary>
@@ -37,7 +39,7 @@ namespace Ozzy.DomainModel
         /// </summary>
         /// <typeparam name="TEvent">Тип доменного события</typeparam>
         /// <param name="event">Доменное событие</param>
-        public void RaiseEvent<TEvent>(TEvent @event) where TEvent : IDomainEvent
+        protected void RaiseEvent<TEvent>(TEvent @event) where TEvent : IDomainEvent
         {
             _events.Add(@event);
         }

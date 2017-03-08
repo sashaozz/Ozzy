@@ -54,8 +54,10 @@ namespace EventSourceProxy
 					var source = _sources[0];
 					if (source.Converter != null)
 						return source.Converter.ReturnType;
+                    if (source.TransformMethod != null)
+                        return source.TransformMethod.ReturnType;
 
-					return source.SourceType;
+                    return source.SourceType;
 				}
 
 				// otherwise we have multiple sources, or a context, so we target a string
@@ -94,7 +96,7 @@ namespace EventSourceProxy
 		/// <param name="pi">The parameter to add.</param>
 		/// <param name="alias">The alias to use to log the parameter.</param>
 		/// <param name="converter">A converter that converts the parameter to a desired value.</param>
-		public void AddSource(ParameterInfo pi, string alias = null, LambdaExpression converter = null)
+		public void AddSource(ParameterInfo pi, string alias = null, LambdaExpression converter = null, MethodInfo method = null)
 		{
 			if (alias == null)
 			{
@@ -104,7 +106,7 @@ namespace EventSourceProxy
 					alias = pi.Name;
 			}
 
-			_sources.Add(new ParameterDefinition(alias, pi, converter));
+			_sources.Add(new ParameterDefinition(alias, pi, converter, method));
 		}
 
 		/// <summary>

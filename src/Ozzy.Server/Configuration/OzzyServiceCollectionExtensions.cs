@@ -1,40 +1,35 @@
-﻿using System;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Ozzy.Server.FeatureFlags;
+using Ozzy.DomainModel;
 
 namespace Ozzy.Server.Configuration
 {
     public static class OzzyServiceCollectionExtensions
     {
 
-        public static void UseOzzy(this IApplicationBuilder app)
+        public static IOzzyStarter UseOzzy(this IApplicationBuilder app)
         {
             var lifetime = app.ApplicationServices.GetService<IApplicationLifetime>();
             var node = app.ApplicationServices.GetService<OzzyNode>();
-            node.Start();
             lifetime.ApplicationStopped.Register(node.Stop);
+            var starter = new OzzyStarter(app, node);
+            return starter;
         }
 
-        public static IOzzyServiceCollectionBuilder AddOzzy(this IServiceCollection services)
+        public static IOzzyBuilder AddOzzy(this IServiceCollection services)
         {
             services.AddSingleton<OzzyNode>();
-            var builder = new OzzyServiceCollectionBuilder(services);
+            services.AddSingleton<IFeatureFlagService, FeatureFlagService>();
+            var builder = new OzzyBuilder(services);
             return builder;
         }
 
-        public static IOzzyServiceCollectionBuilder AddOzzy(this IServiceCollection services, Action<OzzyOptions> setupAction)
-        {            
-            services.Configure(setupAction);
-            return services.AddOzzy();
-        }
-
-        public static IOzzyServiceCollectionBuilder AddOzzy(this IServiceCollection services, IConfiguration configuration)
+        public static OzzyDomainBuilder<TDomain> AddOzzyDomain<TDomain>(this IServiceCollection services) where TDomain : IOzzyDomainModel
         {
-            services.AddOptions();
-            services.Configure<OzzyOptions>(configuration);
-            return services.AddOzzy();
+            var builder = new OzzyDomainBuilder<TDomain>(services);
+            return builder;
         }
     }
 }

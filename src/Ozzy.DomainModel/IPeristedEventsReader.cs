@@ -14,5 +14,7 @@ namespace Ozzy.DomainModel
         /// <param name="maxEvents">Макисмальное количество событий для получения из персистентного хранилища</param>
         /// <returns></returns>
         List<DomainEventRecord> GetEvents(long checkpoint, int maxEvents);
+
+        long GetMaxSequence();
     }
 }

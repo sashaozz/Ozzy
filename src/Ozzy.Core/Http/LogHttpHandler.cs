@@ -24,7 +24,7 @@ namespace Ozzy.Core.Http
             {
                 requestBody = await request.Content.ReadAsStringAsync();
             }
-            Logger<IHttpEvents>.Log.HttpClientSendRequest(requestId, request.Method, request.RequestUri, request.Headers, requestBody);
+            OzzyLogger<IHttpEvents>.Log.HttpClientSendRequest(requestId, request.Method, request.RequestUri, request.Headers, requestBody);
                         
             var stopwatch = new Stopwatch();
             stopwatch.Start();
@@ -39,7 +39,7 @@ namespace Ozzy.Core.Http
                 responseBody = await response.Content.ReadAsStringAsync();
             }
 
-            Logger<IHttpEvents>.Log.HttpClientRecieveResponse(requestId, response.RequestMessage.Method, response.RequestMessage.RequestUri,
+            OzzyLogger<IHttpEvents>.Log.HttpClientRecieveResponse(requestId, response.RequestMessage.Method, response.RequestMessage.RequestUri,
                 response.StatusCode, response.ReasonPhrase, response.Headers, responseBody, stopwatch.Elapsed);
 
             return response;
