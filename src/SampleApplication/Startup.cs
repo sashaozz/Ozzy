@@ -19,6 +19,7 @@ using Serilog.Events;
 using Serilog.Parsing;
 using Ozzy.Server.Events;
 using EventSourceProxy;
+using Ozzy.Server.BackgroundProcesses;
 
 namespace SampleApplication
 {
@@ -49,7 +50,7 @@ namespace SampleApplication
 
             services.AddDbContext<SampleDbContext>(options =>
             {
-                options.UseSqlServer("Data Source=.\\SQLEXPRESS;Initial Catalog=test;Integrated Security=True;");
+                options.UseSqlServer("Data Source=.;Initial Catalog=test;Integrated Security=True;");
             });
             services.AddSingleton<Func<SampleDbContext>>(sp => () =>
             {
@@ -86,6 +87,8 @@ namespace SampleApplication
                 .AddBackgroundMessageLoopProcess<OzzyNodeEventLoop<SampleDbContext>>()
                 .UseEFDistributedLockService<SampleDbContext>()
                 .UseEFFeatureFlagService<SampleDbContext>()
+                .UseEFBackgroundTaskService<SampleDbContext>()
+                .AddBackgroundProcess<BackgroundTaskQueueProcess>()
                 .AddFeatureFlag<ConsoleLogFeature>()
                 .AddApi();
         }

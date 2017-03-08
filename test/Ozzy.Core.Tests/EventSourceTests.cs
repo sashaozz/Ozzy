@@ -8,7 +8,7 @@ namespace Ozzy.Core.Tests
     public class EventSourceTests
     {
         [Fact]
-        public void BasicEvent()
+        public void Test1()
         {
             var eventHappened = false;
             var listener = new ObservableEventListener();
@@ -16,26 +16,6 @@ namespace Ozzy.Core.Tests
             listener.Subscribe(new SimpleEventObserver(e => eventHappened = true));
             OzzyLogger<ICommonEvents>.Log.Exception(new Exception());
             Assert.True(eventHappened);
-        }
-
-
-        [Fact]
-        public void CheckEventLevel()
-        {
-            var errorEventHappened = false;
-            var errorListener = new ObservableEventListener();
-            errorListener.EnableEvents(Logger<ICommonEvents>.LogEventSource, EventLevel.Error);
-            errorListener.Subscribe(new SimpleEventObserver(e => errorEventHappened = true));
-
-            var informationalEventHappened = false;
-            var informationalListener = new ObservableEventListener();
-            informationalListener.EnableEvents(Logger<ICommonEvents>.LogEventSource, EventLevel.Informational);
-            informationalListener.Subscribe(new SimpleEventObserver(e => informationalEventHappened = true));
-
-            Logger<ICommonEvents>.Log.TraceInformationalEvent("Sample information");
-
-            Assert.False(errorEventHappened);
-            Assert.True(informationalEventHappened);
         }
     }
 }
