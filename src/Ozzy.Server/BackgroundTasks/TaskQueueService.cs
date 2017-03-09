@@ -6,11 +6,11 @@ using System.Text;
 namespace Ozzy.Server.BackgroundTasks
 {
 
-    public class BackgroundTaskService: IBackgroundTaskService
+    public class TaskQueueService: ITaskQueueService
     {
         private IBackgroundTaskRepository _backgroundTaskRepository;
 
-        public BackgroundTaskService (IBackgroundTaskRepository backgroundTaskRepository)
+        public TaskQueueService (IBackgroundTaskRepository backgroundTaskRepository)
         {
             _backgroundTaskRepository = backgroundTaskRepository;
         }
@@ -19,13 +19,14 @@ namespace Ozzy.Server.BackgroundTasks
         {
             _backgroundTaskRepository.Create(new BackgroundTaskRecord(code)
             {
-                CreatedAt = DateTime.Now
+                CreatedAt = DateTime.Now,
+                Status = BackgroundTaskStatus.Awaiting
             });
         }
 
-        public virtual BackgroundTaskRecord GetNextTask()
+        public virtual BackgroundTaskRecord FetchNextTask()
         {
-            return _backgroundTaskRepository.Query().OrderBy(bt => bt.CreatedAt).FirstOrDefault();
+            return _backgroundTaskRepository.FetchNextTask();
         }
 
         public virtual void RemoveTask(string code)

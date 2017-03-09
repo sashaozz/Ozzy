@@ -7,5 +7,6 @@ namespace Ozzy.Server.BackgroundTasks
 {
     public interface IBackgroundTaskRepository : IDataRepository<BackgroundTaskRecord, string>
     {
+        BackgroundTaskRecord FetchNextTask();
     }
 }

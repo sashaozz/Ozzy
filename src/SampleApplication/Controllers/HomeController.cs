@@ -9,9 +9,9 @@ namespace SampleApplication.Controllers
 {
     public class HomeController : Controller
     {
-        IBackgroundTaskService _backgroundTaskService;
+        ITaskQueueService _backgroundTaskService;
 
-        public HomeController(IBackgroundTaskService backgroundTaskService)
+        public HomeController(ITaskQueueService backgroundTaskService)
         {
             _backgroundTaskService = backgroundTaskService;
         }

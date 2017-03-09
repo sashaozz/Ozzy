@@ -23,7 +23,7 @@ namespace Ozzy.Server.Configuration
         {
             services.AddSingleton<OzzyNode>();
             services.AddSingleton<IFeatureFlagService, FeatureFlagService>();
-            services.AddSingleton<IBackgroundTaskService, BackgroundTaskService>();
+            services.AddSingleton<ITaskQueueService, TaskQueueService>();
             var builder = new OzzyBuilder(services);
             return builder;
         }

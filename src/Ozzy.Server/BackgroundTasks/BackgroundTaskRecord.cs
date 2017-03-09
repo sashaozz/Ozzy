@@ -16,5 +16,12 @@ namespace Ozzy.Server.BackgroundTasks
         protected BackgroundTaskRecord() { }
 
         public DateTime CreatedAt { get; set; }
+        public BackgroundTaskStatus Status { get; set; }
+    }
+
+    public enum BackgroundTaskStatus
+    {
+        Awaiting = 0,
+        Processing = 1
     }
 }

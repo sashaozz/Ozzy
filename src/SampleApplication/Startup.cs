@@ -88,7 +88,7 @@ namespace SampleApplication
                 .UseEFDistributedLockService<SampleDbContext>()
                 .UseEFFeatureFlagService<SampleDbContext>()
                 .UseEFBackgroundTaskService<SampleDbContext>()
-                .AddBackgroundProcess<BackgroundTaskQueueProcess>()
+                .AddBackgroundProcess<TaskQueueProcess>()
                 .AddFeatureFlag<ConsoleLogFeature>()
                 .AddApi();
         }

@@ -4,10 +4,10 @@ using System.Text;
 
 namespace Ozzy.Server.BackgroundTasks
 {
-    public interface IBackgroundTaskService
+    public interface ITaskQueueService
     {
         void AddBackgroundTask(string code);
-        BackgroundTaskRecord GetNextTask();
+        BackgroundTaskRecord FetchNextTask();
         void RemoveTask(string code);
     }
 }

@@ -11,7 +11,13 @@ namespace Ozzy.Server.BackgroundTasks
         public void Create(BackgroundTaskRecord item)
         {
             _store.GetOrAdd(item.Id, item);
-        }       
+        }
+
+        public BackgroundTaskRecord FetchNextTask()
+        {
+            return _store.Values.OrderBy(v => v.CreatedAt).FirstOrDefault();
+        }
+
         public IQueryable<BackgroundTaskRecord> Query()
         {
             return _store.Values.AsQueryable();
