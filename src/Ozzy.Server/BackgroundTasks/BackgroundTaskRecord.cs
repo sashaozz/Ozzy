@@ -17,6 +17,7 @@ namespace Ozzy.Server.BackgroundTasks
 
         public DateTime CreatedAt { get; set; }
         public BackgroundTaskStatus Status { get; set; }
+        public string TaskType { get; set; }
     }
 
     public enum BackgroundTaskStatus

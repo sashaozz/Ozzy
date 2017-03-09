@@ -20,6 +20,7 @@ using Serilog.Parsing;
 using Ozzy.Server.Events;
 using EventSourceProxy;
 using Ozzy.Server.BackgroundProcesses;
+using SampleApplication.Tasks;
 
 namespace SampleApplication
 {
@@ -56,7 +57,7 @@ namespace SampleApplication
             {
                 return new SampleDbContext(sp.GetService<IExtensibleOptions<SampleDbContext>>());
             });
-
+            services.AddTransient<TestBackgoundTask>();
 
             //var ozzyOptions = Configuration.GetSection("OzzyOptions");
             //services.ConfigureEntityFrameworkForOzzy(ozzyOptions);

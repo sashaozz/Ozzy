@@ -22,18 +22,17 @@ namespace Ozzy.Server.BackgroundProcesses
 
         public string Name => this.GetType().Name;
 
-        protected override Task ActionAsync(CancellationToken cts)
+        protected override async Task ActionAsync(CancellationToken cts)
         {
             var nextTask = _backgroundTaskService.FetchNextTask();
-            while(nextTask != null)
+            while (nextTask != null)
             {
-                //TODO: Execute task
+                await nextTask.Execute();
+
                 _backgroundTaskService.RemoveTask(nextTask.Id);
 
                 nextTask = _backgroundTaskService.FetchNextTask();
             }
-
-            return Task.CompletedTask;
         }
     }
 }

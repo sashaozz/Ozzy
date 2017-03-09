@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Ozzy.Server.BackgroundTasks;
+using SampleApplication.Tasks;
 
 namespace SampleApplication.Controllers
 {
@@ -18,7 +19,8 @@ namespace SampleApplication.Controllers
 
         public IActionResult Index()
         {
-            _backgroundTaskService.AddBackgroundTask("dsafsdfds");
+            _backgroundTaskService.AddBackgroundTask<TestBackgoundTask>();
+
             return View();
         }
 
