@@ -14,7 +14,7 @@ namespace Ozzy.Server.BackgroundTasks
         // For ORM
         [JsonConstructor]
         protected BackgroundTaskRecord() { }
-
+        public string Configuration { get; set; }
         public DateTime CreatedAt { get; set; }
         public BackgroundTaskStatus Status { get; set; }
         public string TaskType { get; set; }

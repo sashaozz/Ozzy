@@ -6,8 +6,8 @@ namespace Ozzy.Server.BackgroundTasks
 {
     public interface ITaskQueueService
     {
-        void AddBackgroundTask<T>() where T : BaseBackgroundTask;
+        void AddBackgroundTask<T>(string configuration = null) where T : BaseBackgroundTask;
         BaseBackgroundTask FetchNextTask();
-        void RemoveTask(string code);
+        void AcknowledgeTask(string code);
     }
 }

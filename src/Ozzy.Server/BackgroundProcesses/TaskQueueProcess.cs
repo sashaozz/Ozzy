@@ -29,7 +29,7 @@ namespace Ozzy.Server.BackgroundProcesses
             {
                 await nextTask.Execute();
 
-                _backgroundTaskService.RemoveTask(nextTask.Id);
+                _backgroundTaskService.AcknowledgeTask(nextTask.Id);
 
                 nextTask = _backgroundTaskService.FetchNextTask();
             }

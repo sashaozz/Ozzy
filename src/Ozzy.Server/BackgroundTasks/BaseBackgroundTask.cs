@@ -9,5 +9,7 @@ namespace Ozzy.Server.BackgroundTasks
     {
         public string Id { get; set; }
         public abstract Task Execute();
+        public string Configuration { get; set; }
     }
+
 }

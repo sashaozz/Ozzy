@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Collections.Generic;
 using System.Text;
+using Newtonsoft.Json;
 
 namespace Ozzy.Server.BackgroundTasks
 {
@@ -17,13 +18,14 @@ namespace Ozzy.Server.BackgroundTasks
             _serviceProvider = serviceProvider;
         }
 
-        public virtual void AddBackgroundTask<T>() where T : BaseBackgroundTask
+        public virtual void AddBackgroundTask<T>(string configuration = null) where T : BaseBackgroundTask
         {
             _backgroundTaskRepository.Create(new BackgroundTaskRecord(Guid.NewGuid().ToString())
             {
                 CreatedAt = DateTime.Now,
                 Status = BackgroundTaskStatus.Awaiting,
-                TaskType = typeof(T).AssemblyQualifiedName
+                TaskType = typeof(T).AssemblyQualifiedName,
+                Configuration = configuration
             });
         }
 
@@ -37,11 +39,17 @@ namespace Ozzy.Server.BackgroundTasks
             var type = Type.GetType(repositoryItem.TaskType);
             var task = _serviceProvider.GetService(type) as BaseBackgroundTask;
             task.Id = repositoryItem.Id;
+            task.Configuration = repositoryItem.Configuration;
+            if (type.IsConstructedGenericType)
+            {
+                Type itemType = type.GenericTypeArguments[0];
+                task.Configuration = repositoryItem.Configuration;
+            }
 
             return task;
         }
 
-        public virtual void RemoveTask(string code)
+        public virtual void AcknowledgeTask(string code)
         {
             _backgroundTaskRepository.Remove(code);
         }

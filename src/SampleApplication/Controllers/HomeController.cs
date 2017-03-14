@@ -19,7 +19,7 @@ namespace SampleApplication.Controllers
 
         public IActionResult Index()
         {
-            _backgroundTaskService.AddBackgroundTask<TestBackgoundTask>();
+            _backgroundTaskService.AddBackgroundTask<TestBackgoundTask>("Hello world");
 
             return View();
         }
