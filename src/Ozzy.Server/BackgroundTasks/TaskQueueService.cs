@@ -40,11 +40,6 @@ namespace Ozzy.Server.BackgroundTasks
             var task = _serviceProvider.GetService(type) as BaseBackgroundTask;
             task.Id = repositoryItem.Id;
             task.Configuration = repositoryItem.Configuration;
-            if (type.IsConstructedGenericType)
-            {
-                Type itemType = type.GenericTypeArguments[0];
-                task.Configuration = repositoryItem.Configuration;
-            }
 
             return task;
         }
