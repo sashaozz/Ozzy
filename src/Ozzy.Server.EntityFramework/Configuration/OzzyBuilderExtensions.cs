@@ -4,6 +4,7 @@ using Ozzy.Server.BackgroundTasks;
 using Ozzy.Server.DomainDsl;
 using Ozzy.Server.EntityFramework;
 using Ozzy.Server.FeatureFlags;
+using Ozzy.Server.Queues;
 using System;
 
 namespace Ozzy.Server.Configuration
@@ -31,7 +32,7 @@ namespace Ozzy.Server.Configuration
         public static IOzzyBuilder UseEFBackgroundTaskService<TDomain>(this IOzzyBuilder builder)
            where TDomain : AggregateDbContext
         {
-            builder.Services.AddSingleton<IBackgroundTaskRepository>(sp => new BackgroundTaskRepository(sp.GetService<Func<TDomain>>(), db => db.BackgroundTasks));
+            builder.Services.AddSingleton<IQueueRepository>(sp => new QueueRepository(sp.GetService<Func<TDomain>>(), db => db.Queues));
             return builder;
         }
     }

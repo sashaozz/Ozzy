@@ -8,6 +8,7 @@ using Ozzy.Core;
 using Ozzy.DomainModel;
 using Ozzy.Server.FeatureFlags;
 using Ozzy.Server.BackgroundTasks;
+using Ozzy.Server.Queues;
 
 namespace Ozzy.Server.EntityFramework
 {
@@ -52,7 +53,7 @@ namespace Ozzy.Server.EntityFramework
         public DbSet<DomainEventRecord> DomainEvents { get; set; }
         public DbSet<EntityDistributedLockRecord> DistributedLocks { get; set; }
         public DbSet<FeatureFlagRecord> FeatureFlags { get; set; }
-        public DbSet<BackgroundTaskRecord> BackgroundTasks { get; set; }
+        public DbSet<QueueRecord> Queues { get; set; }
         /// <summary>
         /// Слушатели событий в данном контексте и номера их последних обработанных сообщений
         /// </summary>
@@ -70,7 +71,7 @@ namespace Ozzy.Server.EntityFramework
             modelBuilder.Entity<FeatureFlagRecord>().Ignore(r => r.Configuration);
             modelBuilder.Entity<FeatureFlagRecord>().Ignore(r => r.Events);
 
-            modelBuilder.Entity<BackgroundTaskRecord>().Ignore(r => r.Events);
+            modelBuilder.Entity<QueueRecord>().Ignore(r => r.Events);
 
             base.OnModelCreating(modelBuilder);
         }

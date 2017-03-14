@@ -3,50 +3,69 @@ using System.Linq;
 using System.Collections.Generic;
 using System.Text;
 using Newtonsoft.Json;
+using Ozzy.Server.Queues;
 
 namespace Ozzy.Server.BackgroundTasks
 {
 
     public class TaskQueueService: ITaskQueueService
     {
-        private IBackgroundTaskRepository _backgroundTaskRepository;
+        private IQueueRepository _queueRepository;
         private IServiceProvider _serviceProvider;
+        private string _queueName = "Tasks";
 
-        public TaskQueueService (IBackgroundTaskRepository backgroundTaskRepository, IServiceProvider serviceProvider)
+        public TaskQueueService (IQueueRepository queueRepository, IServiceProvider serviceProvider)
         {
-            _backgroundTaskRepository = backgroundTaskRepository;
+            _queueRepository = queueRepository;
             _serviceProvider = serviceProvider;
         }
 
-        public virtual void AddBackgroundTask<T>(string configuration = null) where T : BaseBackgroundTask
+        public virtual void Add<T>(string configuration = null) where T : BaseBackgroundTask
         {
-            _backgroundTaskRepository.Create(new BackgroundTaskRecord(Guid.NewGuid().ToString())
+            _queueRepository.Create(new QueueRecord(Guid.NewGuid().ToString())
             {
                 CreatedAt = DateTime.Now,
-                Status = BackgroundTaskStatus.Awaiting,
-                TaskType = typeof(T).AssemblyQualifiedName,
-                Configuration = configuration
+                Status = QueueStatus.Awaiting,
+                ItemType = typeof(T).AssemblyQualifiedName,
+                Content = configuration,
+                QueueName = _queueName
             });
         }
 
-        public virtual BaseBackgroundTask FetchNextTask()
+        public void Add(BaseBackgroundTask item)
         {
-            var repositoryItem = _backgroundTaskRepository.FetchNextTask();
+            _queueRepository.Create(new QueueRecord(Guid.NewGuid().ToString())
+            {
+                CreatedAt = DateTime.Now,
+                Status = QueueStatus.Awaiting,
+                ItemType = item.GetType().AssemblyQualifiedName,
+                Content = item.Content,
+                QueueName = _queueName
+            });
+        }
+        public virtual QueueItem<BaseBackgroundTask> FetchNext()
+        {
+            var repositoryItem = _queueRepository.FetchNext(_queueName);
 
             if (repositoryItem == null)
                 return null;
 
-            var type = Type.GetType(repositoryItem.TaskType);
+            var type = Type.GetType(repositoryItem.ItemType);
             var task = _serviceProvider.GetService(type) as BaseBackgroundTask;
-            task.Id = repositoryItem.Id;
-            task.Configuration = repositoryItem.Configuration;
 
-            return task;
+            task.Content = repositoryItem.Content;
+
+            return new QueueItem<BaseBackgroundTask>()
+            {
+                Id = repositoryItem.Id,
+                Item = task
+            };
         }
 
-        public virtual void AcknowledgeTask(string code)
+        public virtual void Acknowledge(QueueItem<BaseBackgroundTask> task)
         {
-            _backgroundTaskRepository.Remove(code);
+            _queueRepository.Remove(task.Id);
         }
+
     }
 }

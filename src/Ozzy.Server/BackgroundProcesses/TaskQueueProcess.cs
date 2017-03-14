@@ -24,14 +24,14 @@ namespace Ozzy.Server.BackgroundProcesses
 
         protected override async Task ActionAsync(CancellationToken cts)
         {
-            var nextTask = _backgroundTaskService.FetchNextTask();
+            var nextTask = _backgroundTaskService.FetchNext();
             while (nextTask != null)
             {
-                await nextTask.Execute();
+                await nextTask.Item.Execute();
 
-                _backgroundTaskService.AcknowledgeTask(nextTask.Id);
+                _backgroundTaskService.Acknowledge(nextTask);
 
-                nextTask = _backgroundTaskService.FetchNextTask();
+                nextTask = _backgroundTaskService.FetchNext();
             }
         }
     }

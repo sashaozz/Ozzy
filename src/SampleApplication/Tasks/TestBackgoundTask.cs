@@ -11,7 +11,7 @@ namespace SampleApplication.Tasks
     {
         public override async Task Execute()
         {
-            var configuration = this.Configuration;
+            var configuration = this.Content;
             Thread.Sleep(2000);
         }
     }

@@ -1,13 +1,12 @@
-﻿using System;
+﻿using Ozzy.Server.Queues;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
 namespace Ozzy.Server.BackgroundTasks
 {
-    public interface ITaskQueueService
+    public interface ITaskQueueService: IQueueService<BaseBackgroundTask>
     {
-        void AddBackgroundTask<T>(string configuration = null) where T : BaseBackgroundTask;
-        BaseBackgroundTask FetchNextTask();
-        void AcknowledgeTask(string code);
+        void Add<T>(string configuration = null) where T : BaseBackgroundTask;
     }
 }
