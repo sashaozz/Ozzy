@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using Ozzy.DomainModel;
+using Ozzy.DomainModel.Queues;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -18,7 +19,7 @@ namespace Ozzy.Server.Queues
 
         public void Acknowledge(QueueItem<T> item)
         {
-            _queueRepository.Remove(item.Id);
+            _queueRepository.Acknowledge(item.QueueId);
         }
 
         public void Add(T item)
@@ -43,7 +44,7 @@ namespace Ozzy.Server.Queues
 
             return new QueueItem<T>()
             {
-                Id = queueItem.Id,
+                QueueId = queueItem.Id,
                 Item = rez
             };
         }

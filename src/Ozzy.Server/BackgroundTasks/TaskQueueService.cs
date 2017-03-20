@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.Text;
 using Newtonsoft.Json;
 using Ozzy.Server.Queues;
+using Ozzy.DomainModel;
+using Ozzy.DomainModel.Queues;
 
 namespace Ozzy.Server.BackgroundTasks
 {
@@ -57,14 +59,14 @@ namespace Ozzy.Server.BackgroundTasks
 
             return new QueueItem<BaseBackgroundTask>()
             {
-                Id = repositoryItem.Id,
+                QueueId = repositoryItem.Id,
                 Item = task
             };
         }
 
         public virtual void Acknowledge(QueueItem<BaseBackgroundTask> task)
         {
-            _queueRepository.Remove(task.Id);
+            _queueRepository.Acknowledge(task.QueueId);
         }
 
     }

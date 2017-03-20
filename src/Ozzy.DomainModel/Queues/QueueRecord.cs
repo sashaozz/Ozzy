@@ -1,15 +1,15 @@
-﻿using Ozzy.Core;
-using Ozzy.DomainModel;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
+using System.Text;
 
-namespace Ozzy.Server.Queues
+namespace Ozzy.DomainModel.Queues
 {
     public class QueueRecord : GenericDataRecord<string>
     {
         public QueueRecord(string code) : base(code)
         {
-  
+
         }
         // For ORM
         [JsonConstructor]

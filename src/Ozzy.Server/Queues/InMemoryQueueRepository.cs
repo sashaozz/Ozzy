@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Ozzy.DomainModel;
+using Ozzy.DomainModel.Queues;
+using System;
 using System.Collections.Concurrent;
 using System.Linq;
 
@@ -34,21 +36,11 @@ namespace Ozzy.Server.Queues
             return _store.Values.AsQueryable();
         }
 
-        public void Remove(string id)
+
+        public void Acknowledge(string id)
         {
             QueueRecord removed;
             _store.TryRemove(id, out removed);
-        }
-
-        public void Remove(QueueRecord item)
-        {
-            QueueRecord removed;
-            _store.TryRemove(item.Id, out removed);
-        }
-
-        public void Update(QueueRecord item)
-        {
-            throw new NotImplementedException();
         }
     }
 }

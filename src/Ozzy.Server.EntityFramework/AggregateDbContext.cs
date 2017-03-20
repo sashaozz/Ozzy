@@ -9,6 +9,7 @@ using Ozzy.DomainModel;
 using Ozzy.Server.FeatureFlags;
 using Ozzy.Server.BackgroundTasks;
 using Ozzy.Server.Queues;
+using Ozzy.DomainModel.Queues;
 
 namespace Ozzy.Server.EntityFramework
 {

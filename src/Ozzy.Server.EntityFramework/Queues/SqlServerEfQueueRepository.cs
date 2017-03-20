@@ -3,11 +3,13 @@ using System;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using Ozzy.Server.Queues;
+using Ozzy.DomainModel;
+using Ozzy.DomainModel.Queues;
 
 namespace Ozzy.Server.BackgroundTasks
 {
 
-    public class QueueRepository : EfDataRepository<QueueRecord, string>, IQueueRepository
+    public class SqlServerEfQueueRepository : EfQueueRepository, IQueueRepository
     {
         private string _fetchNextItemSql = @"
 UPDATE [dbo].[Queues] 
@@ -23,13 +25,13 @@ WHERE  Id =
 
         private Func<AggregateDbContext> _dbFactory;
 
-        public QueueRepository(Func<AggregateDbContext> dbFactory, Func<AggregateDbContext, DbSet<QueueRecord>> dbSetProvider) 
+        public SqlServerEfQueueRepository(Func<AggregateDbContext> dbFactory, Func<AggregateDbContext, DbSet<QueueRecord>> dbSetProvider) 
             : base(dbFactory, dbSetProvider)
         {
             _dbFactory = dbFactory;
         }
 
-        public QueueRecord FetchNext(string queueName)
+        public override QueueRecord FetchNext(string queueName)
         {
             using (var db = _dbFactory())
             {

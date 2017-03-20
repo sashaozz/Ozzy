@@ -32,7 +32,7 @@ namespace Ozzy.Server.Configuration
         public static IOzzyBuilder UseEFBackgroundTaskService<TDomain>(this IOzzyBuilder builder)
            where TDomain : AggregateDbContext
         {
-            builder.Services.AddSingleton<IQueueRepository>(sp => new QueueRepository(sp.GetService<Func<TDomain>>(), db => db.Queues));
+            builder.Services.AddSingleton<IQueueRepository>(sp => new SqlServerEfQueueRepository(sp.GetService<Func<TDomain>>(), db => db.Queues));
             return builder;
         }
     }
