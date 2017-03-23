@@ -5,7 +5,7 @@ namespace Ozzy.Core.Tests.Fixtures
 {
     public class TestDomainContext : AggregateDbContext
     {
-        public TestDomainContext(OzzyDomainOptions<TestDomainContext> options) 
+        public TestDomainContext(IExtensibleOptions<TestDomainContext> options) 
             :base(options)
         {
         }

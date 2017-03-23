@@ -7,7 +7,7 @@ namespace Ozzy.Core.Tests.Fixtures
 {
     public class TestEventLoop : DomainEventLoop<TestDomainContext>
     {
-        public TestEventLoop(OzzyDomainOptions<TestDomainContext> options) : base(options)
+        public TestEventLoop(IExtensibleOptions<TestDomainContext> options) : base(options)
         {
         }
     }

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Ozzy.Server.FeatureFlags;
 using Ozzy.DomainModel;
+using Ozzy.Server.BackgroundTasks;
 
 namespace Ozzy.Server.Configuration
 {
@@ -22,6 +23,7 @@ namespace Ozzy.Server.Configuration
         {
             services.AddSingleton<OzzyNode>();
             services.AddSingleton<IFeatureFlagService, FeatureFlagService>();
+            services.AddSingleton<ITaskQueueService, TaskQueueService>();
             var builder = new OzzyBuilder(services);
             return builder;
         }

@@ -1,8 +1,10 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Ozzy.DomainModel;
+using Ozzy.Server.BackgroundTasks;
 using Ozzy.Server.DomainDsl;
 using Ozzy.Server.EntityFramework;
 using Ozzy.Server.FeatureFlags;
+using Ozzy.Server.Queues;
 using System;
 
 namespace Ozzy.Server.Configuration
@@ -24,6 +26,13 @@ namespace Ozzy.Server.Configuration
             builder.Services.AddSingleton<FeatureFlagsEventsProcessor>();
             builder.Services.AddSingleton<IDomainEventsProcessor, FeatureFlagsEventsProcessor>();            
             builder.Services.AddSingleton<OzzyNodeEventLoop<TDomain>>();
+            return builder;
+        }
+
+        public static IOzzyBuilder UseEFBackgroundTaskService<TDomain>(this IOzzyBuilder builder)
+           where TDomain : AggregateDbContext
+        {
+            builder.Services.AddSingleton<IQueueRepository>(sp => new SqlServerEfQueueRepository(sp.GetService<Func<TDomain>>(), db => db.Queues));
             return builder;
         }
     }

@@ -19,6 +19,10 @@ using Serilog.Events;
 using Serilog.Parsing;
 using Ozzy.Server.Events;
 using EventSourceProxy;
+using Ozzy.Server.BackgroundProcesses;
+using SampleApplication.Tasks;
+using Ozzy.Server.Queues;
+using SampleApplication.Queues;
 
 namespace SampleApplication
 {
@@ -49,14 +53,14 @@ namespace SampleApplication
 
             services.AddDbContext<SampleDbContext>(options =>
             {
-                options.UseSqlServer("Data Source=.\\SQLEXPRESS;Initial Catalog=test;Integrated Security=True;");
+                options.UseSqlServer("Data Source=.;Initial Catalog=test;Integrated Security=True;");
             });
             services.AddSingleton<Func<SampleDbContext>>(sp => () =>
             {
                 return new SampleDbContext(sp.GetService<IExtensibleOptions<SampleDbContext>>());
             });
-
-
+            services.AddTransient<TestBackgoundTask>();
+            services.AddTransient<IQueueService<SampleQueueItem>, QueueService<SampleQueueItem>>();
             //var ozzyOptions = Configuration.GetSection("OzzyOptions");
             //services.ConfigureEntityFrameworkForOzzy(ozzyOptions);
             //services.ConfigureRedisForOzzy(ozzyOptions);
@@ -86,6 +90,8 @@ namespace SampleApplication
                 .AddBackgroundMessageLoopProcess<OzzyNodeEventLoop<SampleDbContext>>()
                 .UseEFDistributedLockService<SampleDbContext>()
                 .UseEFFeatureFlagService<SampleDbContext>()
+                .UseEFBackgroundTaskService<SampleDbContext>()
+                .AddBackgroundProcess<TaskQueueProcess>()
                 .AddFeatureFlag<ConsoleLogFeature>()
                 .AddApi();
         }
