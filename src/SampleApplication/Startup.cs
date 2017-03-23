@@ -18,7 +18,6 @@ using Serilog;
 using Serilog.Events;
 using Serilog.Parsing;
 using Ozzy.Server.Events;
-using EventSourceProxy;
 using Ozzy.Server.BackgroundProcesses;
 using SampleApplication.Tasks;
 using Ozzy.Server.Queues;
@@ -37,8 +36,13 @@ namespace SampleApplication
             var builder = new ConfigurationBuilder()
                 .SetBasePath(env.ContentRootPath)
                 .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
-                .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true)
-                .AddEnvironmentVariables();
+                .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true);
+
+            if (Environment.IsDevelopment())
+            {
+                builder.AddJsonFile($"appsettings.{System.Environment.MachineName}.json", optional: true);
+            }
+            builder.AddEnvironmentVariables();
             Configuration = builder.Build();
         }
 
@@ -53,7 +57,7 @@ namespace SampleApplication
 
             services.AddDbContext<SampleDbContext>(options =>
             {
-                options.UseSqlServer("Data Source=.;Initial Catalog=test;Integrated Security=True;");
+                options.UseSqlServer(Configuration.GetConnectionString("SampleDbContext"));
             });
             services.AddSingleton<Func<SampleDbContext>>(sp => () =>
             {
@@ -98,7 +102,7 @@ namespace SampleApplication
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
-        {           
+        {
             //loggerFactory
             //    .AddConsole(Configuration.GetSection("Logging"))
             //    .AddDebug();

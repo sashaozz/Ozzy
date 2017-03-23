@@ -22,6 +22,7 @@
     <PackageReference Include="Microsoft.Extensions.Logging.Filter" Version="1.1.0" />
     <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="1.1.0" />
     <PackageReference Include="Serilog.Sinks.ColoredConsole" Version="2.0.0" />
+    <PackageReference Include="System.Runtime.Extensions" Version="4.3.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Ozzy.Server.Api\Ozzy.Server.Api.csproj" />
