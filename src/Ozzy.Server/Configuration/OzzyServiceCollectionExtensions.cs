@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Hosting;
 using Ozzy.Server.FeatureFlags;
 using Ozzy.DomainModel;
 using Ozzy.Server.BackgroundTasks;
+using Ozzy.Server.Monitoring;
 
 namespace Ozzy.Server.Configuration
 {
@@ -15,6 +16,13 @@ namespace Ozzy.Server.Configuration
             var lifetime = app.ApplicationServices.GetService<IApplicationLifetime>();
             var node = app.ApplicationServices.GetService<OzzyNode>();
             lifetime.ApplicationStopped.Register(node.Stop);
+
+            if(app.ApplicationServices.GetService<IMonitoringManager>() != null)
+            {
+                var nodesMonitoringProcess = new NodesMonitoringProcess(app.ApplicationServices.GetService<IMonitoringManager>(), node);
+                node.BackgroundProcesses.Add(nodesMonitoringProcess);
+            }
+
             var starter = new OzzyStarter(app, node);
             return starter;
         }

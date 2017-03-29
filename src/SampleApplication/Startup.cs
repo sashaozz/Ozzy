@@ -96,6 +96,7 @@ namespace SampleApplication
                 .UseEFFeatureFlagService<SampleDbContext>()
                 .UseEFBackgroundTaskService<SampleDbContext>()
                 .AddBackgroundProcess<TaskQueueProcess>()
+                .UseInMemoryMonitoring()
                 .AddFeatureFlag<ConsoleLogFeature>()
                 .AddApi();
         }
@@ -159,7 +160,7 @@ namespace SampleApplication
                     name: "default",
                     template: "{controller=Home}/{action=Index}/{id?}");
             });
-
+         
             app.UseOzzy().Start();
         }
         private LogEventLevel GetSerilogLevel(EventLevel level)
