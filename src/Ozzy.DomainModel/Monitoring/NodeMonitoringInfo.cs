@@ -7,6 +7,7 @@ namespace Ozzy.DomainModel.Monitoring
     public class NodeMonitoringInfo
     {
         public string NodeId { get; set; }
+        public string MachineName { get; set; }
         public DateTime NodeStartedAt { get; set; }
 
         public List<BackgroundTaskMonitoringInfo> BackgroundTasks { get; set; }

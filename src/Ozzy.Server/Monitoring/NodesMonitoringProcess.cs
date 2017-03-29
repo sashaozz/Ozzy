@@ -31,6 +31,7 @@ namespace Ozzy.Server.Monitoring
             var data = new NodeMonitoringInfo()
             {
                 NodeId = _ozzyNode.NodeId,
+                MachineName = Environment.MachineName,
                 BackgroundTasks = _ozzyNode.BackgroundProcesses.Select(p => new BackgroundTaskMonitoringInfo()
                 {
                     TaskId = p.Name,
