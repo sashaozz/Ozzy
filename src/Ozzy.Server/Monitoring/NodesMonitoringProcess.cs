@@ -36,7 +36,8 @@ namespace Ozzy.Server.Monitoring
                 {
                     TaskId = p.Name,
                     IsRunning = p.IsRunning
-                }).ToList()
+                }).ToList(),
+                MonitoringTimeStamp = DateTime.Now
             };
 
            await _monitoringManager.SaveNodeMonitoringInfo(data);

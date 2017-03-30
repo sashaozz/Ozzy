@@ -4,6 +4,8 @@ using Ozzy.Server.FeatureFlags;
 using Ozzy.Server.Monitoring;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using System.Linq;
+using System;
 
 namespace Ozzy.Server.Api.Controllers
 {
@@ -19,7 +21,11 @@ namespace Ozzy.Server.Api.Controllers
 
         public async Task<List<NodeMonitoringInfo>> Nodes()
         {
-            return await _monitoringManager.GetNodeMonitoringInfo();
+            var data = await _monitoringManager.GetNodeMonitoringInfo();
+            data = data
+                .Where(d =>  DateTime.Now - d.MonitoringTimeStamp < TimeSpan.FromMinutes(1))
+                .ToList(); //hide dead nodes?
+            return data;
         }
     }
 }
