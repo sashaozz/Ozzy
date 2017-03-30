@@ -2,13 +2,14 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace Ozzy.Server.Monitoring
 {
     public interface IMonitoringManager
     {
-        void SaveNodeMonitoringInfo(NodeMonitoringInfo data);
+        Task SaveNodeMonitoringInfo(NodeMonitoringInfo data);
 
-        List<NodeMonitoringInfo> GetNodeMonitoringInfo();
+        Task<List<NodeMonitoringInfo>> GetNodeMonitoringInfo();
     }
 }

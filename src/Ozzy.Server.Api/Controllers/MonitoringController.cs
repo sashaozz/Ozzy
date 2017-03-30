@@ -3,6 +3,7 @@ using Ozzy.DomainModel.Monitoring;
 using Ozzy.Server.FeatureFlags;
 using Ozzy.Server.Monitoring;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Ozzy.Server.Api.Controllers
 {
@@ -14,11 +15,11 @@ namespace Ozzy.Server.Api.Controllers
         public MonitoringController(IMonitoringManager monitoringManager)
         {
             _monitoringManager = monitoringManager;
-        }      
-        
-        public List<NodeMonitoringInfo> Nodes()
+        }
+
+        public async Task<List<NodeMonitoringInfo>> Nodes()
         {
-            return _monitoringManager.GetNodeMonitoringInfo();
+            return await _monitoringManager.GetNodeMonitoringInfo();
         }
     }
 }

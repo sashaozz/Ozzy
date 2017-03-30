@@ -3,6 +3,7 @@ using System.Linq;
 using System.Collections.Generic;
 using System.Text;
 using Ozzy.DomainModel.Monitoring;
+using System.Threading.Tasks;
 
 namespace Ozzy.Server.Monitoring
 {
@@ -10,12 +11,12 @@ namespace Ozzy.Server.Monitoring
     {
         private static Dictionary<string, NodeMonitoringInfo> _data = new Dictionary<string, NodeMonitoringInfo>();
 
-        public void SaveNodeMonitoringInfo(NodeMonitoringInfo data)
+        public async Task SaveNodeMonitoringInfo(NodeMonitoringInfo data)
         {
             _data[data.NodeId] = data;
         }
 
-        public List<NodeMonitoringInfo> GetNodeMonitoringInfo()
+        public async Task<List<NodeMonitoringInfo>> GetNodeMonitoringInfo()
         {
             return _data.Values.ToList();
         }

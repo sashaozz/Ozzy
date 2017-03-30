@@ -65,7 +65,7 @@ namespace SampleApplication
             });
             services.AddTransient<TestBackgoundTask>();
             services.AddTransient<IQueueService<SampleQueueItem>, QueueService<SampleQueueItem>>();
-            //var ozzyOptions = Configuration.GetSection("OzzyOptions");
+            var ozzyOptions = Configuration.GetSection("OzzyOptions");
             //services.ConfigureEntityFrameworkForOzzy(ozzyOptions);
             //services.ConfigureRedisForOzzy(ozzyOptions);
 
@@ -96,7 +96,9 @@ namespace SampleApplication
                 .UseEFFeatureFlagService<SampleDbContext>()
                 .UseEFBackgroundTaskService<SampleDbContext>()
                 .AddBackgroundProcess<TaskQueueProcess>()
-                .UseInMemoryMonitoring()
+                .UseRedis(ozzyOptions)
+                .UseRedisMonitoring()
+                //.UseInMemoryMonitoring()
                 .AddFeatureFlag<ConsoleLogFeature>()
                 .AddApi();
         }

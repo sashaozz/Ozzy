@@ -39,7 +39,7 @@ namespace Ozzy.Server.Monitoring
                 }).ToList()
             };
 
-            _monitoringManager.SaveNodeMonitoringInfo(data);
+           await _monitoringManager.SaveNodeMonitoringInfo(data);
         }
     }
 }

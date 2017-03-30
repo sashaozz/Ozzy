@@ -2,7 +2,9 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Ozzy.DomainModel.Configuration;
+using Ozzy.Server.Monitoring;
 using Ozzy.Server.Redis;
+using Ozzy.Server.Redis.Monitoring;
 using StackExchange.Redis;
 using System;
 
@@ -24,5 +26,10 @@ namespace Ozzy.Server.Configuration
             return builder;
         }
 
+        public static IOzzyBuilder UseRedisMonitoring(this IOzzyBuilder builder)
+        {
+            builder.Services.AddTransient<IMonitoringManager, RedisMoniitoringManager>();
+            return builder;
+        }
     }
 }
