@@ -48,7 +48,7 @@ namespace Ozzy.Server.EntityFramework
             }
         }
 
-        public virtual QueueRecord FetchNext(string queueName)
+        public virtual QueueRecord FetchNext(string queueName, string nodeId = null)
         {
             using (var db = _dbFactory())
             {
@@ -57,6 +57,7 @@ namespace Ozzy.Server.EntityFramework
                 var item = dbSet
                     .Where(s => s.QueueName == queueName)
                     .Where(s => s.Status == QueueStatus.Awaiting)
+                    .Where(s => s.NodeId == null || s.NodeId == nodeId)
                     .OrderBy(i => i.CreatedAt)
                     .FirstOrDefault();
 

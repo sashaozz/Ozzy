@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Ozzy.DomainModel;
+using Ozzy.DomainModel.Monitoring;
 using Ozzy.Server.BackgroundProcesses;
 using Ozzy.Server.FeatureFlags;
 using Ozzy.Server.Monitoring;
@@ -88,7 +89,11 @@ namespace Ozzy.Server.Configuration
 
         public static IOzzyBuilder UseInMemoryMonitoring(this IOzzyBuilder builder)
         {
-            builder.Services.AddSingleton<IMonitoringManager, InMemoryMonitoringManager>();
+            builder.Services.AddTransient<StartProcessTask>();
+            builder.Services.AddTransient<StopProcessTask>();
+            builder.Services.AddSingleton<INodesManager, NodesManager>();
+            builder.Services.AddSingleton<IMonitoringRepository, InMemoryMonitoringRepository>();
+            builder.AddBackgroundProcess<NodesMonitoringProcess>();
             return builder;
         }
     }

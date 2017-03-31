@@ -19,7 +19,7 @@ WHERE  Id =
 (
     SELECT TOP 1 Id 
     FROM [dbo].[Queues]  WITH (UPDLOCK)
-	WHERE Status = 0 and QueueName=@p0
+	WHERE Status = 0 and QueueName=@p0 and (NodeId is NULL or NodeId = @p1)
     ORDER  BY [CreatedAt] 
 )";
 
@@ -31,11 +31,11 @@ WHERE  Id =
             _dbFactory = dbFactory;
         }
 
-        public override QueueRecord FetchNext(string queueName)
+        public override QueueRecord FetchNext(string queueName, string nodeId = null)
         {
             using (var db = _dbFactory())
             {
-                return db.Queues.FromSql(_fetchNextItemSql, queueName).FirstOrDefault();
+                return db.Queues.FromSql(_fetchNextItemSql, queueName, nodeId).FirstOrDefault();
             }
         }
     }

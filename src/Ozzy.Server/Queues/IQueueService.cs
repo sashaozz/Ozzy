@@ -6,7 +6,7 @@ namespace Ozzy.Server.Queues
 {
     public interface IQueueService<T> where T: class
     {
-        void Add(T item);
+        void Add(T item, string nodeId = null);
         QueueItem<T> FetchNext();
         void Acknowledge(QueueItem<T> item);
     }

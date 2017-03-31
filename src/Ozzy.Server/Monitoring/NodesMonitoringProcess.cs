@@ -17,22 +17,25 @@ namespace Ozzy.Server.Monitoring
 
         public string Name => this.GetType().Name;
 
-        private IMonitoringManager _monitoringManager;
-        private OzzyNode _ozzyNode;
+        private INodesManager _monitoringManager;
+        private IServiceProvider _serviceProvider;
+        // private OzzyNode _ozzyNode;
 
-        public NodesMonitoringProcess(IMonitoringManager monitoringManager, OzzyNode ozzyNode)
+        public NodesMonitoringProcess(INodesManager monitoringManager, IServiceProvider serviceProvider)
         {
             _monitoringManager = monitoringManager;
-            _ozzyNode = ozzyNode;
+            _serviceProvider = serviceProvider;
         }
 
         protected override async Task ActionAsync(CancellationToken cts)
         {
+            var ozzyNode = _serviceProvider.GetService<OzzyNode>();
+
             var data = new NodeMonitoringInfo()
             {
-                NodeId = _ozzyNode.NodeId,
+                NodeId = ozzyNode.NodeId,
                 MachineName = Environment.MachineName,
-                BackgroundTasks = _ozzyNode.BackgroundProcesses.Select(p => new BackgroundTaskMonitoringInfo()
+                BackgroundTasks = ozzyNode.BackgroundProcesses.Select(p => new BackgroundTaskMonitoringInfo()
                 {
                     TaskId = p.Name,
                     IsRunning = p.IsRunning

@@ -2,6 +2,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Ozzy.DomainModel.Configuration;
+using Ozzy.DomainModel.Monitoring;
 using Ozzy.Server.Monitoring;
 using Ozzy.Server.Redis;
 using Ozzy.Server.Redis.Monitoring;
@@ -28,7 +29,11 @@ namespace Ozzy.Server.Configuration
 
         public static IOzzyBuilder UseRedisMonitoring(this IOzzyBuilder builder)
         {
-            builder.Services.AddTransient<IMonitoringManager, RedisMoniitoringManager>();
+            builder.Services.AddTransient<StartProcessTask>();
+            builder.Services.AddTransient<StopProcessTask>();
+            builder.Services.AddSingleton<INodesManager, NodesManager>();
+            builder.Services.AddSingleton<IMonitoringRepository, RedisMonitoringRepository>();
+            builder.AddBackgroundProcess<NodesMonitoringProcess>();
             return builder;
         }
     }

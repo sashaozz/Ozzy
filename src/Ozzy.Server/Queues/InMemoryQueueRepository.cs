@@ -16,12 +16,13 @@ namespace Ozzy.Server.Queues
             _store.GetOrAdd(item.Id, item);
         }
 
-        public QueueRecord FetchNext(string queueName)
+        public QueueRecord FetchNext(string queueName, string nodeId = null)
         {
             lock (_syncLock)
             {
                 var record = _store.Values
                     .Where(q => q.QueueName == queueName)
+                    .Where(q => q.NodeId == null || q.NodeId == nodeId)
                     .OrderBy(v => v.CreatedAt)
                     .FirstOrDefault();
 

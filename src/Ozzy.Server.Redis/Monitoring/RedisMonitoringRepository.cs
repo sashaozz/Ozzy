@@ -10,12 +10,12 @@ using Newtonsoft.Json;
 
 namespace Ozzy.Server.Redis.Monitoring
 {
-    public class RedisMoniitoringManager : IMonitoringManager
+    public class RedisMonitoringRepository : IMonitoringRepository
     {
         private readonly IConnectionMultiplexer _redis;
         private const string _nodesKey = "monitoring_nodes";
 
-        public RedisMoniitoringManager(RedisClient redis)
+        public RedisMonitoringRepository(RedisClient redis)
         {
             _redis = redis.Redis;
         }

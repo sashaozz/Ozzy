@@ -5,9 +5,9 @@ using System.Text;
 using Ozzy.DomainModel.Monitoring;
 using System.Threading.Tasks;
 
-namespace Ozzy.Server.Monitoring
+namespace Ozzy.DomainModel.Monitoring
 {
-    public class InMemoryMonitoringManager : IMonitoringManager
+    public class InMemoryMonitoringRepository : IMonitoringRepository
     {
         private static Dictionary<string, NodeMonitoringInfo> _data = new Dictionary<string, NodeMonitoringInfo>();
 
