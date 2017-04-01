@@ -22,6 +22,8 @@ using Ozzy.Server.BackgroundProcesses;
 using SampleApplication.Tasks;
 using Ozzy.Server.Queues;
 using SampleApplication.Queues;
+using Ozzy.Server.Saga;
+using SampleApplication.Sagas;
 
 namespace SampleApplication
 {
@@ -84,6 +86,11 @@ namespace SampleApplication
                 //.UseRedisFastChannel()
                 .AddEventLoop<SampleEventLoop>();
             }
+
+            services.AddSingleton<ISagaFactory, DefaultSagaFactory>();
+            services.AddTransient<ContactFormMessageSaga>();
+            services.AddSingleton<ISagaRepository, EntityFrameworkSagaRepository>(sp => new EntityFrameworkSagaRepository(sp.GetService<Func<SampleDbContext>>(), sp.GetService<ISagaFactory>()));
+            services.AddSingleton<SagaEventProcessor<ContactFormMessageSaga, SampleDbContext>>();
 
 
             var node = services
