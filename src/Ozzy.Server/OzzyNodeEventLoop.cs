@@ -5,13 +5,13 @@ using System;
 
 namespace Ozzy.Server
 {
-    public class OzzyNodeEventLoop<TDomain> : DomainEventLoop<TDomain>
+    public class OzzyNodeEventLoop<TDomain> : DomainEventsLoop<TDomain>
         where TDomain : IOzzyDomainModel
 
     {
-        public OzzyNodeEventLoop(IExtensibleOptions<TDomain> options, IServiceProvider provider) : base(options)
+        public OzzyNodeEventLoop(IExtensibleOptions<TDomain> options) : base(options)
         {
-            var ffhandler = provider.GetService<FeatureFlagsEventsProcessor>();
+            var ffhandler = options.GetServiceProvider().GetService<FeatureFlagsEventsProcessor>();
             AddHandler(ffhandler);
         }
     }

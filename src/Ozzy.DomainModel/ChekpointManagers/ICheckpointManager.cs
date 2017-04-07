@@ -6,6 +6,6 @@
     public interface ICheckpointManager
     {
         long GetCheckpoint();
-        void SaveCheckpoint(long checkpoint);
+        void SaveCheckpoint(long checkpoint, bool idempotent = false);
     }
 }

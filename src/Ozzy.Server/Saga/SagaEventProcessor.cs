@@ -1,29 +1,26 @@
 ﻿using Ozzy.Core;
 using Ozzy.DomainModel;
-using Ozzy.Server;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Linq.Expressions;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Ozzy.Server.Saga
 {
-    public class SagaEventProcessor<TSaga, TDomain> : BaseEventsProcessor 
+    public class SagaEventProcessor<TSaga> : DomainEventsProcessor
         where TSaga : SagaBase
-        where TDomain : IOzzyDomainModel
     {
-        private new Dictionary<Type, Action<TSaga, object>> Handlers { get; set; } = new Dictionary<Type, Action<TSaga, object>>();
+        private new Dictionary<Type, Func<TSaga, object, bool>> Handlers { get; set; } = new Dictionary<Type, Func<TSaga, object, bool>>();
+        private ISagaRepository _sagaRepository;
         public Type SagaType = typeof(TSaga);
-        private IServiceProvider _serviceProvider;
 
-        public SagaEventProcessor(IExtensibleOptions<TDomain> options, IServiceProvider serviceProvider)
-            : base(new SimpleChekpointManager(options.GetPersistedEventsReader()))
+        public SagaEventProcessor(ISagaRepository sagaRepository, ICheckpointManager checkpointManager) : base(checkpointManager)
         {
-            _serviceProvider = serviceProvider;
+            _sagaRepository = sagaRepository;
+
             var interfaces = SagaType.GetTypeInfo().GetInterfaces();
             var handleType = typeof(IHandleEvent<>);
-            var reflectedRegisterMethod = this.GetType().GetTypeInfo().GetMethod("RegisterHandler", BindingFlags.NonPublic | BindingFlags.Instance);
+            var reflectedRegisterMethod = this.GetType().GetTypeInfo().GetMethod("RegisterSagaHandler", BindingFlags.NonPublic | BindingFlags.Instance);
             foreach (var type in interfaces)
             {
                 if (type.IsConstructedGenericType && type.GetGenericTypeDefinition() == handleType)
@@ -46,54 +43,44 @@ namespace Ozzy.Server.Saga
             }
         }
 
-        private void RegisterHandler<TMessage>(Action<TSaga, object> handler)
+        private void RegisterSagaHandler<TMessage>(Func<TSaga, object, bool> handler)
         {
             this.Handlers.Add(typeof(TMessage), handler);
         }
 
-        private void DispatchEventToSaga<TMessage>(TSaga saga, object message)
+        private bool DispatchEventToSaga<TMessage>(TSaga saga, object message)
         {
             var handler = saga as IHandleEvent<TMessage>;
-            if (handler != null)
-            {
-                handler.Handle((TMessage)message);
-            }
-            else
-            {
-                //todo : throw
-            }
+            return handler.Handle((TMessage)message);
         }
 
-        public bool CanHandleMessage(Type messageType)
+        public override bool CanHandleMessage(Type messageType)
         {
             return Handlers.ContainsKey(messageType);
         }
 
-        protected override void HandleEvent(DomainEventRecord record)
+        protected override bool HandleEvent(DomainEventRecord record)
         {
             var messageType = record.GetDomainEventType();
-            if (!CanHandleMessage(messageType)) return;
+            if (!CanHandleMessage(messageType)) return true;
 
-            var scopeFactory = _serviceProvider.GetService<IServiceScopeFactory>();
-            using (var scope = scopeFactory.CreateScope())
+            var message = record.GetDomainEvent();
+            var saga = (message is SagaCommand) ?
+                _sagaRepository.GetSagaById<TSaga>((message as SagaCommand).SagaId)
+                : _sagaRepository.CreateNewSaga<TSaga>();
+            var handler = Handlers.GetValueOrDefault(messageType);
+            var idempotent = false;
+            try
             {
-                var message = record.GetDomainEvent();
-                var sagaRepository = scope.ServiceProvider.GetService<ISagaRepository>();
-                var saga = (message is SagaCommand) ?
-                    sagaRepository.GetSagaById<TSaga>((message as SagaCommand).SagaId)
-                    : sagaRepository.CreateNewSaga<TSaga>();
-                var handler = Handlers.GetValueOrDefault(messageType);
-                try
-                {
-                    handler?.Invoke(saga, message);
-                    saga.SagaState.SagaVersion++;
-                    sagaRepository.SaveSaga(saga);
-                }
-                catch (Exception e)
-                {
-                    //todo handle retry
-                }
+                idempotent = handler.Invoke(saga, message);
+                saga.SagaState.SagaVersion++;
+                _sagaRepository.SaveSaga(saga);
             }
+            catch (Exception e)
+            {
+                //todo handle retry
+            }
+            return idempotent;
         }
     }
 }

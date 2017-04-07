@@ -7,9 +7,9 @@ namespace Ozzy.DomainModel
     {
         private InMemoryDomainEventsPubSub _domainQueue;
         private IDisposable _subscription = null;
-        private DomainEventsManager _loop;
+        private DomainEventsLoop _loop;
 
-        public InMemoryEventReciever(DomainEventsManager loop, InMemoryDomainEventsPubSub domainQueue)
+        public InMemoryEventReciever(DomainEventsLoop loop, InMemoryDomainEventsPubSub domainQueue)
         {
             Guard.ArgumentNotNull(domainQueue, nameof(domainQueue));
             Guard.ArgumentNotNull(loop, nameof(loop));

@@ -8,27 +8,8 @@ namespace Ozzy.Server.EntityFramework
 {
     public static class EfOzzyServiceCollectionExtensions
     {
-        public static OzzyDomainBuilder<TDomain> AddEntityFrameworkOzzyDomain<TDomain>(this IServiceCollection services)
-            where TDomain : AggregateDbContext
-        {
-            var builder = services
-                .AddOzzyDomain<TDomain>()
-                .UseEntityFramework();
-            return builder;
-        }
-
         public static OzzyDomainBuilder<TDomain> AddEntityFrameworkOzzyDomain<TDomain>(this IServiceCollection services,
-            Action<EfOzzyDomainOptionsBuilder<TDomain>> optionsAction = null)
-            where TDomain : AggregateDbContext
-        {
-            var builder = services
-                .AddOzzyDomain<TDomain>()
-                .UseEntityFramework(optionsAction);
-            return builder;
-        }
-
-        public static OzzyDomainBuilder<TDomain> AddEntityFrameworkOzzyDomain<TDomain>(this IServiceCollection services,
-            Action<IServiceProvider, EfOzzyDomainOptionsBuilder<TDomain>> optionsAction)
+            Action<DbContextOptionsBuilder> optionsAction = null)
             where TDomain : AggregateDbContext
         {
             var builder = services

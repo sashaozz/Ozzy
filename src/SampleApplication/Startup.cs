@@ -57,14 +57,6 @@ namespace SampleApplication
             services.AddMvc();
             services.AddCors();
 
-            services.AddDbContext<SampleDbContext>(options =>
-            {
-                options.UseSqlServer(Configuration.GetConnectionString("SampleDbContext"));
-            });
-            services.AddSingleton<Func<SampleDbContext>>(sp => () =>
-            {
-                return new SampleDbContext(sp.GetService<IExtensibleOptions<SampleDbContext>>());
-            });
             services.AddTransient<TestBackgoundTask>();
             services.AddTransient<IQueueService<SampleQueueItem>, QueueService<SampleQueueItem>>();
             //var ozzyOptions = Configuration.GetSection("OzzyOptions");
@@ -75,23 +67,32 @@ namespace SampleApplication
             if (Environment.IsDevelopment())
             {
                 domain = services
-                .AddEntityFrameworkOzzyDomain<SampleDbContext>()
+                .AddEntityFrameworkOzzyDomain<SampleDbContext>(options =>
+                {
+                    options.UseSqlServer(Configuration.GetConnectionString("SampleDbContext"));
+                })
                 .UseInMemoryFastChannel()
-                .AddEventLoop<SampleEventLoop>();
+                .AddEventLoop<SampleEventLoop>(options =>
+                {
+                    options.AddProcessor<LoggerEventsProcessor>();                    
+                    //options.AddHandler<LoggerEventHandler, SimpleChekpointManager>();
+                    options.AddSagaProcessor<ContactFormMessageSaga>();
+                });
             }
             else
             {
                 domain = services
-                .AddEntityFrameworkOzzyDomain<SampleDbContext>()
+                .AddEntityFrameworkOzzyDomain<SampleDbContext>(options =>
+                {
+                    options.UseSqlServer(Configuration.GetConnectionString("SampleDbContext"));
+                })
                 //.UseRedisFastChannel()
-                .AddEventLoop<SampleEventLoop>();
+                .AddEventLoop<SampleEventLoop>(options =>
+                {
+                    //options.AddHandler<SampleEventProcessor>();
+                    options.AddSagaProcessor<ContactFormMessageSaga>();
+                });
             }
-
-            services.AddSingleton<ISagaFactory, DefaultSagaFactory>();
-            services.AddTransient<ContactFormMessageSaga>();
-            services.AddSingleton<ISagaRepository, EntityFrameworkSagaRepository>(sp => new EntityFrameworkSagaRepository(sp.GetService<Func<SampleDbContext>>(), sp.GetService<ISagaFactory>()));
-            services.AddSingleton<SagaEventProcessor<ContactFormMessageSaga, SampleDbContext>>();
-
 
             var node = services
                 .AddOzzy()

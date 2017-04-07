@@ -8,4 +8,8 @@ namespace Ozzy.DomainModel
         TSaga CreateNewSaga<TSaga>();
         void SaveSaga(SagaBase saga);
     }
+
+    public interface ISagaRepository<TDomain> : ISagaRepository where TDomain : IOzzyDomainModel
+    {
+    }
 }

@@ -17,7 +17,7 @@ namespace Ozzy.Server.Redis
             _channelName = channelName;
         }
 
-        public IFastEventReciever CreateReciever(DomainEventsManager loop)
+        public IFastEventReciever CreateReciever(DomainEventsLoop loop)
         {
             return new RedisFastEventReciever(_redis, loop, _channelName);
         }

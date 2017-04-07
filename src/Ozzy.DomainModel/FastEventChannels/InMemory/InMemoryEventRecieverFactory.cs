@@ -9,7 +9,7 @@ namespace Ozzy.DomainModel
     {
         private InMemoryDomainEventsPubSub _domainQueue;
         private IDisposable _subscription = null;
-        private DomainEventsManager _loop;
+        private DomainEventsLoop _loop;
 
         public InMemoryEventRecieverFactory(InMemoryDomainEventsPubSub domainQueue)
         {
@@ -17,7 +17,7 @@ namespace Ozzy.DomainModel
             _domainQueue = domainQueue;
         }
 
-        public IFastEventReciever CreateReciever(DomainEventsManager loop)
+        public IFastEventReciever CreateReciever(DomainEventsLoop loop)
         {
             return new InMemoryEventReciever(loop, _domainQueue);
         }

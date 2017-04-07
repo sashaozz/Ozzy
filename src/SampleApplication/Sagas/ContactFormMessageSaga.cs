@@ -51,7 +51,7 @@ namespace SampleApplication.Sagas
             //_mediator = mediator;
         }
 
-        public void Handle(ContactFormMessageRecieved message)
+        public bool Handle(ContactFormMessageRecieved message)
         {
             State.Message = message.Message;
             State.From = message.From;
@@ -59,9 +59,10 @@ namespace SampleApplication.Sagas
 
             SendSagaCommand(new SendGreetingEmail(this));
             SendSagaCommand(new SendNotificationToAdministrator(this));
+            return false;
         }
 
-        public void Handle(SendGreetingEmail message)
+        public bool Handle(SendGreetingEmail message)
         {
             var command = new EmailMailCommand()
             {
@@ -73,9 +74,10 @@ namespace SampleApplication.Sagas
             //_mediator.Send(command);
             State.GreetingEmailSent = true;
             CheckSagaComplete();
+            return false;
         }
 
-        public void Handle(SendNotificationToAdministrator message)
+        public bool Handle(SendNotificationToAdministrator message)
         {
             var command = new EmailMailCommand()
             {
@@ -87,6 +89,7 @@ namespace SampleApplication.Sagas
             //_mediator.Send(command);
             State.AdminEmailSent = true;
             CheckSagaComplete();
+            return false;
         }
 
         public void CheckSagaComplete()

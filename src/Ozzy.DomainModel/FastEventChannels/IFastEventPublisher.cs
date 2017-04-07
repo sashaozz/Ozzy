@@ -13,4 +13,8 @@
         /// <param name="message">Событие для отправки</param>
         void Publish(DomainEventRecord message);
     }
+
+    public interface IFastEventPublisher<TDomain> : IFastEventPublisher where TDomain : IOzzyDomainModel
+    {
+    }
 }

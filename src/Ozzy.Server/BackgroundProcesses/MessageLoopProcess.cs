@@ -6,8 +6,8 @@ namespace Ozzy.Server.BackgroundProcesses
 {
     public class MessageLoopProcess : BackgroundProcessBase
     {
-        private readonly DomainEventsManager _eventsManager;
-        public MessageLoopProcess(DomainEventsManager eventsManager)
+        private readonly DomainEventsLoop _eventsManager;
+        public MessageLoopProcess(DomainEventsLoop eventsManager)
         {
             _eventsManager = eventsManager;
         }
@@ -25,7 +25,7 @@ namespace Ozzy.Server.BackgroundProcesses
     }
 
     public class MessageLoopProcess<TLoop, TDomain> : BackgroundProcessBase
-        where TLoop : DomainEventLoop<TDomain>
+        where TLoop : DomainEventsLoop<TDomain>
         where TDomain : IOzzyDomainModel
     {
         private readonly TLoop _loop;

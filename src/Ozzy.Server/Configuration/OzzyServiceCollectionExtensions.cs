@@ -4,6 +4,9 @@ using Microsoft.AspNetCore.Hosting;
 using Ozzy.Server.FeatureFlags;
 using Ozzy.DomainModel;
 using Ozzy.Server.BackgroundTasks;
+using Ozzy.Server.Saga;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using System;
 
 namespace Ozzy.Server.Configuration
 {
@@ -31,6 +34,11 @@ namespace Ozzy.Server.Configuration
         public static OzzyDomainBuilder<TDomain> AddOzzyDomain<TDomain>(this IServiceCollection services) where TDomain : IOzzyDomainModel
         {
             var builder = new OzzyDomainBuilder<TDomain>(services);
+
+            //todo : maybe move it to the end of pipeline so other extensions could register implementations first?                    
+            builder.Services.TryAddSingleton<IFastEventPublisher>(NullEventsPublisher.Instance);
+            builder.Services.TryAddSingleton<Func<IFastEventPublisher>>(sp => () => NullEventsPublisher.Instance);
+            builder.Services.TryAddSingleton<ISagaFactory, DefaultSagaFactory>();
             return builder;
         }
     }

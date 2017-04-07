@@ -1,10 +1,7 @@
 ﻿using Ozzy.Core;
-using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
 
 namespace Ozzy.DomainModel
-{   
+{
     public class InMemoryEventPublisher : IFastEventPublisher
     {
         private InMemoryDomainEventsPubSub _domainQueue;

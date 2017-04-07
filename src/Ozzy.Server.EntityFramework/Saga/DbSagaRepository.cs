@@ -4,13 +4,14 @@ using Ozzy.Server.EntityFramework.Saga;
 
 namespace Ozzy.DomainModel
 {
-    public class EntityFrameworkSagaRepository : ISagaRepository
+    public class DbSagaRepository<TDomain> : ISagaRepository<TDomain>
+        where TDomain : AggregateDbContext
     {
         private ISagaFactory _sagaFactory;
-        private Func<AggregateDbContext> _contextFactory;
+        private Func<TDomain> _contextFactory;
         private AggregateDbContext _db;
 
-        public EntityFrameworkSagaRepository(Func<AggregateDbContext> contextFactory, ISagaFactory sagaFactory)
+        public DbSagaRepository(Func<TDomain> contextFactory, ISagaFactory sagaFactory)
         {
             _sagaFactory = sagaFactory;
             _contextFactory = contextFactory;

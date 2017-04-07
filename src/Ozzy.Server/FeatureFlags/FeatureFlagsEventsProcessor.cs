@@ -5,7 +5,10 @@ using System;
 
 namespace Ozzy.Server.FeatureFlags
 {
-    public class FeatureFlagsEventsProcessor : BaseEventsProcessor
+    public class FeatureFlagsEventsProcessor : DomainEventsProcessor,
+        IHandleEvent<DataRecordDeletedEvent<FeatureFlagRecord>>,
+        IHandleEvent<DataRecordUpdatedEvent<FeatureFlagRecord>>,
+        IHandleEvent<DataRecordCreatedEvent<FeatureFlagRecord>>
     {
         private IFeatureFlagService _ffService;
 
@@ -13,30 +16,28 @@ namespace Ozzy.Server.FeatureFlags
             : base(checkpointManager.GetService())
         {
             Guard.ArgumentNotNull(ffService, nameof(ffService));
-            _ffService = ffService;
-
-            AddHandler<DataRecordCreatedEvent<FeatureFlagRecord>>(Handle);
-            AddHandler<DataRecordUpdatedEvent<FeatureFlagRecord>>(Handle);
-            AddHandler<DataRecordDeletedEvent<FeatureFlagRecord>>(Handle);
+            _ffService = ffService;            
         }       
 
-        private void Handle(DataRecordDeletedEvent<FeatureFlagRecord> obj)
+        public bool Handle(DataRecordDeletedEvent<FeatureFlagRecord> obj)
         {
             throw new NotImplementedException();
         }
 
-        private void Handle(DataRecordUpdatedEvent<FeatureFlagRecord> obj)
+        public bool Handle(DataRecordUpdatedEvent<FeatureFlagRecord> obj)
         {
-            if (obj.RecordType != typeof(FeatureFlagRecord)) return;
+            if (obj.RecordType != typeof(FeatureFlagRecord)) return true;
             var newFlag = obj.RecordValue as FeatureFlagRecord;
             _ffService.SetFlagState(newFlag.Id, newFlag.Configuration, newFlag.Version);
+            return false;
         }
 
-        private void Handle(DataRecordCreatedEvent<FeatureFlagRecord> obj)
+        public bool Handle(DataRecordCreatedEvent<FeatureFlagRecord> obj)
         {
-            if (obj.RecordType != typeof(FeatureFlagRecord)) return;
+            if (obj.RecordType != typeof(FeatureFlagRecord)) return true;
             var newFlag = obj.RecordValue as FeatureFlagRecord;
             _ffService.SetFlagState(newFlag.Id, newFlag.Configuration, newFlag.Version);
+            return false;
         }
     }
 }
