@@ -89,8 +89,7 @@ namespace Ozzy.Server.Configuration
 
         public static IOzzyBuilder UseInMemoryMonitoring(this IOzzyBuilder builder)
         {
-            builder.Services.AddTransient<StartProcessTask>();
-            builder.Services.AddTransient<StopProcessTask>();
+            builder.Services.AddSingleton<MonitoringEventsProcessor>();
             builder.Services.AddSingleton<INodesManager, NodesManager>();
             builder.Services.AddSingleton<IMonitoringRepository, InMemoryMonitoringRepository>();
             builder.AddBackgroundProcess<NodesMonitoringProcess>();

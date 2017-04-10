@@ -5,18 +5,19 @@ using System.Threading.Tasks;
 using Ozzy.DomainModel.Monitoring;
 using Ozzy.Server.BackgroundTasks;
 using System.Linq;
+using static Ozzy.DomainModel.Monitoring.Events;
 
 namespace Ozzy.Server.Monitoring
 {
     public class NodesManager : INodesManager
     {
         private IMonitoringRepository _monitoringRepository;
-        private ITaskQueueService _taskQueueService;
+        private IDomainEventsManager _domainEventsManager;
 
-        public NodesManager(IMonitoringRepository monitoringRepository, ITaskQueueService taskQueueService)
+        public NodesManager(IMonitoringRepository monitoringRepository, IDomainEventsManager domainEventsManager)
         {
             _monitoringRepository = monitoringRepository;
-            _taskQueueService = taskQueueService;
+            _domainEventsManager = domainEventsManager;
         }
         public async Task<List<NodeMonitoringInfo>> GetNodeMonitoringInfo()
         {
@@ -35,12 +36,20 @@ namespace Ozzy.Server.Monitoring
 
         public async Task StartProcess(string nodeId, string processId)
         {
-            _taskQueueService.Add<StartProcessTask>(processId, nodeId);
+            _domainEventsManager.AddDomainEvent(new BackgroundProcessStarted()
+            {
+                NodeId = nodeId,
+                ProcessId = processId
+            });
         }
 
         public async Task StopProcess(string nodeId, string processId)
         {
-            _taskQueueService.Add<StopProcessTask>(processId, nodeId);
+            _domainEventsManager.AddDomainEvent(new BackgroundProcessStopped()
+            {
+                NodeId = nodeId,
+                ProcessId = processId
+            });
         }
     }
 }

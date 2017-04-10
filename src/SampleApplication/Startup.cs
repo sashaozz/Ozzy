@@ -92,6 +92,7 @@ namespace SampleApplication
                 .AddBackgroundProcess<NodeConsoleHeartBeatProcess2>()
                 .AddBackgroundMessageLoopProcess<SampleEventLoop>()
                 .AddBackgroundMessageLoopProcess<OzzyNodeEventLoop<SampleDbContext>>()
+                .UseEFDomainEvent<SampleDbContext>()
                 .UseEFDistributedLockService<SampleDbContext>()
                 .UseEFFeatureFlagService<SampleDbContext>()
                 .UseEFBackgroundTaskService<SampleDbContext>()
