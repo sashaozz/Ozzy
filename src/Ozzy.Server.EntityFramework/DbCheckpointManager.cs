@@ -5,13 +5,14 @@ using System.Linq;
 
 namespace Ozzy.Server.EntityFramework
 {
-    public class DbCheckpointManager : ICheckpointManager
+    public class DbCheckpointManager<TDomain> : ICheckpointManager
+        where TDomain : AggregateDbContext
     {
         private readonly string _serviceName;
         private long _startCheckpoint;
-        private Func<AggregateDbContext> _contextFactory;
+        private Func<TDomain> _contextFactory;
 
-        public DbCheckpointManager(Func<AggregateDbContext> contextFactory, string serviceName, long startCheckpoint = -1L)
+        public DbCheckpointManager(Func<TDomain> contextFactory, string serviceName, long startCheckpoint = -1L)
         {
             Guard.ArgumentNotNull(contextFactory, nameof(contextFactory));
             Guard.ArgumentNotNullOrEmptyString(serviceName, nameof(serviceName));
@@ -39,8 +40,11 @@ namespace Ozzy.Server.EntityFramework
             }
         }
 
-        public void SaveCheckpoint(long checkpoint)
+        public void SaveCheckpoint(long checkpoint, bool idempotent = false)
         {
+            //do not write to database if idempotent - it safe to run this sequence again if its lost
+            if (idempotent) return;
+
             using (var context = _contextFactory())
             {
                 var seq = context.Sequences.SingleOrDefault(s => s.Name == _serviceName);

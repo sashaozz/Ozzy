@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Ozzy.Core.Tests.Fixtures
 {
-    public class TestEventLoop : DomainEventLoop<TestDomainContext>
+    public class TestEventLoop : DomainEventsLoop<TestDomainContext>
     {
         public TestEventLoop(IExtensibleOptions<TestDomainContext> options) : base(options)
         {

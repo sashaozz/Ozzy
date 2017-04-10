@@ -7,9 +7,8 @@ using Microsoft.EntityFrameworkCore;
 using Ozzy.Core;
 using Ozzy.DomainModel;
 using Ozzy.Server.FeatureFlags;
-using Ozzy.Server.BackgroundTasks;
-using Ozzy.Server.Queues;
 using Ozzy.DomainModel.Queues;
+using Ozzy.Server.EntityFramework.Saga;
 
 namespace Ozzy.Server.EntityFramework
 {
@@ -55,6 +54,7 @@ namespace Ozzy.Server.EntityFramework
         public DbSet<EntityDistributedLockRecord> DistributedLocks { get; set; }
         public DbSet<FeatureFlagRecord> FeatureFlags { get; set; }
         public DbSet<QueueRecord> Queues { get; set; }
+        public DbSet<SagaRecord> Sagas { get; set; }
         /// <summary>
         /// Слушатели событий в данном контексте и номера их последних обработанных сообщений
         /// </summary>
@@ -67,12 +67,14 @@ namespace Ozzy.Server.EntityFramework
             modelBuilder.Entity<DomainEventRecord>().HasKey(r => r.Sequence);
 
             modelBuilder.Entity<Sequence>().HasKey(c => c.Name);
-            modelBuilder.Entity<Sequence>().Property(c => c.Name).IsRequired();
-
+            modelBuilder.Entity<Sequence>().Property(c => c.Name).IsRequired();            
+            modelBuilder.Entity<FeatureFlagRecord>().HasKey(r => r.Id);
             modelBuilder.Entity<FeatureFlagRecord>().Ignore(r => r.Configuration);
-            modelBuilder.Entity<FeatureFlagRecord>().Ignore(r => r.Events);
 
-            modelBuilder.Entity<QueueRecord>().Ignore(r => r.Events);
+            //modelBuilder.Entity<QueueRecord>().HasKey(r => r.Id);
+
+            modelBuilder.Entity<SagaRecord>().HasKey(r => r.Id);
+            modelBuilder.Entity<SagaRecord>().Property(r => r.SagaVersion).IsConcurrencyToken();
 
             base.OnModelCreating(modelBuilder);
         }
@@ -80,12 +82,12 @@ namespace Ozzy.Server.EntityFramework
         private void SaveDomainEvents()
         {
             var domainEventEntities = ChangeTracker.Entries<IAggregate>()
-                .Where(po => po.Entity.Events.Any())
+                .Where(po => po.Entity.GetUndispatchedEvents().Any())
                 .Select(po => po.Entity)
                 .ToList();
 
             var domainEvents = domainEventEntities
-                .SelectMany(dee => dee.Events.Select(ev => new DomainEventRecord(ev)))
+                .SelectMany(dee => dee.GetUndispatchedEvents().Select(ev => new DomainEventRecord(ev)))
                 .ToList();
 
             OzzyLogger<IDomainModelTracing>.TraceVerboseMessageIfEnabled(() => $"Saving {domainEvents.Count} domain events");
@@ -93,7 +95,7 @@ namespace Ozzy.Server.EntityFramework
             _eventsToSave.AddRange(domainEvents);
             foreach (var entity in domainEventEntities)
             {
-                entity.Events.Clear();
+                entity.ClearUndispatchedEvents();
             }
 
             var removedEntitiesEvents = ChangeTracker.Entries<IEntity>()

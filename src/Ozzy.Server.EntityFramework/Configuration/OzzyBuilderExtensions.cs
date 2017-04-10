@@ -22,7 +22,7 @@ namespace Ozzy.Server.Configuration
             where TDomain : AggregateDbContext
         {
             builder.Services.AddSingleton<IFeatureFlagRepository>(sp => new FeatureFlagRepository(sp.GetService<Func<TDomain>>(), db => db.FeatureFlags));
-            builder.Services.AddSingleton(sp => new TypedRegistration<FeatureFlag, ICheckpointManager>(new DbCheckpointManager(sp.GetService<Func<TDomain>>(), "featureflags", -1)));
+            builder.Services.AddSingleton(sp => new TypedRegistration<FeatureFlag, ICheckpointManager>(new DbCheckpointManager<TDomain>(sp.GetService<Func<TDomain>>(), "featureflags", -1)));            
             builder.Services.AddSingleton<FeatureFlagsEventsProcessor>();
             builder.Services.AddSingleton<IDomainEventsProcessor, FeatureFlagsEventsProcessor>();
             builder.Services.AddSingleton<OzzyNodeEventLoop<TDomain>>();

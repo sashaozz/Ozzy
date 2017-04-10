@@ -11,6 +11,12 @@ namespace Ozzy.Server
             return extension.ServiceProvider;
         }
 
+        public static IServiceProvider GetServiceProvider(this IExtensibleOptions options)
+        {
+            var extension = options.FindExtension<CoreOptionsExtension>();
+            return extension.TopLevelServiceProvider;
+        }
+
         public static IServiceCollection GetInternalServiceCollection(this IExtensibleOptions options)
         {
             var extension = options.FindExtension<CoreOptionsExtension>();

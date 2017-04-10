@@ -1,14 +1,13 @@
-﻿using Ozzy.DomainModel;
+﻿using System;
 using Ozzy.Server;
-using Ozzy.Server.Configuration;
 
 namespace SampleApplication
 {
-    public class SampleEventLoop : DomainEventLoop<SampleDbContext>
+    public class SampleEventLoop : DomainEventsLoop<SampleDbContext>
     {
         public SampleEventLoop(IExtensibleOptions<SampleDbContext> options) : base(options)
         {
-            AddHandler(new SampleEventProcessor(options));
+            
         }
     }
 }

@@ -17,4 +17,8 @@ namespace Ozzy.DomainModel
 
         long GetMaxSequence();
     }
+
+    public interface IPeristedEventsReader<TDomain> : IPeristedEventsReader where TDomain : IOzzyDomainModel
+    {
+    }
 }

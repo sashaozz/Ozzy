@@ -14,9 +14,9 @@ namespace Ozzy.Server.Redis
         private ISubscriber _subscriber;
         private RedisClient _redis;
         private Action<DomainEventRecord> _consumerAction;
-        private DomainEventsManager _loop;
+        private DomainEventsLoop _loop;
 
-        public RedisFastEventReciever(RedisClient redis, DomainEventsManager loop, string channelName)            
+        public RedisFastEventReciever(RedisClient redis, DomainEventsLoop loop, string channelName)            
         {
             Guard.ArgumentNotNull(redis, nameof(redis));
             Guard.ArgumentNotNull(loop, nameof(loop));

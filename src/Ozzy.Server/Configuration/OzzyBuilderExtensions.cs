@@ -29,7 +29,7 @@ namespace Ozzy.Server.Configuration
             return builder;
         }
 
-        public static IOzzyBuilder AddBackgroundMessageLoopProcess<TLoop>(this IOzzyBuilder builder) where TLoop : DomainEventsManager
+        public static IOzzyBuilder AddBackgroundMessageLoopProcess<TLoop>(this IOzzyBuilder builder) where TLoop : DomainEventsLoop
         {
             //todo check types with reflection 
             //todo walk base types up to loop base type

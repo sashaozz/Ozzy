@@ -12,7 +12,7 @@ namespace Ozzy.DomainModel
     /// <summary>
     /// Менеджер очереди доменных событий
     /// </summary>
-    public class DomainEventsManager
+    public class DomainEventsLoop
     {
         public long CurrentSequence => _disruptor.RingBuffer.BufferSize - _disruptor.RingBuffer.RemainingCapacity();
 
@@ -30,7 +30,7 @@ namespace Ozzy.DomainModel
         private CancellationTokenSource _stopSupervisor;
         private ISequenceBarrier _barrier;
 
-        public DomainEventsManager(IPeristedEventsReader persistedEventsReader,
+        public DomainEventsLoop(IPeristedEventsReader persistedEventsReader,
             IEnumerable<IDomainEventsProcessor> eventProcessors = null,
             int bufferSize = 16384,
             int pollTimeout = 2000,
@@ -50,6 +50,12 @@ namespace Ozzy.DomainModel
         {
             if (_stage != 0) throw new InvalidOperationException("It is forbidden to add EventsProcessors after start");
             this._eventProcessors.Add(processor);
+        }
+
+        public void AddHandlers(IEnumerable<IDomainEventsProcessor> processors)
+        {
+            if (_stage != 0) throw new InvalidOperationException("It is forbidden to add EventsProcessors after start");
+            this._eventProcessors.AddRange(processors);
         }
 
         private bool Started()
@@ -84,8 +90,9 @@ namespace Ozzy.DomainModel
         private List<DomainEventRecord> GetEventsFromDurableStore()
         {
             var checkpoint = _ringBuffer.Cursor;
-            var count = Convert.ToInt32(_ringBuffer.RemainingCapacity());
-            var events = _persistedEventsReader.GetEvents(checkpoint, count);
+            var count = _ringBuffer.RemainingCapacity();
+            if (count < 0) count = 0;
+            var events = _persistedEventsReader.GetEvents(checkpoint, Convert.ToInt32(count));
             if (!events.Any()) return events;
             // ожидается, что события получаются из IPeristedEventsReader уже отсортированными
             var sortedEvents = events;
@@ -112,7 +119,7 @@ namespace Ozzy.DomainModel
         private void PollData(CancellationToken stopRequested)
         {
             var events = GetEventsFromDurableStore();
-            OzzyLogger<IDomainModelTracing>.LogFor<DomainEventsManager>().Polling(events.Count);
+            OzzyLogger<IDomainModelTracing>.LogFor<DomainEventsLoop>().Polling(events.Count);
 
             foreach (var e in events)
             {

@@ -7,7 +7,6 @@ namespace Ozzy.DomainModel
     {
         protected GenericDataRecord()
         {
-
         }
         protected GenericDataRecord(T id) : base(id)
         {

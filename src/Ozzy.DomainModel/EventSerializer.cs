@@ -11,9 +11,10 @@ namespace Ozzy.DomainModel
         static EventSerializer()
         {
             _settings = new JsonSerializerSettings()
-            {                             
+            {
+                ConstructorHandling = ConstructorHandling.AllowNonPublicDefaultConstructor,
                 NullValueHandling = NullValueHandling.Ignore,
-                TypeNameAssemblyFormat = FormatterAssemblyStyle.Simple                
+                TypeNameAssemblyFormat = FormatterAssemblyStyle.Simple        
             };
             _settings.Converters.Add(new StringEnumConverter());                        
         }

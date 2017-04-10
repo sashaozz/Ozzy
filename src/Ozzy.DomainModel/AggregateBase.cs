@@ -17,7 +17,8 @@ namespace Ozzy.DomainModel
         /// <param name="id"></param>
         protected AggregateBase(T id) : base(id)
         {
-            Events = _events = new List<IDomainEvent>();
+            //Events = 
+            _events = new List<IDomainEvent>();
         }
 
         /// <summary>
@@ -25,14 +26,24 @@ namespace Ozzy.DomainModel
         /// </summary>
         protected AggregateBase() : base()
         {
-            Events = _events = new List<IDomainEvent>();
+            //Events = 
+            _events = new List<IDomainEvent>();
         }
 
         /// <summary>
         /// Список доменных событий, связанных с агрегатом.
         /// </summary>
-        [JsonIgnore]
-        public List<IDomainEvent> Events { get; protected set; }
+        //[JsonIgnore]
+        //public List<IDomainEvent> Events { get; protected set; }
+        public IEnumerable<IDomainEvent> GetUndispatchedEvents()
+        {
+            return _events;
+        }
+
+        public void ClearUndispatchedEvents()
+        {
+            _events.Clear();
+        }
 
         /// <summary>
         /// Создает новое доменное событие в данном агрегате.

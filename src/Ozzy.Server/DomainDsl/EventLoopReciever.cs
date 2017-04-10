@@ -5,9 +5,9 @@ namespace Ozzy.Server
 {
     public class EventLoopReciever : BackgroundTask, IFastEventReciever       
     {        
-        private DomainEventsManager _loop;
+        private DomainEventsLoop _loop;
 
-        public EventLoopReciever(DomainEventsManager loop)
+        public EventLoopReciever(DomainEventsLoop loop)
         {           
             _loop = loop;
         }

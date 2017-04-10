@@ -10,10 +10,10 @@ namespace Ozzy.Server.EntityFramework
     /// <summary>
     /// Реализация IPeristedEventsReader на основе дата-контекста AggregateDbContext
     /// </summary>
-    public class DbEventsReader : IPeristedEventsReader
+    public class DbEventsReader<TDomain> : IPeristedEventsReader<TDomain> where TDomain : AggregateDbContext
     {
-        private readonly Func<AggregateDbContext> _dbContext;
-        public DbEventsReader(Func<AggregateDbContext> dbContext)
+        private readonly Func<TDomain> _dbContext;
+        public DbEventsReader(Func<TDomain> dbContext)
         {
             Guard.ArgumentNotNull(dbContext, nameof(dbContext));
             _dbContext = dbContext;
