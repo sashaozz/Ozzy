@@ -23,7 +23,7 @@ namespace Ozzy.Server.BackgroundTasks
             _serviceProvider = serviceProvider;
         }
 
-        public virtual void Add<T>(string configuration = null, string nodeId = null) where T : BaseBackgroundTask
+        public virtual void Add<T>(string configuration = null) where T : BaseBackgroundTask
         {
             _queueRepository.Create(new QueueRecord(Guid.NewGuid().ToString())
             {
@@ -31,12 +31,11 @@ namespace Ozzy.Server.BackgroundTasks
                 Status = QueueStatus.Awaiting,
                 ItemType = typeof(T).AssemblyQualifiedName,
                 Content = configuration,
-                QueueName = _queueName,
-                NodeId = nodeId
+                QueueName = _queueName
             });
         }
 
-        public void Add(BaseBackgroundTask item, string nodeId = null)
+        public void Add(BaseBackgroundTask item)
         {
             _queueRepository.Create(new QueueRecord(Guid.NewGuid().ToString())
             {
@@ -44,14 +43,12 @@ namespace Ozzy.Server.BackgroundTasks
                 Status = QueueStatus.Awaiting,
                 ItemType = item.GetType().AssemblyQualifiedName,
                 Content = item.Content,
-                QueueName = _queueName,
-                NodeId = nodeId
+                QueueName = _queueName
             });
         }
         public virtual QueueItem<BaseBackgroundTask> FetchNext()
         {
-            var ozzyNode = _serviceProvider.GetService<OzzyNode>();
-            var repositoryItem = _queueRepository.FetchNext(_queueName, ozzyNode.NodeId);
+            var repositoryItem = _queueRepository.FetchNext(_queueName);
 
             if (repositoryItem == null)
                 return null;

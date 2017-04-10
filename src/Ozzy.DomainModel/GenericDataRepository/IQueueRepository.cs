@@ -7,7 +7,7 @@ namespace Ozzy.DomainModel
     {
         IQueryable<QueueRecord> Query();
         void Create(QueueRecord item);
-        QueueRecord FetchNext(string queueName, string nodeId = null);
+        QueueRecord FetchNext(string queueName);
         void Acknowledge(string id);
     }
 }

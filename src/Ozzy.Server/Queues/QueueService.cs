@@ -11,13 +11,11 @@ namespace Ozzy.Server.Queues
     public class QueueService<T> : IQueueService<T> where T : class
     {
         private IQueueRepository _queueRepository;
-        private IServiceProvider _serviceProvider;
         public virtual string QueueName { get; protected set; } = "GeneralQueue";
 
-        public QueueService(IQueueRepository queueRepository, IServiceProvider serviceProvider)
+        public QueueService(IQueueRepository queueRepository)
         {
             _queueRepository = queueRepository;
-            _serviceProvider = serviceProvider;
         }
 
         public void Acknowledge(QueueItem<T> item)
@@ -25,7 +23,7 @@ namespace Ozzy.Server.Queues
             _queueRepository.Acknowledge(item.QueueId);
         }
 
-        public void Add(T item, string nodeId = null)
+        public void Add(T item)
         {
             _queueRepository.Create(new QueueRecord(Guid.NewGuid().ToString())
             {
@@ -33,16 +31,13 @@ namespace Ozzy.Server.Queues
                 Status = QueueStatus.Awaiting,
                 ItemType = typeof(T).AssemblyQualifiedName,
                 Content = JsonConvert.SerializeObject(item),
-                QueueName = QueueName,
-                NodeId = nodeId
+                QueueName = QueueName
             });
         }
 
         public QueueItem<T> FetchNext()
         {
-            var ozzyNode = _serviceProvider.GetService<OzzyNode>();
-
-            var queueItem = _queueRepository.FetchNext(QueueName, ozzyNode?.NodeId);
+            var queueItem = _queueRepository.FetchNext(QueueName);
             if (queueItem == null)
                 return null;
 
