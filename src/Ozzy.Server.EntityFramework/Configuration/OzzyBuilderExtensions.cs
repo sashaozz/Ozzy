@@ -40,9 +40,9 @@ namespace Ozzy.Server.Configuration
           where TDomain : AggregateDbContext
         {
             builder.Services.AddSingleton<IDomainEventsManager>(sp => new EfDomainEventsManager(sp.GetService<Func<TDomain>>()));
-            builder.Services.AddSingleton(sp => new TypedRegistration<DomainModel.Monitoring.NodeMonitoringInfo, ICheckpointManager>(new DbCheckpointManager(sp.GetService<Func<TDomain>>(), "monitoring", -1)));
+            builder.Services.AddSingleton(sp => new TypedRegistration<DomainModel.Monitoring.NodeMonitoringInfo, ICheckpointManager>(new SimpleChekpointManager(new DbEventsReader( sp.GetService<Func<TDomain>>()))));
 
             return builder;
-        }
+        } 
     }
 }
