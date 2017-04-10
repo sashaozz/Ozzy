@@ -9,7 +9,9 @@ using static Ozzy.DomainModel.Monitoring.Events;
 
 namespace Ozzy.Server.FeatureFlags
 {
-    public class MonitoringEventsProcessor : BaseEventsProcessor
+    public class MonitoringEventsProcessor : DomainEventsProcessor,
+        IHandleEvent<BackgroundProcessStopped>,
+        IHandleEvent<BackgroundProcessStarted>
     {
         private IServiceProvider _serviceProvider;
 
@@ -17,33 +19,34 @@ namespace Ozzy.Server.FeatureFlags
             : base(checkpointManager.GetService())
         {
             _serviceProvider = serviceProvider;
-
-            AddHandler<BackgroundProcessStopped>(Handle);
-            AddHandler<BackgroundProcessStarted>(Handle);
         }       
 
-        private void Handle(BackgroundProcessStarted obj)
+        public bool Handle(BackgroundProcessStarted obj)
         {
             var node = _serviceProvider.GetService<OzzyNode>();
 
             if (obj.NodeId != node.NodeId)
-                return; //event came to wrong node, ignore it
+                return true; //event came to wrong node, ignore it
 
             var process = node.BackgroundProcesses.FirstOrDefault(b => b.Name == obj.ProcessId);
             if (process != null)
                 process.Start();
+
+            return false;
         }
 
-        private void Handle(BackgroundProcessStopped obj)
+        public bool Handle(BackgroundProcessStopped obj)
         {
             var node = _serviceProvider.GetService<OzzyNode>();
 
             if (obj.NodeId != node.NodeId)
-                return; //event came to wrong node, ignore it
+                return true; //event came to wrong node, ignore it
 
             var process = node.BackgroundProcesses.FirstOrDefault(b => b.Name == obj.ProcessId);
             if (process != null)
                 process.Stop();
+
+            return false;
         }
     }
 }
