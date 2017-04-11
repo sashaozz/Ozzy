@@ -8,19 +8,14 @@ using System.Threading;
 using Microsoft.Extensions.DependencyInjection;
 using System.Threading.Tasks;
 using Ozzy.DomainModel.Monitoring;
+using Ozzy.Server.BackgroundProcesses;
 
 namespace Ozzy.Server.Monitoring
 {
-    public class NodesMonitoringProcess : PeriodicAction, IBackgroundProcess
+    public class NodesMonitoringProcess : PeriodicActionProcess
     {
-        public bool IsRunning => base.IsStarted;
-        public Guid Id { get; } = Guid.NewGuid();
-        public string Name => this.GetType().Name;
-
         private INodesManager _monitoringManager;
         private IServiceProvider _serviceProvider;
-        // private OzzyNode _ozzyNode;
-
         public NodesMonitoringProcess(INodesManager monitoringManager, IServiceProvider serviceProvider)
         {
             _monitoringManager = monitoringManager;
@@ -37,14 +32,15 @@ namespace Ozzy.Server.Monitoring
                 MachineName = Environment.MachineName,
                 BackgroundTasks = ozzyNode.BackgroundProcesses.Select(p => new BackgroundTaskMonitoringInfo()
                 {
-                    TaskId = p.Id,
-                    TaskName = p.Name,
+                    TaskId = p.ProcessId,
+                    TaskName = p.ProcessName,
+                    TaskState = p.ProcessState,
                     IsRunning = p.IsRunning
                 }).ToList(),
                 MonitoringTimeStamp = DateTime.Now
             };
 
-           await _monitoringManager.SaveNodeMonitoringInfo(data);
+            await _monitoringManager.SaveNodeMonitoringInfo(data);
         }
     }
 }

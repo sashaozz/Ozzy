@@ -1,5 +1,4 @@
-﻿using System;
-using System.Threading;
+﻿using System.Threading;
 using System.Threading.Tasks;
 using Ozzy.Core;
 using Ozzy.Server.FeatureFlags;
@@ -15,21 +14,20 @@ namespace SampleApplication
         {
             _ffService = ffService;
             ActionInterval = 1000;
-            
+
         }
 
         public bool IsRunning => base.IsStarted;
-
-        public string Name => "process1";
-
-        public Guid Id { get; } = Guid.NewGuid();
+        public string ProcessName => "Log Process";
+        public string ProcessId { get; } = "Process 1";
+        public string ProcessState => IsRunning ? "Logging" : "Not Logging";
 
         protected override async Task ActionAsync(CancellationToken cts)
         {
-            //if (_ffService.IsEnabled<ConsoleLogFeature>())
-            //{
+            if (_ffService.IsEnabled<ConsoleLogFeature>())
+            {
                 OzzyLogger<ICommonEvents>.Log.TraceInformationalEvent("process 1");
-            //}
+            }
         }
     }
 
@@ -43,18 +41,17 @@ namespace SampleApplication
             ActionInterval = 1000;
         }
 
-        public Guid Id { get; } = Guid.NewGuid();
-
         public bool IsRunning => base.IsStarted;
-
-        public string Name => "process1";
+        public string ProcessName => "Log Process";
+        public string ProcessId { get; } = "Process 2";
+        public string ProcessState => IsRunning ? "Logging" : "Not Logging";
 
         protected override async Task ActionAsync(CancellationToken cts)
         {
-            //if (_ffService.IsEnabled<ConsoleLogFeature>())
-            //{
+            if (_ffService.IsEnabled<ConsoleLogFeature>())
+            {
                 OzzyLogger<ICommonEvents>.Log.TraceInformationalEvent("process 2");
-            //}
+            }
         }
     }
 }

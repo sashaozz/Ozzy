@@ -5,13 +5,14 @@ namespace Ozzy.Server
 {
     public abstract class BackgroundProcessBase : BackgroundTask, IBackgroundProcess
     {
-        public bool IsRunning => IsStarted;
-        public string Name { get; protected set; }
-        public Guid Id { get; protected set; } = Guid.NewGuid();
+        public virtual bool IsRunning => IsStarted;
+        public virtual string ProcessName { get; protected set; }
+        public virtual string ProcessId { get; protected set; } = Guid.NewGuid().ToString();
+        public virtual string ProcessState => IsRunning ? "Running" : "Not Running";
 
         protected BackgroundProcessBase()
         {
-            Name = this.GetType().Name;
+            ProcessName = this.GetType().Name;
         }
     }
 }

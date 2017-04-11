@@ -5,8 +5,10 @@ namespace Ozzy.Server
 {
     public interface IBackgroundProcess : IBackgroundTask
     {
-        Guid Id { get; }
+        string ProcessId { get; }
+        string ProcessName { get; }
+        string ProcessState { get; }
         bool IsRunning { get; }
-        string Name { get; }
+        
     }
 }

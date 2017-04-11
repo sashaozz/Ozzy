@@ -2,11 +2,12 @@
 using System.Threading;
 using System.Threading.Tasks;
 using Ozzy.Core;
+using Ozzy.Server.BackgroundProcesses;
 using StackExchange.Redis;
 
 namespace Ozzy.Server.Redis.BackgroundProcesses
 {
-    public class NodeHeartBeatProcess : PeriodicAction, IBackgroundProcess
+    public class NodeHeartBeatProcess : PeriodicActionProcess
     {
         private readonly OzzyNode _node;
         private readonly IConnectionMultiplexer _redis;
@@ -16,11 +17,6 @@ namespace Ozzy.Server.Redis.BackgroundProcesses
             _node = node;
             _redis = redis.Redis;
         }
-
-        public bool IsRunning => base.IsStarted;
-        public Guid Id { get; } = Guid.NewGuid();
-        public string Name => this.GetType().Name;
-
         protected override async Task ActionAsync(CancellationToken cts)
         {
             var db = _redis.GetDatabase();

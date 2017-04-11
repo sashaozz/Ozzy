@@ -12,8 +12,8 @@ namespace Ozzy.Server.Monitoring
 
         Task<List<NodeMonitoringInfo>> GetNodeMonitoringInfo();
 
-        Task StopProcess(string nodeId, Guid processId);
+        Task StopProcess(string nodeId, string processId);
 
-        Task StartProcess(string nodeId, Guid processId);
+        Task StartProcess(string nodeId, string processId);
     }
 }

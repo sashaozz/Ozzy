@@ -18,8 +18,7 @@ namespace Ozzy.Core
 
         public int ActionInterval { get; protected set; }
         public bool WaitForFirstInterval { get; protected set; }
-        
-
+        public bool DoingAction => _doingAction == 1;
         protected PeriodicAction(int interval = 5000, bool waitForFirstInterval = false)
         {
             Guard.ArgumentNotNegativeValue(interval, nameof(interval));

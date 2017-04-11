@@ -14,13 +14,23 @@ namespace Ozzy.Server.BackgroundProcesses
         {
             _lockService = lockService;
             _innerProcess = innerProcess;
-            Name = innerProcess.Name;
-            Id = innerProcess.Id;
+            ProcessName = innerProcess.ProcessName;
+            ProcessId = innerProcess.ProcessId;
+        }
+
+        public override string ProcessState
+        {
+            get
+            {
+                string state = IsRunning ? "Started" : "Not Started";
+                state += _innerProcess.IsRunning ? " (Doing Work)" : $" (Not Doing Work - Waiting For Distributed Lock '{ProcessName}')";
+                return state;
+            }
         }
 
         protected override async Task StartInternal()
         {
-            using (var _dlock = await _lockService.CreateLockAsync(this.Name,
+            using (var _dlock = await _lockService.CreateLockAsync(this.ProcessName,
                 TimeSpan.FromSeconds(1),
                 TimeSpan.MaxValue,
                 TimeSpan.FromSeconds(1),
