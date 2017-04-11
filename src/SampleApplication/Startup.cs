@@ -59,7 +59,7 @@ namespace SampleApplication
 
             services.AddTransient<TestBackgoundTask>();
             services.AddTransient<IQueueService<SampleQueueItem>, QueueService<SampleQueueItem>>();
-            //var ozzyOptions = Configuration.GetSection("OzzyOptions");
+            var ozzyOptions = Configuration.GetSection("OzzyOptions");
             //services.ConfigureEntityFrameworkForOzzy(ozzyOptions);
             //services.ConfigureRedisForOzzy(ozzyOptions);
 
@@ -100,10 +100,14 @@ namespace SampleApplication
                 .AddBackgroundProcess<NodeConsoleHeartBeatProcess2>()
                 .AddBackgroundMessageLoopProcess<SampleEventLoop>()
                 .AddBackgroundMessageLoopProcess<OzzyNodeEventLoop<SampleDbContext>>()
+                .UseEFDomainEvent<SampleDbContext>()
                 .UseEFDistributedLockService<SampleDbContext>()
                 .UseEFFeatureFlagService<SampleDbContext>()
                 .UseEFBackgroundTaskService<SampleDbContext>()
                 .AddBackgroundProcess<TaskQueueProcess>()
+                .UseRedis(ozzyOptions)
+                .UseRedisMonitoring()
+                //.UseInMemoryMonitoring()
                 .AddFeatureFlag<ConsoleLogFeature>()
                 .AddApi();
         }
@@ -167,7 +171,7 @@ namespace SampleApplication
                     name: "default",
                     template: "{controller=Home}/{action=Index}/{id?}");
             });
-
+         
             app.UseOzzy().Start();
         }
         private LogEventLevel GetSerilogLevel(EventLevel level)

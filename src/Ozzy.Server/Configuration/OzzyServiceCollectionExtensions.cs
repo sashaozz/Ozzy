@@ -7,6 +7,7 @@ using Ozzy.Server.BackgroundTasks;
 using Ozzy.Server.Saga;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using System;
+using Ozzy.Server.Monitoring;
 
 namespace Ozzy.Server.Configuration
 {
@@ -18,6 +19,7 @@ namespace Ozzy.Server.Configuration
             var lifetime = app.ApplicationServices.GetService<IApplicationLifetime>();
             var node = app.ApplicationServices.GetService<OzzyNode>();
             lifetime.ApplicationStopped.Register(node.Stop);
+
             var starter = new OzzyStarter(app, node);
             return starter;
         }
