@@ -13,6 +13,9 @@ namespace Ozzy.Server
         {
             var ffhandler = options.GetServiceProvider().GetService<FeatureFlagsEventsProcessor>();
             AddHandler(ffhandler);
+
+            var mhandler = options.GetServiceProvider().GetService<MonitoringEventsProcessor>();
+            AddHandler(mhandler);
         }
     }
 }

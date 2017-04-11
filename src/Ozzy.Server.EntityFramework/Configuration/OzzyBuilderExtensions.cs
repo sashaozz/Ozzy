@@ -24,7 +24,7 @@ namespace Ozzy.Server.Configuration
             builder.Services.AddSingleton<IFeatureFlagRepository>(sp => new FeatureFlagRepository(sp.GetService<Func<TDomain>>(), db => db.FeatureFlags));
             builder.Services.AddSingleton(sp => new TypedRegistration<FeatureFlag, ICheckpointManager>(new DbCheckpointManager<TDomain>(sp.GetService<Func<TDomain>>(), "featureflags", -1)));            
             builder.Services.AddSingleton<FeatureFlagsEventsProcessor>();
-            builder.Services.AddSingleton<IDomainEventsProcessor, FeatureFlagsEventsProcessor>();            
+            builder.Services.AddSingleton<IDomainEventsProcessor, FeatureFlagsEventsProcessor>();
             builder.Services.AddSingleton<OzzyNodeEventLoop<TDomain>>();
             return builder;
         }
@@ -35,5 +35,14 @@ namespace Ozzy.Server.Configuration
             builder.Services.AddSingleton<IQueueRepository>(sp => new SqlServerEfQueueRepository(sp.GetService<Func<TDomain>>(), db => db.Queues));
             return builder;
         }
+
+        public static IOzzyBuilder UseEFDomainEvent<TDomain>(this IOzzyBuilder builder)
+          where TDomain : AggregateDbContext
+        {
+            builder.Services.AddSingleton<IDomainEventsManager>(sp => new EfDomainEventsManager(sp.GetService<Func<TDomain>>()));
+            builder.Services.AddSingleton(sp => new TypedRegistration<DomainModel.Monitoring.NodeMonitoringInfo, ICheckpointManager>(new SimpleChekpointManager(new DbEventsReader<TDomain>( sp.GetService<Func<TDomain>>()))));
+
+            return builder;
+        } 
     }
 }
