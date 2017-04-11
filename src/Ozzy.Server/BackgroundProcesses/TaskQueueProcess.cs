@@ -19,6 +19,7 @@ namespace Ozzy.Server.BackgroundProcesses
         }
 
         public bool IsRunning => base.IsStarted;
+        public Guid Id { get; } = Guid.NewGuid();
 
         public string Name => this.GetType().Name;
 

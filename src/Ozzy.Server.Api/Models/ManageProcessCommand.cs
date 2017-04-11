@@ -7,6 +7,6 @@ namespace Ozzy.Server.Api.Models
    public class ManageProcessCommand
     {
         public string NodeId { get; set; }
-        public string ProcessId { get; set; }
+        public Guid ProcessId { get; set; }
     }
 }

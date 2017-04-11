@@ -14,7 +14,7 @@ namespace Ozzy.Server.Monitoring
     public class NodesMonitoringProcess : PeriodicAction, IBackgroundProcess
     {
         public bool IsRunning => base.IsStarted;
-
+        public Guid Id { get; } = Guid.NewGuid();
         public string Name => this.GetType().Name;
 
         private INodesManager _monitoringManager;
@@ -37,7 +37,8 @@ namespace Ozzy.Server.Monitoring
                 MachineName = Environment.MachineName,
                 BackgroundTasks = ozzyNode.BackgroundProcesses.Select(p => new BackgroundTaskMonitoringInfo()
                 {
-                    TaskId = p.Name,
+                    TaskId = p.Id,
+                    TaskName = p.Name,
                     IsRunning = p.IsRunning
                 }).ToList(),
                 MonitoringTimeStamp = DateTime.Now

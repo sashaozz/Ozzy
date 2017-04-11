@@ -34,7 +34,7 @@ namespace Ozzy.Server.Monitoring
             await _monitoringRepository.SaveNodeMonitoringInfo(data);
         }
 
-        public async Task StartProcess(string nodeId, string processId)
+        public async Task StartProcess(string nodeId, Guid processId)
         {
             _domainEventsManager.AddDomainEvent(new BackgroundProcessStarted()
             {
@@ -43,7 +43,7 @@ namespace Ozzy.Server.Monitoring
             });
         }
 
-        public async Task StopProcess(string nodeId, string processId)
+        public async Task StopProcess(string nodeId, Guid processId)
         {
             _domainEventsManager.AddDomainEvent(new BackgroundProcessStopped()
             {

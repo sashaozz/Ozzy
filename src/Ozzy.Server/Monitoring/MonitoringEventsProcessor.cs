@@ -28,7 +28,7 @@ namespace Ozzy.Server.FeatureFlags
             if (obj.NodeId != node.NodeId)
                 return true; //event came to wrong node, ignore it
 
-            var process = node.BackgroundProcesses.FirstOrDefault(b => b.Name == obj.ProcessId);
+            var process = node.BackgroundProcesses.FirstOrDefault(b => b.Id == obj.ProcessId);
             if (process != null)
                 process.Start();
 
@@ -42,7 +42,7 @@ namespace Ozzy.Server.FeatureFlags
             if (obj.NodeId != node.NodeId)
                 return true; //event came to wrong node, ignore it
 
-            var process = node.BackgroundProcesses.FirstOrDefault(b => b.Name == obj.ProcessId);
+            var process = node.BackgroundProcesses.FirstOrDefault(b => b.Id == obj.ProcessId);
             if (process != null)
                 process.Stop();
 
