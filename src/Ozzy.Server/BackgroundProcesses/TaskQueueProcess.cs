@@ -1,15 +1,10 @@
-﻿using Ozzy.Core;
-using Ozzy.Server.BackgroundTasks;
-using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using Ozzy.Server.BackgroundTasks;
 using System.Threading;
 using System.Threading.Tasks;
-using Ozzy.DomainModel;
 
 namespace Ozzy.Server.BackgroundProcesses
 {
-    public class TaskQueueProcess : PeriodicAction, IBackgroundProcess
+    public class TaskQueueProcess : PeriodicActionProcess
     {
         private ITaskQueueService _backgroundTaskService;
 
@@ -17,10 +12,6 @@ namespace Ozzy.Server.BackgroundProcesses
         {
             _backgroundTaskService = backgroundTaskService;
         }
-
-        public bool IsRunning => base.IsStarted;
-
-        public string Name => this.GetType().Name;
 
         protected override async Task ActionAsync(CancellationToken cts)
         {

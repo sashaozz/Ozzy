@@ -22,9 +22,15 @@ namespace Ozzy.Server.Redis.Monitoring
 
         public async Task<List<NodeMonitoringInfo>> GetNodeMonitoringInfo()
         {
-            var db = _redis.GetDatabase();
-            var values = await db.HashValuesAsync(_nodesKey);
-            return values.Select(v => JsonConvert.DeserializeObject<NodeMonitoringInfo>(v)).ToList();
+            try
+            {
+                var db = _redis.GetDatabase();
+                var values = await db.HashValuesAsync(_nodesKey);
+                return values.Select(v => JsonConvert.DeserializeObject<NodeMonitoringInfo>(v)).ToList();
+            }
+            catch {
+                return new List<NodeMonitoringInfo>();
+            }
         }
 
         public async Task SaveNodeMonitoringInfo(NodeMonitoringInfo data)

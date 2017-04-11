@@ -33,5 +33,9 @@ namespace Ozzy.Server.EntityFramework
             LockId = Guid.NewGuid();
             LockDateTime = DateTime.UtcNow.Add(expiry);
         }
+        public void Release() {
+            LockId = Guid.NewGuid();
+            LockDateTime = DateTime.UtcNow;
+        }
     }
 }
