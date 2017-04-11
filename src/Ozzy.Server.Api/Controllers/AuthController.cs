@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Ozzy.Server.Api.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/[controller]/[action]")]
     public class AuthController : Controller
     {
         private IAuthentificationService _authentificationService;
@@ -18,6 +18,7 @@ namespace Ozzy.Server.Api.Controllers
             _authentificationService = authentificationService;
         }
 
+        [HttpPost]
         public async Task<bool> Login([FromBody]LoginModel data)
         {
             var rez = await _authentificationService.IsAuthorized(data.Login, data.Password);

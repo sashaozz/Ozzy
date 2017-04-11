@@ -7,10 +7,12 @@ using System.Threading.Tasks;
 using System.Linq;
 using System;
 using Ozzy.Server.Api.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Ozzy.Server.Api.Controllers
 {
     [Route("api/[controller]/[action]")]
+    [Authorize]
     public class MonitoringController : Controller
     {
         INodesManager _nodesManager;
