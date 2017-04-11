@@ -18,7 +18,7 @@ namespace Ozzy.Server.Redis.BackgroundProcesses
         }
 
         public bool IsRunning => base.IsStarted;
-
+        public Guid Id { get; } = Guid.NewGuid();
         public string Name => this.GetType().Name;
 
         protected override async Task ActionAsync(CancellationToken cts)

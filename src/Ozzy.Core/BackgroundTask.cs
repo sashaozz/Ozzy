@@ -14,7 +14,6 @@ namespace Ozzy.Core
     {
         // 0-notstarted, 1-starting, 2-started, 3-stopping
         private int _stage;
-
         protected CancellationTokenSource StopRequested;
         protected Task RunningTask = Task.CompletedTask;
         protected TaskCompletionSource<bool> RunningTaskCompletionSource;

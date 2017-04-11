@@ -31,8 +31,7 @@ namespace Ozzy.Server.BackgroundTasks
                 Status = QueueStatus.Awaiting,
                 ItemType = typeof(T).AssemblyQualifiedName,
                 Content = configuration,
-                QueueName = _queueName,
-                NodeId = nodeId
+                QueueName = _queueName
             });
         }
 
@@ -44,8 +43,7 @@ namespace Ozzy.Server.BackgroundTasks
                 Status = QueueStatus.Awaiting,
                 ItemType = item.GetType().AssemblyQualifiedName,
                 Content = item.Content,
-                QueueName = _queueName,
-                NodeId = nodeId
+                QueueName = _queueName
             });
         }
         public virtual QueueItem<BaseBackgroundTask> FetchNext()

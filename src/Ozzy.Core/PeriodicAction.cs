@@ -81,7 +81,14 @@ namespace Ozzy.Core
             }
             while (!StopRequested.IsCancellationRequested)
             {
-                await Task.Delay(ActionInterval, StopRequested.Token);
+                try
+                {
+                    await Task.Delay(ActionInterval, StopRequested.Token);
+                }
+                catch (TaskCanceledException)
+                {
+                    return;
+                }
                 await DoActionAsync();
             }
         }
@@ -93,6 +100,10 @@ namespace Ozzy.Core
                 try
                 {
                     await _asyncAction(StopRequested.Token);
+                }
+                catch (TaskCanceledException e)
+                {
+                    //todo : log task was cancelled
                 }
                 catch (Exception e)
                 {

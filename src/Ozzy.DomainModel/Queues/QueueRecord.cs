@@ -21,7 +21,6 @@ namespace Ozzy.DomainModel.Queues
 
         public string QueueName { get; set; }
         public string ItemType { get; set; }
-        public string NodeId { get; set; }
     }
 
     public enum QueueStatus

@@ -22,7 +22,6 @@ namespace Ozzy.Server.Queues
             {
                 var record = _store.Values
                     .Where(q => q.QueueName == queueName)
-                    .Where(q => q.NodeId == null || q.NodeId == nodeId)
                     .OrderBy(v => v.CreatedAt)
                     .FirstOrDefault();
 

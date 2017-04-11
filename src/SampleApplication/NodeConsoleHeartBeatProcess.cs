@@ -22,12 +22,14 @@ namespace SampleApplication
 
         public string Name => "process1";
 
+        public Guid Id { get; } = Guid.NewGuid();
+
         protected override async Task ActionAsync(CancellationToken cts)
         {
-            if (_ffService.IsEnabled<ConsoleLogFeature>())
-            {
+            //if (_ffService.IsEnabled<ConsoleLogFeature>())
+            //{
                 OzzyLogger<ICommonEvents>.Log.TraceInformationalEvent("process 1");
-            }
+            //}
         }
     }
 
@@ -41,16 +43,18 @@ namespace SampleApplication
             ActionInterval = 1000;
         }
 
+        public Guid Id { get; } = Guid.NewGuid();
+
         public bool IsRunning => base.IsStarted;
 
         public string Name => "process1";
 
         protected override async Task ActionAsync(CancellationToken cts)
         {
-            if (_ffService.IsEnabled<ConsoleLogFeature>())
-            {
+            //if (_ffService.IsEnabled<ConsoleLogFeature>())
+            //{
                 OzzyLogger<ICommonEvents>.Log.TraceInformationalEvent("process 2");
-            }
+            //}
         }
     }
 }

@@ -6,6 +6,7 @@ using Ozzy.Server.Events;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Linq;
 
 namespace Ozzy.Server.EntityFramework
 {
@@ -16,8 +17,6 @@ namespace Ozzy.Server.EntityFramework
         private bool _disposed;
         private Func<AggregateDbContext> _contextFactory;
         private static IDistibutedLockEvents _logger = OzzyLogger<IDistibutedLockEvents>.LogFor<EntityDistributedLockService>();
-
-
         public bool IsAcquired { get; protected set; }
         public TimeSpan Expiry { get; protected set; }
         public string LockName { get; protected set; }
@@ -61,41 +60,67 @@ namespace Ozzy.Server.EntityFramework
                 using (var context = _contextFactory())
                 {
                     var dlock = await context.DistributedLocks.SingleOrDefaultAsync(l => l.LockId == LockId);
-                    dlock.Acquire(Expiry);
-                    var updated = await context.SaveChangesAsync(ct);
-                    if (updated > 0)
+                    if (dlock != null)
                     {
-                        LockId = dlock.LockId;
-                        ExpirationTime = dlock.LockDateTime;
-                        IsAcquired = dlock.IsAcquired();
-                        _logger.LockIsExtended(LockName, Expiry);
-                        return;
+                        dlock.Acquire(Expiry);
+                        var updated = await context.SaveChangesAsync(ct);
+                        if (updated > 0)
+                        {
+                            LockId = dlock.LockId;
+                            ExpirationTime = dlock.LockDateTime;
+                            IsAcquired = dlock.IsAcquired();
+                            _logger.LockIsExtended(LockName, Expiry);
+                            return;
+                        }
                     }
                 }
             }
+            catch (TaskCanceledException)
+            {
+                //todo: sadsa
+            }
             catch (Exception e)
             {
-                _logger.Exception(e, $"Exception when trying to extend distributed lock {LockName}");                
+                //todo:handle exception serialization
+                //_logger.Exception(e, $"Exception when trying to extend distributed lock {LockName}");
                 //_logger.TraceVerboseEvent($"Exception when trying to extend distributed lock {LockName}");
             }
             Dispose();
+            _action?.Invoke();
         }
 
         public void Dispose()
         {
             if (_disposed) return;
-            IsAcquired = false;
-            ReleaseLock();
-            _timer.Dispose();
-            _action?.Invoke();
+            _timer?.Dispose();
+            if (IsAcquired)
+            {
+                TryReleaseLock();                
+                IsAcquired = false;
+            }                                    
             _disposed = true;
         }
 
-        private void ReleaseLock()
+        private void TryReleaseLock()
         {
             _logger.TraceVerboseEvent($"LockReleased");
-            //_logger.LockReleased(LockName, ExpirationTime);
-            //todo : implement release lock
+            //_logger.LockReleased(LockName, ExpirationTime);            
+            try
+            {
+                using (var context = _contextFactory())
+                {
+                    var dlock = context.DistributedLocks.SingleOrDefault(l => l.LockId == LockId);
+                    if (dlock != null && dlock.IsAcquired())
+                    {
+                        dlock.Release();
+                        context.SaveChanges();
+                    }
+                }
+            }
+            catch
+            {
+                //todo: log
+            }
         }
     }
 }

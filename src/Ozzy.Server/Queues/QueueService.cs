@@ -33,8 +33,7 @@ namespace Ozzy.Server.Queues
                 Status = QueueStatus.Awaiting,
                 ItemType = typeof(T).AssemblyQualifiedName,
                 Content = JsonConvert.SerializeObject(item),
-                QueueName = QueueName,
-                NodeId = nodeId
+                QueueName = QueueName
             });
         }
 

@@ -19,7 +19,7 @@ WHERE  Id =
 (
     SELECT TOP 1 Id 
     FROM [dbo].[Queues]  WITH (UPDLOCK)
-	WHERE Status = 0 and QueueName=@p0 and (NodeId is NULL or NodeId = @p1)
+	WHERE Status = 0 and QueueName=@p0
     ORDER  BY [CreatedAt] 
 )";
 
