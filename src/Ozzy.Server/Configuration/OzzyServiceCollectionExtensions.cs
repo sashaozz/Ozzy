@@ -8,6 +8,8 @@ using Ozzy.Server.Saga;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using System;
 using Ozzy.Server.Monitoring;
+using Ozzy.Server.Faults;
+using Ozzy.Server.Queues;
 
 namespace Ozzy.Server.Configuration
 {
@@ -29,6 +31,10 @@ namespace Ozzy.Server.Configuration
             services.AddSingleton<OzzyNode>();
             services.AddSingleton<IFeatureFlagService, FeatureFlagService>();
             services.AddSingleton<ITaskQueueService, TaskQueueService>();
+            services.AddSingleton<IFaultManager, FaultManager>();
+            services.AddTransient<RetryEventTask>();
+            services.AddTransient<IQueueService<FaultInfo>>(x => new QueueService<FaultInfo>(x.GetService<IQueueRepository>(), "deadLetter"));
+
             var builder = new OzzyBuilder(services);
             return builder;
         }

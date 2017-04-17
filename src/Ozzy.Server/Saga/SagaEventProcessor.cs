@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Linq.Expressions;
+using Ozzy.Server.Faults;
 
 namespace Ozzy.Server.Saga
 {
@@ -13,10 +14,12 @@ namespace Ozzy.Server.Saga
         private new Dictionary<Type, Func<TSaga, object, bool>> Handlers { get; set; } = new Dictionary<Type, Func<TSaga, object, bool>>();
         private ISagaRepository _sagaRepository;
         public Type SagaType = typeof(TSaga);
+        private IFaultManager _faultManager;
 
-        public SagaEventProcessor(ISagaRepository sagaRepository, ICheckpointManager checkpointManager) : base(checkpointManager)
+        public SagaEventProcessor(ISagaRepository sagaRepository, ICheckpointManager checkpointManager, IFaultManager faultManager) : base(checkpointManager)
         {
             _sagaRepository = sagaRepository;
+            _faultManager = faultManager;
 
             var interfaces = SagaType.GetTypeInfo().GetInterfaces();
             var handleType = typeof(IHandleEvent<>);
@@ -59,7 +62,7 @@ namespace Ozzy.Server.Saga
             return Handlers.ContainsKey(messageType);
         }
 
-        protected override bool HandleEvent(DomainEventRecord record)
+        public override bool HandleEvent(DomainEventRecord record)
         {
             var messageType = record.GetDomainEventType();
             if (!CanHandleMessage(messageType)) return true;
@@ -78,6 +81,8 @@ namespace Ozzy.Server.Saga
             }
             catch (Exception e)
             {
+          
+                _faultManager.Handle(this.GetType(), record, 5, true);
                 //todo handle retry
             }
             return idempotent;

@@ -34,6 +34,14 @@ namespace Ozzy.Server.BackgroundTasks
                 QueueName = _queueName
             });
         }
+        public void Add<T, T1>(T1 configuration = null)
+          where T : BaseBackgroundTask<T1>
+          where T1 : class
+        {
+            var configurationSerialized = JsonConvert.SerializeObject(configuration);
+            Add<T>(configurationSerialized);
+        }
+
 
         public void Add(BaseBackgroundTask item)
         {
@@ -70,5 +78,6 @@ namespace Ozzy.Server.BackgroundTasks
             _queueRepository.Acknowledge(task.QueueId);
         }
 
+      
     }
 }

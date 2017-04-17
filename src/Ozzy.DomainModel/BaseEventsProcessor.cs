@@ -91,7 +91,7 @@ namespace Ozzy.DomainModel
         {
             return Handlers.ContainsKey(messageType);
         }
-        protected virtual bool HandleEvent(DomainEventRecord record)
+        public virtual bool HandleEvent(DomainEventRecord record)
         {
             var messageType = record.GetDomainEventType();
             if (!CanHandleMessage(messageType)) return true;

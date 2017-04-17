@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using Ozzy.DomainModel;
 using Ozzy.Server.DomainDsl;
 using Ozzy.Server.Saga;
+using Ozzy.Server.Faults;
 
 namespace Ozzy.Server.Configuration
 {
@@ -71,8 +72,9 @@ namespace Ozzy.Server.Configuration
                 var sagaName = typeof(TSaga).FullName;
                 var sagaRepository = sp.GetService<ISagaRepository<TDomain>>();
                 var eventsReader = sp.GetService<IPeristedEventsReader<TDomain>>();
+                var faultManager = sp.GetService<IFaultManager>();
                 var checkpointManager = new SimpleChekpointManager(eventsReader);
-                return new SagaEventProcessor<TSaga>(sagaRepository, checkpointManager);
+                return new SagaEventProcessor<TSaga>(sagaRepository, checkpointManager, faultManager);
             });
             return this;
         }
@@ -87,7 +89,8 @@ namespace Ozzy.Server.Configuration
                 var sagaRepository = options.GetSagaRepository();
                 var eventsReader = options.GetPersistedEventsReader();
                 var checkpointManager = new SimpleChekpointManager(eventsReader);
-                return new SagaEventProcessor<TSaga>(sagaRepository, checkpointManager);
+                var faultManager = sp.GetService<IFaultManager>();
+                return new SagaEventProcessor<TSaga>(sagaRepository, checkpointManager, faultManager);
             });
             return this;
         }

@@ -13,9 +13,12 @@ namespace Ozzy.Server.Queues
         private IQueueRepository _queueRepository;
         public virtual string QueueName { get; protected set; } = "GeneralQueue";
 
-        public QueueService(IQueueRepository queueRepository)
+        public QueueService(IQueueRepository queueRepository, string queueName = null)
         {
             _queueRepository = queueRepository;
+
+            if (!string.IsNullOrEmpty(queueName))
+                QueueName = queueName;
         }
 
         public void Acknowledge(QueueItem<T> item)
