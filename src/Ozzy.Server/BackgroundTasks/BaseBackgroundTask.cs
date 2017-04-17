@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using Ozzy.DomainModel;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -19,11 +20,11 @@ namespace Ozzy.Server.BackgroundTasks
         {
             get
             {
-                return string.IsNullOrEmpty(Content) ? null : JsonConvert.DeserializeObject<T>(Content);
+                return string.IsNullOrEmpty(Content) ? null : EventSerializer.Deserialize<T>(Content);
             }
             set
             {
-                Content = JsonConvert.SerializeObject(Content);
+                Content = EventSerializer.Serialize(Content);
             }
 
         }

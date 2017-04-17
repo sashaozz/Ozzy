@@ -7,10 +7,10 @@ namespace Ozzy.DomainModel
 {
     public class DomainEventRecord
     {
-        public long Sequence { get; protected set; }
-        public string EventType { get; private set; }
-        public string EventData { get; private set; }
-        public DateTime TimeStamp { get; private set; }
+        public long Sequence { get; set; }
+        public string EventType { get; set; }
+        public string EventData { get; set; }
+        public DateTime TimeStamp { get; set; }
 
         public string MetaDataSerialized
         {
