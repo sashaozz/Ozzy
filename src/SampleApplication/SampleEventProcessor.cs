@@ -11,7 +11,7 @@ namespace SampleApplication
             : base(options, new SimpleChekpointManager(options.GetPersistedEventsReader()))
         {
         }
-        protected override bool HandleEvent(DomainEventRecord record)
+        public override bool HandleEvent(DomainEventRecord record)
         {
             return false;
             //OzzyLogger<ICommonEvents>.Log.TraceInformationalEvent(record.ToString());
@@ -36,7 +36,7 @@ namespace SampleApplication
 
         {
         }
-        protected override bool HandleEvent(DomainEventRecord record)
+        public override bool HandleEvent(DomainEventRecord record)
         {
             //OzzyLogger<ICommonEvents>.Log.TraceInformationalEvent(record.ToString());
             return false;

@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using Ozzy.DomainModel;
 using Ozzy.Server.DomainDsl;
 using Ozzy.Server.Saga;
+using Ozzy.Server.Faults;
 
 namespace Ozzy.Server.Configuration
 {
@@ -65,14 +66,19 @@ namespace Ozzy.Server.Configuration
         public OzzyEventLoopOptionsBuilder<TLoop, TDomain> AddSagaProcessor<TSaga>() where TSaga : SagaBase
         {
             _domainBuilder.Services.AddSingleton<TSaga>();
-            _domainBuilder.Services.AddDomainSpecificSingleton<TLoop, IDomainEventsProcessor>(sp =>
+            _domainBuilder.Services.AddSingleton<SagaEventProcessor<TSaga>>(sp =>
             {
                 var options = sp.GetService<IExtensibleOptions<TDomain>>();
                 var sagaName = typeof(TSaga).FullName;
                 var sagaRepository = sp.GetService<ISagaRepository<TDomain>>();
                 var eventsReader = sp.GetService<IPeristedEventsReader<TDomain>>();
+                var faultManager = sp.GetService<IFaultManager>();
                 var checkpointManager = new SimpleChekpointManager(eventsReader);
-                return new SagaEventProcessor<TSaga>(sagaRepository, checkpointManager);
+                return new SagaEventProcessor<TSaga>(sagaRepository, checkpointManager, faultManager);
+            });
+            _domainBuilder.Services.AddDomainSpecificSingleton<TLoop, IDomainEventsProcessor>(sp =>
+            {
+                return sp.GetService<SagaEventProcessor<TSaga>>();
             });
             return this;
         }
@@ -87,7 +93,8 @@ namespace Ozzy.Server.Configuration
                 var sagaRepository = options.GetSagaRepository();
                 var eventsReader = options.GetPersistedEventsReader();
                 var checkpointManager = new SimpleChekpointManager(eventsReader);
-                return new SagaEventProcessor<TSaga>(sagaRepository, checkpointManager);
+                var faultManager = sp.GetService<IFaultManager>();
+                return new SagaEventProcessor<TSaga>(sagaRepository, checkpointManager, faultManager);
             });
             return this;
         }

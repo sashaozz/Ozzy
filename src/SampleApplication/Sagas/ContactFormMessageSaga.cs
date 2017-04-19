@@ -3,6 +3,7 @@ using Ozzy.DomainModel;
 using Ozzy.Server.Saga;
 using SampleApplication.Commands;
 using SampleApplication.Entities;
+using System;
 
 namespace SampleApplication.Sagas
 {
@@ -70,6 +71,8 @@ namespace SampleApplication.Sagas
                 From = "admin@ozzy.com",
                 Message = $"Thank you for your contact. We will be in touch Id of your request is {State.MessageId}"
             };
+
+            throw new InvalidOperationException("Test");
 
             //_mediator.Send(command);
             State.GreetingEmailSent = true;

@@ -65,6 +65,7 @@ namespace Ozzy.Server.EntityFramework
             modelBuilder.Ignore<EmptyEventRecord>();
 
             modelBuilder.Entity<DomainEventRecord>().HasKey(r => r.Sequence);
+            modelBuilder.Entity<DomainEventRecord>().Ignore(r => r.MetaData);
 
             modelBuilder.Entity<Sequence>().HasKey(c => c.Name);
             modelBuilder.Entity<Sequence>().Property(c => c.Name).IsRequired();            
