@@ -96,6 +96,7 @@ namespace SampleApplication
 
             var node = services
                 .AddOzzy()
+                .UseSimpleAuthService()
                 .AddBackgroundProcess<NodeConsoleHeartBeatProcess>()
                 .AddBackgroundProcess<NodeConsoleHeartBeatProcess2>()
                 .AddBackgroundMessageLoopProcess<SampleEventLoop>()
@@ -118,7 +119,7 @@ namespace SampleApplication
             //loggerFactory
             //    .AddConsole(Configuration.GetSection("Logging"))
             //    .AddDebug();
-
+          
             Log.Logger = new LoggerConfiguration()
                 .MinimumLevel.Verbose()
                 .WriteTo.ColoredConsole(LogEventLevel.Verbose, "{Timestamp:yyyy-MM-dd HH:mm:ss} [{Level}] {Message}{NewLine}{OzzyEvent}")
@@ -144,7 +145,7 @@ namespace SampleApplication
                 //log.Log(LogLevel.Information, new EventId(e.EventId), e, null, (s, ex) => string.Format(s.Message, s.Payload.ToArray()));
             }));
 
-
+          
             //if (env.IsDevelopment())
             //{
             //    app.UseDeveloperExceptionPage();
@@ -162,9 +163,8 @@ namespace SampleApplication
             //    handlers.Addhandler<SampleEventProcessor>();
             //});                    
 
-            app.UseCors(builder =>
-                builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
-
+            app.UseCors(builder => builder.WithOrigins("http://localhost:3000").AllowAnyMethod().AllowAnyHeader().AllowCredentials());
+            app.UseCookieAuthentication();
             app.UseMvc(routes =>
             {
                 routes.MapRoute(

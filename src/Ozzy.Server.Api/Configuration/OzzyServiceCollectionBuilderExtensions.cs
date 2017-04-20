@@ -11,6 +11,12 @@ namespace Ozzy.Server.Api.Configuration
             {
             });
             return builder;
-        }        
+        }
+
+        public static IOzzyBuilder UseSimpleAuthService(this IOzzyBuilder builder)
+        {
+            builder.Services.AddSingleton<IAuthentificationService, AuthentificationService>();
+            return builder;
+        }
     }
 }
