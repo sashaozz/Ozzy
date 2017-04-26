@@ -3,7 +3,7 @@ using Ozzy.Core;
 using System;
 using System.Diagnostics.Tracing;
 
-namespace Ozzy.Server.Events
+namespace Ozzy.Server
 {
     [EventSourceImplementation(Name = "Ozzy-DistributedLockEvents")]
     public interface IDistibutedLockEvents : ICommonEvents

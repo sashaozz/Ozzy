@@ -11,7 +11,7 @@ namespace Ozzy.Server.Redis
     {
         static RedisPubSubEventPublisher()
         {
-            RuntimeTypeModel.Default.Add(typeof(DomainEventRecord), false)
+            RuntimeTypeModel.Default.Add(typeof(IDomainEventRecord), false)
                 .Add("Sequence", "AggregateId", "EventType", "EventData", "TimeStamp");
         }
 
@@ -26,7 +26,7 @@ namespace Ozzy.Server.Redis
             _db = redis.Redis.GetDatabase();
         }
 
-        public void Publish(DomainEventRecord message)
+        public void Publish(IDomainEventRecord message)
         {
             using (var stream = new MemoryStream())
             {

@@ -1,10 +1,7 @@
-﻿using Ozzy.DomainModel.Monitoring;
-using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace Ozzy.Server.Monitoring
+namespace Ozzy.Server
 {
     public interface INodesManager
     {

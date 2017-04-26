@@ -7,14 +7,14 @@ namespace Ozzy.DomainModel
     /// </summary>
     public class DelegateEventPublisher : IFastEventPublisher
     {
-        private readonly Action<DomainEventRecord> _publishAction;
-        public DelegateEventPublisher(Action<DomainEventRecord> publishAction)
+        private readonly Action<IDomainEventRecord> _publishAction;
+        public DelegateEventPublisher(Action<IDomainEventRecord> publishAction)
         {
             if (publishAction == null) throw new ArgumentNullException(nameof(publishAction));
             _publishAction = publishAction;
         }
 
-        public void Publish(DomainEventRecord message)
+        public void Publish(IDomainEventRecord message)
         {
             _publishAction(message);
         }

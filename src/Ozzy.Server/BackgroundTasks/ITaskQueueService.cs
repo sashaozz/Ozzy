@@ -1,9 +1,4 @@
-﻿using Ozzy.Server.Queues;
-using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Ozzy.Server.BackgroundTasks
+﻿namespace Ozzy.Server
 {
     public interface ITaskQueueService: IQueueService<BaseBackgroundTask>
     {

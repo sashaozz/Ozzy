@@ -1,6 +1,5 @@
 ﻿using System;
 using Ozzy.Core;
-using Newtonsoft.Json;
 
 namespace Ozzy.DomainModel
 {
@@ -19,9 +18,9 @@ namespace Ozzy.DomainModel
             Guard.ArgumentNotNull(id, nameof(id));
             Id = id;
         }
-
-        [JsonProperty]
-        public T Id { get; protected set; }        
+        
+        public T Id { get; protected set; }
+        public int Version { get; protected set; }
 
         public override bool Equals(object anotherObject)
         {

@@ -6,9 +6,8 @@ using System.Linq;
 namespace Ozzy.Server.Api
 {
     [Route("api/[controller]")]
-    public class GenericDataController<TItem, TId> : Controller where TItem : GenericDataRecord<TId>
+    public class GenericDataController<TItem, TId> : Controller where TItem : class, IEntity<TId>
     {
-
         private IDataRepository<TItem, TId> _repository;
 
         public GenericDataController(IDataRepository<TItem, TId> repository)

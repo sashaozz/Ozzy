@@ -5,9 +5,9 @@ using System.Threading;
 
 namespace Ozzy.DomainModel
 {
-    public class InMemoryDomainEventsPubSub : IObservable<DomainEventRecord>, IObserver<DomainEventRecord>, IDisposable
+    public class InMemoryDomainEventsPubSub : IObservable<IDomainEventRecord>, IObserver<IDomainEventRecord>, IDisposable
     { 
-        private List<IObserver<DomainEventRecord>> _observers = new List<IObserver<DomainEventRecord>>();
+        private List<IObserver<IDomainEventRecord>> _observers = new List<IObserver<IDomainEventRecord>>();
         private object _syncLock = new object();
    
         public void OnCompleted()
@@ -26,7 +26,7 @@ namespace Ozzy.DomainModel
             }
         }
 
-        public void OnNext(DomainEventRecord value)
+        public void OnNext(IDomainEventRecord value)
         {
             foreach (var observer in _observers)
             {
@@ -34,7 +34,7 @@ namespace Ozzy.DomainModel
             }
         }
 
-        public IDisposable Subscribe(IObserver<DomainEventRecord> observer)
+        public IDisposable Subscribe(IObserver<IDomainEventRecord> observer)
         {
             Guard.ArgumentNotNull(observer, nameof(observer));
             lock (_syncLock)
@@ -44,7 +44,7 @@ namespace Ozzy.DomainModel
             return new Subscription(this, observer);
         }
 
-        public void Unsubscribe(IObserver<DomainEventRecord> observer)
+        public void Unsubscribe(IObserver<IDomainEventRecord> observer)
         {
             Guard.ArgumentNotNull(observer, nameof(observer));
             lock (_syncLock)
@@ -60,10 +60,10 @@ namespace Ozzy.DomainModel
 
         private sealed class Subscription : IDisposable
         {
-            private IObserver<DomainEventRecord> _observer;
+            private IObserver<IDomainEventRecord> _observer;
             private InMemoryDomainEventsPubSub _subject;
 
-            public Subscription(InMemoryDomainEventsPubSub subject, IObserver<DomainEventRecord> observer)
+            public Subscription(InMemoryDomainEventsPubSub subject, IObserver<IDomainEventRecord> observer)
             {
                 _subject = subject;
                 _observer = observer;

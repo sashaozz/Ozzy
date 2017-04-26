@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json;
 
-namespace Ozzy.Server.FeatureFlags
+namespace Ozzy.Server
 {
     public class FeatureFlagConfiguration
     {

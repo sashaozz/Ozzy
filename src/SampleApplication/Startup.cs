@@ -5,7 +5,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Ozzy.Server.Configuration;
 using Microsoft.EntityFrameworkCore;
-using Ozzy.Server.EntityFramework;
 using Ozzy.Server.Api.Configuration;
 using Ozzy.Core.Events;
 using Ozzy.Core;
@@ -13,17 +12,13 @@ using System.Diagnostics.Tracing;
 using System;
 using System.Linq;
 using Ozzy.DomainModel;
-using Ozzy.Server;
 using Serilog;
 using Serilog.Events;
 using Serilog.Parsing;
-using Ozzy.Server.Events;
-using Ozzy.Server.BackgroundProcesses;
 using SampleApplication.Tasks;
-using Ozzy.Server.Queues;
 using SampleApplication.Queues;
-using Ozzy.Server.Saga;
 using SampleApplication.Sagas;
+using Ozzy.Server;
 
 namespace SampleApplication
 {
@@ -63,51 +58,25 @@ namespace SampleApplication
             //services.ConfigureEntityFrameworkForOzzy(ozzyOptions);
             //services.ConfigureRedisForOzzy(ozzyOptions);
 
-            OzzyDomainBuilder<SampleDbContext> domain = null;
-            if (Environment.IsDevelopment())
+            services
+            .AddOzzyDomain<SampleDbContext>(options =>
             {
-                domain = services
-                .AddEntityFrameworkOzzyDomain<SampleDbContext>(options =>
-                {
-                    options.UseSqlServer(Configuration.GetConnectionString("SampleDbContext"));
-                })
-                .UseInMemoryFastChannel()
-                .AddEventLoop<SampleEventLoop>(options =>
-                {
-                    options.AddProcessor<LoggerEventsProcessor>();                    
-                    //options.AddHandler<LoggerEventHandler, SimpleChekpointManager>();
-                    options.AddSagaProcessor<ContactFormMessageSaga>();
-                });
-            }
-            else
+                options.UseInMemoryFastChannel();
+                options.AddSagaProcessor<ContactFormMessageSaga>();
+            })
+            .UseEntityFramework((options =>
             {
-                domain = services
-                .AddEntityFrameworkOzzyDomain<SampleDbContext>(options =>
-                {
-                    options.UseSqlServer(Configuration.GetConnectionString("SampleDbContext"));
-                })
-                //.UseRedisFastChannel()
-                .AddEventLoop<SampleEventLoop>(options =>
-                {
-                    //options.AddHandler<SampleEventProcessor>();
-                    options.AddSagaProcessor<ContactFormMessageSaga>();
-                });
-            }
+                options.UseSqlServer(Configuration.GetConnectionString("SampleDbContext"));
+            }));
 
-            var node = services
-                .AddOzzy()
-                .AddBackgroundProcess<NodeConsoleHeartBeatProcess>()
-                .AddBackgroundProcess<NodeConsoleHeartBeatProcess2>()
-                .AddBackgroundMessageLoopProcess<SampleEventLoop>()
-                .AddBackgroundMessageLoopProcess<OzzyNodeEventLoop<SampleDbContext>>()
-                .UseEFDomainEvent<SampleDbContext>()
+            services.ConfigureOzzyNode<SampleDbContext>()
                 .UseEFDistributedLockService<SampleDbContext>()
                 .UseEFFeatureFlagService<SampleDbContext>()
                 .UseEFBackgroundTaskService<SampleDbContext>()
-                .AddBackgroundProcess<TaskQueueProcess>()
-                .UseRedis(ozzyOptions)
-                .UseRedisMonitoring()
-                //.UseInMemoryMonitoring()
+                //.UseRedis(ozzyOptions)
+                //.UseRedisMonitoring()
+                .UseInMemoryMonitoring<SampleDbContext>()
+                .AddBackgroundProcess<NodeConsoleHeartBeatProcess>()
                 .AddFeatureFlag<ConsoleLogFeature>()
                 .AddApi();
         }
@@ -157,11 +126,6 @@ namespace SampleApplication
 
             //app.UseStaticFiles();
 
-            //app.UseMessageLoop<SampleEventsLoop>(handlers =>
-            //{
-            //    handlers.Addhandler<SampleEventProcessor>();
-            //});                    
-
             app.UseCors(builder =>
                 builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
 
@@ -171,7 +135,7 @@ namespace SampleApplication
                     name: "default",
                     template: "{controller=Home}/{action=Index}/{id?}");
             });
-         
+
             app.UseOzzy().Start();
         }
         private LogEventLevel GetSerilogLevel(EventLevel level)

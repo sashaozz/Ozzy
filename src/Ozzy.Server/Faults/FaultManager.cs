@@ -1,12 +1,7 @@
 ﻿using System;
-using System.Linq;
-using System.Collections.Generic;
-using System.Text;
 using Ozzy.DomainModel;
-using Ozzy.Server.BackgroundTasks;
-using Ozzy.Server.Queues;
 
-namespace Ozzy.Server.Faults
+namespace Ozzy.Server
 {
     public class FaultManager : IFaultManager
     {
@@ -19,7 +14,7 @@ namespace Ozzy.Server.Faults
             _faultQueueService = faultQueueService;
         }
 
-        public void Handle(Type processorType, DomainEventRecord record, int retryMaxCount = 5, bool sendToErrorQueue = true)
+        public void Handle(Type processorType, IDomainEventRecord record, int retryMaxCount = 5, bool sendToErrorQueue = true)
         {
             var retries = record.MetaData.ContainsKey("retries") ? (Int64)record.MetaData["retries"] : 0;
 

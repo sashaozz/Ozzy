@@ -1,14 +1,13 @@
 ﻿using Ozzy.Core;
 using Ozzy.DomainModel;
-using Ozzy.Server.DomainDsl;
 using System;
 
-namespace Ozzy.Server.FeatureFlags
+namespace Ozzy.Server
 {
     public class FeatureFlagsEventsProcessor : DomainEventsProcessor,
-        IHandleEvent<DataRecordDeletedEvent<FeatureFlagRecord>>,
-        IHandleEvent<DataRecordUpdatedEvent<FeatureFlagRecord>>,
-        IHandleEvent<DataRecordCreatedEvent<FeatureFlagRecord>>
+        IHandleEvent<DataRecordDeletedEvent<FeatureFlag>>,
+        IHandleEvent<DataRecordUpdatedEvent<FeatureFlag>>,
+        IHandleEvent<DataRecordCreatedEvent<FeatureFlag>>
     {
         private IFeatureFlagService _ffService;
 
@@ -19,23 +18,23 @@ namespace Ozzy.Server.FeatureFlags
             _ffService = ffService;            
         }       
 
-        public bool Handle(DataRecordDeletedEvent<FeatureFlagRecord> obj)
+        public bool Handle(DataRecordDeletedEvent<FeatureFlag> obj)
         {
             throw new NotImplementedException();
         }
 
-        public bool Handle(DataRecordUpdatedEvent<FeatureFlagRecord> obj)
+        public bool Handle(DataRecordUpdatedEvent<FeatureFlag> obj)
         {
-            if (obj.RecordType != typeof(FeatureFlagRecord)) return true;
-            var newFlag = obj.RecordValue as FeatureFlagRecord;
+            if (obj.RecordType != typeof(FeatureFlag)) return true;
+            var newFlag = obj.RecordValue as FeatureFlag;
             _ffService.SetFlagState(newFlag.Id, newFlag.Configuration, newFlag.Version);
             return false;
         }
 
-        public bool Handle(DataRecordCreatedEvent<FeatureFlagRecord> obj)
+        public bool Handle(DataRecordCreatedEvent<FeatureFlag> obj)
         {
-            if (obj.RecordType != typeof(FeatureFlagRecord)) return true;
-            var newFlag = obj.RecordValue as FeatureFlagRecord;
+            if (obj.RecordType != typeof(FeatureFlag)) return true;
+            var newFlag = obj.RecordValue as FeatureFlag;
             _ffService.SetFlagState(newFlag.Id, newFlag.Configuration, newFlag.Version);
             return false;
         }

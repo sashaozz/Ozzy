@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Ozzy.DomainModel
+namespace Ozzy.Server
 {
     public abstract class SagaBase
     {

@@ -1,16 +1,10 @@
-﻿using Microsoft.AspNetCore.Builder;
-using Ozzy.Core;
-using System;
+﻿using System;
 using System.Linq;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading;
 using Microsoft.Extensions.DependencyInjection;
 using System.Threading.Tasks;
-using Ozzy.DomainModel.Monitoring;
-using Ozzy.Server.BackgroundProcesses;
 
-namespace Ozzy.Server.Monitoring
+namespace Ozzy.Server
 {
     public class NodesMonitoringProcess : PeriodicActionProcess
     {

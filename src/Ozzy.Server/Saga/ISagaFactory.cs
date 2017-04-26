@@ -1,4 +1,4 @@
-﻿namespace Ozzy.DomainModel
+﻿namespace Ozzy.Server
 {
     public interface ISagaFactory
     {

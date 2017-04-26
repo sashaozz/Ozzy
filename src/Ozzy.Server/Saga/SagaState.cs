@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using Ozzy.Core;
+using Ozzy.DomainModel;
 
-namespace Ozzy.DomainModel
+namespace Ozzy.Server
 {
     public class SagaState
     {

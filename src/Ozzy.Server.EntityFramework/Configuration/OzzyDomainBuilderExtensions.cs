@@ -16,9 +16,22 @@ namespace Ozzy.Server.Configuration
             builder.Services.AddDbContext<TDomain>(optionsAction, ServiceLifetime.Transient);
             builder.Services.TryAddScoped<ScopedRegistration<TDomain>>();
             builder.Services.TryAddSingleton<Func<TDomain>>(sp => () => sp.GetService<TDomain>());
-           
-            builder.Services.TryAddSingleton<IPeristedEventsReader<TDomain>, DbEventsReader<TDomain>>();
-            builder.Services.TryAddSingleton<ISagaRepository<TDomain>, DbSagaRepository<TDomain>>();
+
+            builder.Services.TryAddSingleton<EfEventsReader<TDomain>>();
+            builder.Services.TryAddTypeSpecificSingleton<TDomain, IPeristedEventsReader>(sp => sp.GetService<EfEventsReader<TDomain>>());
+
+            builder.Services.TryAddSingleton<EfDomainEventsManager<TDomain>>();
+            builder.Services.AddTypeSpecificSingleton<TDomain, IDomainEventsManager>(sp => sp.GetService<EfDomainEventsManager<TDomain>>());
+
+            builder.Services.TryAddSingleton<EfSagaRepository<TDomain>>();
+            builder.Services.TryAddTypeSpecificSingleton<TDomain, ISagaRepository>(sp =>
+            {
+                var contextFactory = sp.GetService<Func<TDomain>>();
+                var sagaFactory = sp.GetTypeSpecificService<TDomain, ISagaFactory>();
+                return new EfSagaRepository<TDomain>(contextFactory, sagaFactory);
+            });
+
+            builder.Services.AddTypeSpecificSingleton<NodeMonitoringInfo, ICheckpointManager>(sp => new SimpleChekpointManager(new EfEventsReader<TDomain>(sp.GetService<Func<TDomain>>())));
 
             return builder;
         }

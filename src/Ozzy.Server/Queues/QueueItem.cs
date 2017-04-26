@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Ozzy.Server.Queues
+﻿namespace Ozzy.Server
 {
     public class QueueItem<T>
     {

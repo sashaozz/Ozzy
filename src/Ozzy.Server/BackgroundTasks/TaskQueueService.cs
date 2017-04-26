@@ -1,14 +1,6 @@
 ﻿using System;
-using System.Linq;
-using System.Collections.Generic;
-using System.Text;
 using Newtonsoft.Json;
-using Ozzy.Server.Queues;
-using Ozzy.DomainModel;
-using Ozzy.DomainModel.Queues;
-using Microsoft.Extensions.DependencyInjection;
-
-namespace Ozzy.Server.BackgroundTasks
+namespace Ozzy.Server
 {
 
     public class TaskQueueService: ITaskQueueService

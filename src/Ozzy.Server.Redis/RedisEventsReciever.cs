@@ -12,9 +12,9 @@ namespace Ozzy.Server.Redis
         private string _channel;
         private ISubscriber _subscriber;
         private RedisClient _redis;
-        private Action<DomainEventRecord> _consumerAction;
+        private Action<IDomainEventRecord> _consumerAction;
 
-        public RedisEventsReciever(RedisClient redis, Action<DomainEventRecord> consumerAction = null, string channel = "DomainEventsManager-fast-channel")
+        public RedisEventsReciever(RedisClient redis, Action<IDomainEventRecord> consumerAction = null, string channel = "DomainEventsManager-fast-channel")
         {
             Guard.ArgumentNotNull(redis, nameof(redis));
             Guard.ArgumentNotNull(consumerAction, nameof(consumerAction));
@@ -25,13 +25,13 @@ namespace Ozzy.Server.Redis
             _consumerAction = consumerAction;
         }
 
-        public void UseAction(Action<DomainEventRecord> consumerAction)
+        public void UseAction(Action<IDomainEventRecord> consumerAction)
         {
             Guard.ArgumentNotNull(consumerAction, nameof(consumerAction));
             _consumerAction = consumerAction;
         }
 
-        public virtual void Recieve(DomainEventRecord message)
+        public virtual void Recieve(IDomainEventRecord message)
         {
             _consumerAction?.Invoke(message);
         }
@@ -46,10 +46,10 @@ namespace Ozzy.Server.Redis
             _subscriber = _redis.Redis.GetSubscriber();
             _subscriber.SubscribeAsync(_channel, (ch, message) =>
             {
-                DomainEventRecord data;
+                IDomainEventRecord data;
                 using (var stream = new MemoryStream(message))
                 {
-                    data = Serializer.Deserialize<DomainEventRecord>(stream);
+                    data = Serializer.Deserialize<IDomainEventRecord>(stream);
                 }
                 if (data == null)
                 {

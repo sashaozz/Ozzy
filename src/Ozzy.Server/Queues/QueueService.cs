@@ -1,12 +1,7 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using Newtonsoft.Json;
-using Ozzy.DomainModel;
-using Ozzy.DomainModel.Queues;
+﻿using Newtonsoft.Json;
 using System;
-using System.Collections.Generic;
-using System.Text;
 
-namespace Ozzy.Server.Queues
+namespace Ozzy.Server
 {
     public class QueueService<T> : IQueueService<T> where T : class
     {

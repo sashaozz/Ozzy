@@ -1,11 +1,7 @@
-﻿using Newtonsoft.Json;
-using Ozzy.DomainModel;
-using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using Ozzy.DomainModel;
 using System.Threading.Tasks;
 
-namespace Ozzy.Server.BackgroundTasks
+namespace Ozzy.Server
 {
     public abstract class BaseBackgroundTask
     {

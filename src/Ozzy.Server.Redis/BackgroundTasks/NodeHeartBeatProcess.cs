@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Ozzy.Core;
-using Ozzy.Server.BackgroundProcesses;
 using StackExchange.Redis;
 
 namespace Ozzy.Server.Redis.BackgroundProcesses

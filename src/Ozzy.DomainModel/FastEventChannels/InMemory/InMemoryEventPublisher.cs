@@ -12,7 +12,7 @@ namespace Ozzy.DomainModel
             _domainQueue = domainQueue;
         }
 
-        public void Publish(DomainEventRecord message)
+        public void Publish(IDomainEventRecord message)
         {
             _domainQueue.OnNext(message);
         }

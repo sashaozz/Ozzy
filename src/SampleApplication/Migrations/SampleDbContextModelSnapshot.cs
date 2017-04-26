@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using SampleApplication;
-using Ozzy.DomainModel.Queues;
+using Ozzy.DomainModel;
 
 namespace SampleApplication.Migrations
 {
@@ -67,6 +67,8 @@ namespace SampleApplication.Migrations
                     b.Property<Guid>("LockId")
                         .IsConcurrencyToken();
 
+                    b.Property<int>("Version");
+
                     b.HasKey("Name");
 
                     b.ToTable("DistributedLocks");
@@ -83,6 +85,8 @@ namespace SampleApplication.Migrations
                         .IsConcurrencyToken();
 
                     b.Property<string>("StateType");
+
+                    b.Property<int>("Version");
 
                     b.HasKey("Id");
 
@@ -101,7 +105,7 @@ namespace SampleApplication.Migrations
                     b.ToTable("Sequences");
                 });
 
-            modelBuilder.Entity("Ozzy.Server.FeatureFlags.FeatureFlagRecord", b =>
+            modelBuilder.Entity("Ozzy.Server.FeatureFlags.FeatureFlag", b =>
                 {
                     b.Property<string>("Id")
                         .ValueGeneratedOnAdd();
@@ -125,6 +129,8 @@ namespace SampleApplication.Migrations
                     b.Property<string>("Message");
 
                     b.Property<bool>("MessageSent");
+
+                    b.Property<int>("Version");
 
                     b.HasKey("Id");
 

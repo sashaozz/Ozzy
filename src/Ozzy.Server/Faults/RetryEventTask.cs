@@ -1,11 +1,8 @@
 ﻿using Ozzy.DomainModel;
-using Ozzy.Server.BackgroundTasks;
 using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
 
-namespace Ozzy.Server.Faults
+namespace Ozzy.Server
 {
     public class RetryEventTask : BaseBackgroundTask<RetryEventTaskParams>
     {
@@ -37,7 +34,7 @@ namespace Ozzy.Server.Faults
     public class RetryEventTaskParams
     {
         public Type ProcessorType { get; set; }
-        public DomainEventRecord Record { get; set; }
+        public IDomainEventRecord Record { get; set; }
         public int RetryMaxCount { get; set; }
         public bool sendToErrorQueue { get; set; }
     }

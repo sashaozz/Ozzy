@@ -1,5 +1,3 @@
-using System;
-
 namespace Ozzy.DomainModel
 {
     /// <summary>
@@ -7,6 +5,6 @@ namespace Ozzy.DomainModel
     /// </summary>
     public class DomainEventEntry
     {
-        public DomainEventRecord Value { get; set; }        
+        public IDomainEventRecord Value { get; set; }        
     }
 }

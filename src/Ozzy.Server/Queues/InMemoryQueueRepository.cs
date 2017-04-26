@@ -1,10 +1,7 @@
-﻿using Ozzy.DomainModel;
-using Ozzy.DomainModel.Queues;
-using System;
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.Linq;
 
-namespace Ozzy.Server.Queues
+namespace Ozzy.Server
 {
     public class InMemoryQueueRepository : IQueueRepository
     {

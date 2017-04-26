@@ -1,9 +1,5 @@
-﻿using Ozzy.Server.Monitoring;
-using System;
-using System.Linq;
+﻿using System.Linq;
 using System.Collections.Generic;
-using System.Text;
-using Ozzy.DomainModel.Monitoring;
 using StackExchange.Redis;
 using System.Threading.Tasks;
 using Newtonsoft.Json;

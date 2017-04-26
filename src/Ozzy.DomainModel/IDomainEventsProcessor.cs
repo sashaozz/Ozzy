@@ -2,6 +2,7 @@
 
 namespace Ozzy.DomainModel
 {
+
     /// <summary>
     /// Процессор очереди доменных событий
     /// </summary>

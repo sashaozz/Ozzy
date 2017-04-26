@@ -1,9 +1,9 @@
 ﻿using MediatR;
 using Ozzy.DomainModel;
-using Ozzy.Server.Saga;
 using SampleApplication.Commands;
 using SampleApplication.Entities;
 using System;
+using Ozzy.Server;
 
 namespace SampleApplication.Sagas
 {

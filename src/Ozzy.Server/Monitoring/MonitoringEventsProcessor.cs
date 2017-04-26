@@ -1,22 +1,17 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using Ozzy.Core;
 using Ozzy.DomainModel;
-using Ozzy.DomainModel.Monitoring;
-using Ozzy.Server.DomainDsl;
 using System;
 using System.Linq;
-using static Ozzy.DomainModel.Monitoring.Events;
 
-namespace Ozzy.Server.FeatureFlags
+namespace Ozzy.Server
 {
-    public class MonitoringEventsProcessor : DomainEventsProcessor,
+    public class MonitoringEventsHandler : DomainEventsHandler,
         IHandleEvent<BackgroundProcessStopped>,
         IHandleEvent<BackgroundProcessStarted>
     {
         private IServiceProvider _serviceProvider;
 
-        public MonitoringEventsProcessor(IServiceProvider serviceProvider, TypedRegistration<NodeMonitoringInfo, ICheckpointManager> checkpointManager)
-            : base(checkpointManager.GetService())
+        public MonitoringEventsHandler(IServiceProvider serviceProvider)
         {
             _serviceProvider = serviceProvider;
         }       

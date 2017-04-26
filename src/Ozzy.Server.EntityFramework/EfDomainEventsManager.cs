@@ -1,15 +1,14 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using Ozzy.DomainModel;
 
 namespace Ozzy.Server.EntityFramework
 {
-    public class EfDomainEventsManager : IDomainEventsManager
+    public class EfDomainEventsManager<TDomain> : IDomainEventsManager
+        where TDomain : AggregateDbContext
     {
-        private Func<AggregateDbContext> _dbFactory;
+        private Func<TDomain> _dbFactory;
 
-        public EfDomainEventsManager(Func<AggregateDbContext> dbFactory) 
+        public EfDomainEventsManager(Func<TDomain> dbFactory)
         {
             _dbFactory = dbFactory;
         }

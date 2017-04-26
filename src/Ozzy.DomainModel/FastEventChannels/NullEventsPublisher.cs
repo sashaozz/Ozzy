@@ -6,7 +6,7 @@
     public class NullEventsPublisher : IFastEventPublisher
     {
         public static NullEventsPublisher Instance = new NullEventsPublisher();
-        public void Publish(DomainEventRecord message)
+        public void Publish(IDomainEventRecord message)
         {
             //do nothing
         }

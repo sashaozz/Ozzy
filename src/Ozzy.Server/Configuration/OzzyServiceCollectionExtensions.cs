@@ -1,15 +1,9 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Ozzy.Server.FeatureFlags;
 using Ozzy.DomainModel;
-using Ozzy.Server.BackgroundTasks;
-using Ozzy.Server.Saga;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using System;
-using Ozzy.Server.Monitoring;
-using Ozzy.Server.Faults;
-using Ozzy.Server.Queues;
 
 namespace Ozzy.Server.Configuration
 {
@@ -22,11 +16,11 @@ namespace Ozzy.Server.Configuration
             var node = app.ApplicationServices.GetService<OzzyNode>();
             lifetime.ApplicationStopped.Register(node.Stop);
 
-            var starter = new OzzyStarter(app, node);
+            var starter = new OzzyStarter(node);
             return starter;
         }
 
-        public static IOzzyBuilder AddOzzy(this IServiceCollection services)
+        public static IOzzyBuilder ConfigureOzzyNode<TDomain>(this IServiceCollection services) where TDomain : IOzzyDomainModel
         {
             services.AddSingleton<OzzyNode>();
             services.AddSingleton<IFeatureFlagService, FeatureFlagService>();
@@ -39,14 +33,31 @@ namespace Ozzy.Server.Configuration
             return builder;
         }
 
-        public static OzzyDomainBuilder<TDomain> AddOzzyDomain<TDomain>(this IServiceCollection services) where TDomain : IOzzyDomainModel
+        public static OzzyDomainBuilder<TDomain> AddOzzyDomain<TDomain>(this IServiceCollection services, Action<OzzyDomainOptionsBuilder<TDomain>> configureOptions) where TDomain : IOzzyDomainModel
         {
             var builder = new OzzyDomainBuilder<TDomain>(services);
+            var optionsBuilder = new OzzyDomainOptionsBuilder<TDomain>(builder);
+            configureOptions(optionsBuilder);
 
-            //todo : maybe move it to the end of pipeline so other extensions could register implementations first?                    
-            builder.Services.TryAddSingleton<IFastEventPublisher>(NullEventsPublisher.Instance);
-            builder.Services.TryAddSingleton<Func<IFastEventPublisher>>(sp => () => NullEventsPublisher.Instance);
-            builder.Services.TryAddSingleton<ISagaFactory, DefaultSagaFactory>();
+            //todo : maybe move it to the end of pipeline so other extensions could register implementations first?                   
+            builder.Services.TryAddTypeSpecificSingleton<TDomain, DomainEventsLoop>(sp =>
+            {
+                var reader = sp.GetTypeSpecificService<TDomain, IPeristedEventsReader>();
+                var processors = sp.GetTypeSpecificServicesCollection<TDomain, IDomainEventsProcessor>();
+                return new DomainEventsLoop(reader, processors);
+            });
+            builder.Services.TryAddSingleton<IBackgroundProcess>(sp =>
+            {
+                var loop = sp.GetTypeSpecificService<TDomain, DomainEventsLoop>();
+                var recieverFactory = sp.GetTypeSpecificService<TDomain, IFastEventRecieverFactory>();
+                return new MessageLoopProcess(loop, recieverFactory);
+            });
+
+            builder.Services.TryAddTypeSpecificSingleton<TDomain, IFastEventPublisher>(NullEventsPublisher.Instance);
+            builder.Services.TryAddTypeSpecificSingleton<TDomain, Func<IFastEventPublisher>>(sp => () => NullEventsPublisher.Instance);
+            builder.Services.TryAddTypeSpecificSingleton<TDomain, DefaultSagaFactory>();
+            builder.Services.TryAddTypeSpecificSingleton<TDomain, ISagaFactory>(sp => sp.GetTypeSpecificService<TDomain, DefaultSagaFactory>());
+
             return builder;
         }
     }

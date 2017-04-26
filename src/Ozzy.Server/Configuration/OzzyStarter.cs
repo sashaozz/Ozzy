@@ -1,27 +1,20 @@
 ﻿using System;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.AspNetCore.Builder;
 
 namespace Ozzy.Server.Configuration
 {
     public interface IOzzyStarter
     {
-        IApplicationBuilder Builder { get; }
         void Start();
     }
 
     public class OzzyStarter : IOzzyStarter
     {
-        private IOzzyNode _node;
-        public IApplicationBuilder Builder { get; }
-        
+        private IOzzyNode _node;       
 
-        public OzzyStarter(IApplicationBuilder builder, IOzzyNode node)
+        public OzzyStarter(IOzzyNode node)
         {
-            if (builder == null) throw new ArgumentNullException(nameof(builder));
             if (node == null) throw new ArgumentNullException(nameof(node));
             _node = node;
-            Builder = builder;
         }
         
         public void Start()

@@ -1,8 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Ozzy.Core;
 using Ozzy.DomainModel;
-using Ozzy.DomainModel.Queues;
-using Ozzy.Server.Queues;
 using System;
 using System.Linq;
 

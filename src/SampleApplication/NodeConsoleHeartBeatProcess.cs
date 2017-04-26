@@ -1,7 +1,6 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
 using Ozzy.Core;
-using Ozzy.Server.FeatureFlags;
 using Ozzy.Server;
 
 namespace SampleApplication

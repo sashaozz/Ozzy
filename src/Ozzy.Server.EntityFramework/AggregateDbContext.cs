@@ -6,9 +6,6 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Ozzy.Core;
 using Ozzy.DomainModel;
-using Ozzy.Server.FeatureFlags;
-using Ozzy.DomainModel.Queues;
-using Ozzy.Server.EntityFramework.Saga;
 
 namespace Ozzy.Server.EntityFramework
 {
@@ -21,7 +18,7 @@ namespace Ozzy.Server.EntityFramework
     public class AggregateDbContext : DbContext, IOzzyDomainModel
     {
         protected readonly IFastEventPublisher FastEventPublisher;
-        private readonly List<DomainEventRecord> _eventsToSave = new List<DomainEventRecord>();
+        private readonly List<IDomainEventRecord> _eventsToSave = new List<IDomainEventRecord>();
 
         public AggregateDbContext(IExtensibleOptions<AggregateDbContext> options)
             : this(options.GetDbContextOptions(), options.GetFastEventPublisher())
@@ -51,10 +48,10 @@ namespace Ozzy.Server.EntityFramework
         /// Доменные события доменной модели
         /// </summary>
         public DbSet<DomainEventRecord> DomainEvents { get; set; }
-        public DbSet<EntityDistributedLockRecord> DistributedLocks { get; set; }
-        public DbSet<FeatureFlagRecord> FeatureFlags { get; set; }
+        public DbSet<EfDistributedLockRecord> DistributedLocks { get; set; }
+        public DbSet<FeatureFlag> FeatureFlags { get; set; }
         public DbSet<QueueRecord> Queues { get; set; }
-        public DbSet<SagaRecord> Sagas { get; set; }
+        public DbSet<EfSagaRecord> Sagas { get; set; }
         /// <summary>
         /// Слушатели событий в данном контексте и номера их последних обработанных сообщений
         /// </summary>
@@ -69,13 +66,13 @@ namespace Ozzy.Server.EntityFramework
 
             modelBuilder.Entity<Sequence>().HasKey(c => c.Name);
             modelBuilder.Entity<Sequence>().Property(c => c.Name).IsRequired();            
-            modelBuilder.Entity<FeatureFlagRecord>().HasKey(r => r.Id);
-            modelBuilder.Entity<FeatureFlagRecord>().Ignore(r => r.Configuration);
+            modelBuilder.Entity<FeatureFlag>().HasKey(r => r.Id);
+            modelBuilder.Entity<FeatureFlag>().Ignore(r => r.Configuration);
 
             //modelBuilder.Entity<QueueRecord>().HasKey(r => r.Id);
 
-            modelBuilder.Entity<SagaRecord>().HasKey(r => r.Id);
-            modelBuilder.Entity<SagaRecord>().Property(r => r.SagaVersion).IsConcurrencyToken();
+            modelBuilder.Entity<EfSagaRecord>().HasKey(r => r.Id);
+            modelBuilder.Entity<EfSagaRecord>().Property(r => r.SagaVersion).IsConcurrencyToken();
 
             base.OnModelCreating(modelBuilder);
         }

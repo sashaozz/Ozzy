@@ -3,7 +3,7 @@ using System;
 
 namespace Ozzy.DomainModel
 {
-    public class InMemoryEventReciever : IFastEventReciever, IObserver<DomainEventRecord>
+    public class InMemoryEventReciever : IFastEventReciever, IObserver<IDomainEventRecord>
     {
         private InMemoryDomainEventsPubSub _domainQueue;
         private IDisposable _subscription = null;
@@ -32,12 +32,12 @@ namespace Ozzy.DomainModel
             //
         }
 
-        public void OnNext(DomainEventRecord value)
+        public void OnNext(IDomainEventRecord value)
         {
             Recieve(value);
         }
 
-        public void Recieve(DomainEventRecord message)
+        public void Recieve(IDomainEventRecord message)
         {
             _loop.AddEventForProcessing(message);
         }

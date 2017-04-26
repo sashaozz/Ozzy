@@ -1,12 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Ozzy.Server.BackgroundTasks;
+﻿using Microsoft.AspNetCore.Mvc;
 using SampleApplication.Tasks;
-using Ozzy.Server.Queues;
 using SampleApplication.Queues;
+using Ozzy.Server;
 
 namespace SampleApplication.Controllers
 {

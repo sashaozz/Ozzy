@@ -1,8 +1,8 @@
 ﻿using Ozzy.DomainModel;
 
-namespace Ozzy.Server.FeatureFlags
+namespace Ozzy.Server
 {
-    public interface IFeatureFlagRepository : IDataRepository<FeatureFlagRecord, string>
+    public interface IFeatureFlagRepository : IDataRepository<FeatureFlag, string>
     {
     }
 }

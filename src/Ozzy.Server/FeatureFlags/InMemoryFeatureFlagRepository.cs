@@ -2,17 +2,17 @@
 using System.Collections.Concurrent;
 using System.Linq;
 
-namespace Ozzy.Server.FeatureFlags
+namespace Ozzy.Server
 {
     public class InMemoryFeatureFlagRepository: IFeatureFlagRepository
     {
-        private ConcurrentDictionary<string, FeatureFlagRecord> _store = new ConcurrentDictionary<string, FeatureFlagRecord>();
+        private ConcurrentDictionary<string, FeatureFlag> _store = new ConcurrentDictionary<string, FeatureFlag>();
 
-        public void Create(FeatureFlagRecord item)
+        public void Create(FeatureFlag item)
         {
             _store.GetOrAdd(item.Id, item);
         }       
-        public IQueryable<FeatureFlagRecord> Query()
+        public IQueryable<FeatureFlag> Query()
         {
             return _store.Values.AsQueryable();
         }
@@ -22,12 +22,12 @@ namespace Ozzy.Server.FeatureFlags
             throw new NotImplementedException();
         }
 
-        public void Remove(FeatureFlagRecord item)
+        public void Remove(FeatureFlag item)
         {
             throw new NotImplementedException();
         }
 
-        public void Update(FeatureFlagRecord item)
+        public void Update(FeatureFlag item)
         {
             throw new NotImplementedException();
         }

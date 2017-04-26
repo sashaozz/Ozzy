@@ -1,13 +1,26 @@
 ﻿using Ozzy.Core;
 using System;
+using Ozzy.DomainModel;
+using Newtonsoft.Json;
 
-namespace Ozzy.Server.FeatureFlags
+namespace Ozzy.Server
 {
-    public class FeatureFlag
+    public class FeatureFlag : EntityBase<string>
     {
-        public string Id { get; protected set; }
-        public int Version { get;protected set; }
+        //public string Id { get; protected set; }
+        //public int Version { get;protected set; }
         public FeatureFlagConfiguration Configuration { get; private set; }
+
+        [JsonIgnore]
+        public string SerializedConfiguration
+        {
+            get { return DefaultSerializer.Serialize(Configuration); }
+            protected set
+            {
+                if (string.IsNullOrEmpty(value)) return;
+                Configuration = DefaultSerializer.Deserialize<FeatureFlagConfiguration>(value);
+            }
+        }
 
         public FeatureFlag(string code)
         {
@@ -16,7 +29,10 @@ namespace Ozzy.Server.FeatureFlags
             Configuration = new FeatureFlagConfiguration(false);
             Version = 0;
         }
-        
+        protected FeatureFlag()
+        {
+        }
+
         public string GetVariation()
         {
             //todo: implement variations

@@ -9,7 +9,7 @@ namespace Ozzy.DomainModel
     public interface IDomainModelTracing : ICommonEvents
     {
         [Event(101, Level = EventLevel.Verbose, Message = "Publishing new record to fast channel")]
-        void TracePublishToFastChannel(DomainEventRecord record);
+        void TracePublishToFastChannel(IDomainEventRecord record);
         [Event(102, Level = EventLevel.Warning, Message = "Error during publishing new record to fast channel")]
         void PublishToFastChannelException(Exception e);
         [Event(103, Level = EventLevel.Verbose, Message = "Processing domain event entry")]

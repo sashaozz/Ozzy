@@ -1,13 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
-using Ozzy.DomainModel.Monitoring;
-using Ozzy.Server.BackgroundTasks;
 using System.Linq;
-using static Ozzy.DomainModel.Monitoring.Events;
 
-namespace Ozzy.Server.Monitoring
+namespace Ozzy.Server
 {
     public class NodesManager : INodesManager
     {

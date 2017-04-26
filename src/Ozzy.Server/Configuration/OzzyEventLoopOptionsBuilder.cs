@@ -1,103 +1,75 @@
 ﻿using System;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 using Ozzy.DomainModel;
-using Ozzy.Server.DomainDsl;
-using Ozzy.Server.Saga;
-using Ozzy.Server.Faults;
 
 namespace Ozzy.Server.Configuration
 {
-    public class OzzyEventLoopOptionsBuilder<TLoop, TDomain>
-        where TLoop : DomainEventsLoop<TDomain>
+    public class OzzyDomainOptionsBuilder<TDomain>
         where TDomain : IOzzyDomainModel
     {
         private OzzyDomainBuilder<TDomain> _domainBuilder;
-        public OzzyEventLoopOptionsBuilder(OzzyDomainBuilder<TDomain> domainBuilder)
+        public OzzyDomainOptionsBuilder(OzzyDomainBuilder<TDomain> domainBuilder)
         {
             _domainBuilder = domainBuilder;
         }
 
-        public OzzyEventLoopOptionsBuilder<TLoop, TDomain> AddProcessor<TProcessor>() where TProcessor : class, IDomainEventsProcessor
+        public OzzyDomainOptionsBuilder<TDomain> UseInMemoryFastChannel()
         {
-            _domainBuilder.Services.TryAddTransient<TProcessor>();
-            _domainBuilder.Services.AddDomainSpecificSingleton<TLoop, IDomainEventsProcessor>(sp => sp.GetService<TProcessor>());
-            //_domainBuilder.RegisterOptionService(sc => sc.TryAddSingleton<IDomainEventsProcessor, TProcessor>());
-            return this;
-        }
-        public OzzyEventLoopOptionsBuilder<TLoop, TDomain> AddProcessor<TProcessor>(Func<IServiceProvider, TProcessor> implementationFactory) where TProcessor : class, IDomainEventsProcessor
-        {
-            _domainBuilder.Services.TryAddTransient<TProcessor>(implementationFactory);
-            _domainBuilder.Services.AddDomainSpecificSingleton<TLoop, IDomainEventsProcessor>(sp => sp.GetService<TProcessor>());
-            //_domainBuilder.RegisterOptionService(sc => sc.TryAddSingleton<IDomainEventsProcessor>(implementationFactory));
+            _domainBuilder.Services.TryAddTypeSpecificSingleton<TDomain, InMemoryDomainEventsPubSub>(sp => new InMemoryDomainEventsPubSub());
+            _domainBuilder.Services.TryAddTypeSpecificSingleton<TDomain, IFastEventPublisher>(sp => new InMemoryEventPublisher(sp.GetTypeSpecificService<TDomain, InMemoryDomainEventsPubSub>()));
+            _domainBuilder.Services.TryAddTypeSpecificSingleton<TDomain, IFastEventRecieverFactory>(sp => new InMemoryEventRecieverFactory(sp.GetTypeSpecificService<TDomain, InMemoryDomainEventsPubSub>()));
             return this;
         }
 
-        //public OzzyEventLoopOptionsBuilder<TDomain> AddHandler<TProcessor, TChekpointManage>()
-        //    where TProcessor : class, IDomainEventHandler
-        //    where TChekpointManage : class, ICheckpointManager
-        //{
-        //    _domainBuilder.RegisterOptionService(sc => sc.TryAddSingleton<TProcessor>());
-        //    _domainBuilder.RegisterOptionService(sc => sc.TryAddSingleton<TChekpointManage>());
 
-        //    _domainBuilder.RegisterOptionService(sc => sc.TryAddSingleton<IDomainEventsProcessor>(sp =>
-        //    {
-        //        var options = sp.GetRequiredService<IExtensibleOptions<TDomain>>();
-        //        var checkpoint = options.GetCheckpointManager("sadasd");
-        //        var handler = sp.GetService<TProcessor>();
-        //        return new BaseEventsProcessor(handler, checkpoint);
-        //    }));
-        //    return this;
-        //}
-
-        //public OzzyEventLoopOptionsBuilder<TDomain> AddHandler<TProcessor>(Func<IServiceProvider, ICheckpointManager> checkpointFactory) where TProcessor : class, IDomainEventHandler
-        //{
-        //    _domainBuilder.RegisterOptionService(sc => sc.TryAddSingleton<TProcessor>());
-        //    _domainBuilder.RegisterOptionService(sc => sc.TryAddSingleton<IDomainEventsProcessor>(sp =>
-        //    {
-        //        var options = sp.GetRequiredService<IExtensibleOptions<TDomain>>();
-        //        var checkpoint = checkpointFactory(options.GetInternalServiceProvider());
-        //        var handler = sp.GetService<TProcessor>();
-        //        return new BaseEventsProcessor(handler, checkpoint);
-        //    }));
-        //    return this;
-        //}
-
-        public OzzyEventLoopOptionsBuilder<TLoop, TDomain> AddSagaProcessor<TSaga>() where TSaga : SagaBase
+        public OzzyDomainOptionsBuilder<TDomain> AddProcessor<TProcessor>(Func<IServiceProvider, TProcessor> processorFactory = null) where TProcessor : class, IDomainEventsProcessor
         {
-            _domainBuilder.Services.AddSingleton<TSaga>();
-            _domainBuilder.Services.AddSingleton<SagaEventProcessor<TSaga>>(sp =>
+            if (processorFactory == null)
+            {
+                processorFactory = sp => sp.GetService<TProcessor>();
+            }
+            _domainBuilder.Services.TryAddTypeSpecificSingleton<TDomain, TProcessor>(processorFactory);
+            return this;
+        }
+
+        public OzzyDomainOptionsBuilder<TDomain> AddHandler<THandler>(Func<IServiceProvider, THandler> handlerFactory = null) where THandler : class, IDomainEventsHandler
+        {
+            if (handlerFactory == null)
+            {
+                handlerFactory = sp => sp.GetService<THandler>();
+            }
+            _domainBuilder.Services.TryAddTypeSpecificSingleton<TDomain, THandler>(handlerFactory);
+            _domainBuilder.Services.TryAddTypeSpecificSingleton<TDomain, IDomainEventsProcessor>(sp =>
+            {
+                var options = sp.GetService<IExtensibleOptions<TDomain>>();
+                var handler = sp.GetTypeSpecificService<TDomain, THandler>();
+                var eventsReader = sp.GetTypeSpecificService<TDomain, IPeristedEventsReader>();
+                var faultManager = sp.GetService<IFaultManager>();
+                var checkpointManager = new SimpleChekpointManager(eventsReader);
+                return new DomainEventsProcessor(handler, checkpointManager);
+            });
+            return this;
+        }
+        public OzzyDomainOptionsBuilder<TDomain> AddSagaProcessor<TSaga>(Func<IServiceProvider, TSaga> sagaFactory = null) where TSaga : SagaBase
+        {
+            if (sagaFactory == null)
+            {
+                sagaFactory = sp => sp.GetService<TSaga>();
+            }
+            _domainBuilder.Services.TryAddTypeSpecificSingleton<TDomain, TSaga>(sagaFactory);
+            _domainBuilder.Services.TryAddTypeSpecificSingleton<TDomain, IDomainEventsProcessor>(sp =>
             {
                 var options = sp.GetService<IExtensibleOptions<TDomain>>();
                 var sagaName = typeof(TSaga).FullName;
-                var sagaRepository = sp.GetService<ISagaRepository<TDomain>>();
-                var eventsReader = sp.GetService<IPeristedEventsReader<TDomain>>();
+                var sagaRepository = sp.GetTypeSpecificService<TDomain, ISagaRepository>();
+                var sagaHandler = new SagaDomainEventsHandler<TSaga>(sagaRepository);
+                var eventsReader = sp.GetTypeSpecificService<TDomain, IPeristedEventsReader>();
                 var faultManager = sp.GetService<IFaultManager>();
                 var checkpointManager = new SimpleChekpointManager(eventsReader);
-                return new SagaEventProcessor<TSaga>(sagaRepository, checkpointManager, faultManager);
-            });
-            _domainBuilder.Services.AddDomainSpecificSingleton<TLoop, IDomainEventsProcessor>(sp =>
-            {
-                return sp.GetService<SagaEventProcessor<TSaga>>();
+                return new DomainEventsProcessor(sagaHandler, checkpointManager);
             });
             return this;
-        }
-
-        public OzzyEventLoopOptionsBuilder<TLoop, TDomain> AddSagaProcessor<TSaga>(Func<IServiceProvider, TSaga> sagaFactory) where TSaga : SagaBase
-        {
-            _domainBuilder.Services.AddSingleton<TSaga>(sagaFactory);
-            _domainBuilder.Services.AddDomainSpecificSingleton<TLoop, IDomainEventsProcessor>(sp =>
-            {
-                var options = sp.GetService<IExtensibleOptions<TDomain>>();
-                var sagaName = typeof(TSaga).FullName;
-                var sagaRepository = options.GetSagaRepository();
-                var eventsReader = options.GetPersistedEventsReader();
-                var checkpointManager = new SimpleChekpointManager(eventsReader);
-                var faultManager = sp.GetService<IFaultManager>();
-                return new SagaEventProcessor<TSaga>(sagaRepository, checkpointManager, faultManager);
-            });
-            return this;
-        }
+        }            
     }
 
 

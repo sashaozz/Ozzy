@@ -1,30 +1,24 @@
 ﻿using System;
 using Ozzy.Core;
 using System.Collections.Generic;
-using Newtonsoft.Json;
 
 namespace Ozzy.DomainModel
 {
-    public class DomainEventRecord
+    public interface IDomainEventRecord
+    {
+        long Sequence { get; }
+        DateTime TimeStamp { get; }
+        Dictionary<string, object> MetaData { get; }
+        object GetDomainEvent();
+        T GetDomainEvent<T>();
+        Type GetDomainEventType();
+    }
+    public class DomainEventRecord : IDomainEventRecord
     {
         public long Sequence { get; set; }
         public string EventType { get; set; }
         public string EventData { get; set; }
         public DateTime TimeStamp { get; set; }
-
-        public string MetaDataSerialized
-        {
-            get
-            {
-                return JsonConvert.SerializeObject(MetaData);
-            }
-            set
-            {
-                if (value != null)
-                    MetaData = JsonConvert.DeserializeObject<Dictionary<string, object>>(value);
-
-            }
-        }
 
         public Dictionary<string, object> MetaData { get; set; } = new Dictionary<string, object>();
 

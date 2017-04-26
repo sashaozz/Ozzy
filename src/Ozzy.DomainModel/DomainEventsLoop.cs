@@ -63,7 +63,7 @@ namespace Ozzy.DomainModel
             return _stage == 2;
         }
 
-        public bool AddEventForProcessing(DomainEventRecord message)
+        public bool AddEventForProcessing(IDomainEventRecord message)
         {
             if (!Started()) return false;
 
@@ -75,7 +75,7 @@ namespace Ozzy.DomainModel
         }
 
         //this will block if too many events published
-        private void AddEventToDisruptor(DomainEventRecord message)
+        private void AddEventToDisruptor(IDomainEventRecord message)
         {
             if (message.Sequence <= _ringBuffer.Cursor) return;
             while ((_ringBuffer.Cursor + _ringBuffer.RemainingCapacity()) < message.Sequence)
@@ -87,7 +87,7 @@ namespace Ozzy.DomainModel
             _ringBuffer.Publish(message.Sequence);
         }
 
-        private List<DomainEventRecord> GetEventsFromDurableStore()
+        private IEnumerable<IDomainEventRecord> GetEventsFromDurableStore()
         {
             var checkpoint = _ringBuffer.Cursor;
             var count = _ringBuffer.RemainingCapacity();
@@ -99,9 +99,9 @@ namespace Ozzy.DomainModel
             var lastSeq = sortedEvents.Last().Sequence;
             var eventsCount = lastSeq - checkpoint;
             // если событий столько сколько нужно, значит заполнять пробелы не нужно
-            if (eventsCount == events.Count) return events;
+            if (eventsCount == events.Count()) return events;
             // заполняем пробелы
-            List<DomainEventRecord> result = new List<DomainEventRecord>();
+            List<IDomainEventRecord> result = new List<IDomainEventRecord>();
             long index = checkpoint + 1;
             foreach (var domainEventRecord in sortedEvents)
             {
@@ -119,7 +119,7 @@ namespace Ozzy.DomainModel
         private void PollData(CancellationToken stopRequested)
         {
             var events = GetEventsFromDurableStore();
-            OzzyLogger<IDomainModelTracing>.LogFor<DomainEventsLoop>().Polling(events.Count);
+            OzzyLogger<IDomainModelTracing>.LogFor<DomainEventsLoop>().Polling(events.Count());
 
             foreach (var e in events)
             {
@@ -140,7 +140,7 @@ namespace Ozzy.DomainModel
             {
                 var minCheckpoint = 0L;
                 var checkpoints = _eventProcessors.Select(e => e.GetCheckpoint()).ToList();
-                if (checkpoints.Any()) minCheckpoint = checkpoints.Min();                
+                if (checkpoints.Any()) minCheckpoint = checkpoints.Min();
 
                 _disruptor = new Disruptor<DomainEventEntry>(() => new DomainEventEntry(),
                     new MultiThreadedClaimStrategy(_bufferSize),

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Ozzy.DomainModel.Saga
+namespace Ozzy.Server
 {
     public class ActivatorSagaFactory : ISagaFactory
     {

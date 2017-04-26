@@ -2,7 +2,7 @@
 using Ozzy.DomainModel;
 using System.Threading.Tasks;
 
-namespace Ozzy.Server.BackgroundProcesses
+namespace Ozzy.Server
 {
     public class SingleInstanceProcess<T> : BackgroundProcessBase where T : IBackgroundProcess
     {
@@ -30,7 +30,7 @@ namespace Ozzy.Server.BackgroundProcesses
 
         protected override async Task StartInternal()
         {
-            using (var _dlock = await _lockService.CreateLockAsync(this.ProcessName,
+            using (_dlock = await _lockService.CreateLockAsync(this.ProcessName,
                 TimeSpan.FromSeconds(1),
                 TimeSpan.MaxValue,
                 TimeSpan.FromSeconds(1),

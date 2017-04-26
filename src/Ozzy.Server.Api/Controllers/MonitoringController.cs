@@ -1,11 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Ozzy.DomainModel.Monitoring;
-using Ozzy.Server.FeatureFlags;
-using Ozzy.Server.Monitoring;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using System.Linq;
-using System;
 using Ozzy.Server.Api.Models;
 
 namespace Ozzy.Server.Api.Controllers

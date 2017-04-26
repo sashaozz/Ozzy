@@ -1,8 +1,7 @@
-﻿using Ozzy.Server.BackgroundTasks;
-using System.Threading;
+﻿using System.Threading;
 using System.Threading.Tasks;
 
-namespace Ozzy.Server.BackgroundProcesses
+namespace Ozzy.Server
 {
     public class TaskQueueProcess : PeriodicActionProcess
     {

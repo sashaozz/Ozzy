@@ -1,15 +1,10 @@
 ﻿using System;
-using Ozzy.DomainModel;
 using Ozzy.Core;
 
-namespace Ozzy.Server.BackgroundProcesses
+namespace Ozzy.Server
 {
     public class PeriodicActionProcess : PeriodicAction, IBackgroundProcess
-    {
-        private readonly IDistributedLockService _lockService;
-        private readonly IBackgroundProcess _innerProcess;
-        private IDistributedLock _dlock;
-
+    {        
         public PeriodicActionProcess(int interval = 5000, bool waitForFirstInterval = false) : base(interval, waitForFirstInterval)
         {
             ProcessName = this.GetType().Name;

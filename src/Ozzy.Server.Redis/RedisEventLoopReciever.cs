@@ -13,7 +13,7 @@ namespace Ozzy.Server.Redis
         private string _channel;
         private ISubscriber _subscriber;
         private RedisClient _redis;
-        private Action<DomainEventRecord> _consumerAction;
+        private Action<IDomainEventRecord> _consumerAction;
         private DomainEventsLoop _loop;
 
         public RedisFastEventReciever(RedisClient redis, DomainEventsLoop loop, string channelName)            
@@ -27,7 +27,7 @@ namespace Ozzy.Server.Redis
             _channel = channelName;//$"{options.OptionsType.FullName}-fast-channel";
         }
 
-        public void Recieve(DomainEventRecord message)
+        public void Recieve(IDomainEventRecord message)
         {
             _loop.AddEventForProcessing(message);
         }
@@ -47,10 +47,10 @@ namespace Ozzy.Server.Redis
             _subscriber = _redis.Redis.GetSubscriber();
             _subscriber.SubscribeAsync(_channel, (ch, message) =>
             {
-                DomainEventRecord data;
+                IDomainEventRecord data;
                 using (var stream = new MemoryStream(message))
                 {
-                    data = Serializer.Deserialize<DomainEventRecord>(stream);
+                    data = Serializer.Deserialize<IDomainEventRecord>(stream);
                 }
                 if (data == null)
                 {

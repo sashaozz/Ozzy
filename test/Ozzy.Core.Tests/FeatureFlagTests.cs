@@ -1,6 +1,4 @@
-﻿using Xunit;
-using Ozzy.Server.FeatureFlags;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Ozzy.Server;
 
 namespace Ozzy.Core.Tests
 {

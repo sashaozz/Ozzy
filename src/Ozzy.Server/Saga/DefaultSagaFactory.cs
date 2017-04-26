@@ -2,7 +2,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Ozzy.DomainModel;
 
-namespace Ozzy.Server.Saga
+namespace Ozzy.Server
 {
     public class DefaultSagaFactory : ISagaFactory
     {

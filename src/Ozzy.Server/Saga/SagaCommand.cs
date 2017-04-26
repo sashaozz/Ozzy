@@ -1,6 +1,7 @@
 ﻿using System;
+using Ozzy.DomainModel;
 
-namespace Ozzy.DomainModel
+namespace Ozzy.Server
 {
     public class SagaCommand : IDomainEvent
     {

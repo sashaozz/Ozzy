@@ -4,7 +4,6 @@ using Ozzy.Core;
 using Ozzy.DomainModel;
 using System;
 using System.Collections.Generic;
-using Ozzy.Server.DomainDsl;
 
 namespace Ozzy.Server.Configuration
 {
@@ -27,8 +26,7 @@ namespace Ozzy.Server.Configuration
         {
             Guard.ArgumentNotNull(services, nameof(services));
             Services = services;
-
-            // add OzzyDomainOptions<TDomain>
+            
             Services.TryAddSingleton(OzzyDomainOptionsFactory);
         }
 
@@ -41,11 +39,7 @@ namespace Ozzy.Server.Configuration
             }
             return options.UpdateOption<CoreOptionsExtension>(coreExtension =>
             {
-                coreExtension.TopLevelServiceProvider = serviceProvider;
-                if (coreExtension.ServiceProvider == null)
-                {
-                    coreExtension.ServiceProvider = new OverridingServiceProvider(serviceProvider, coreExtension.ServiceCollection.BuildServiceProvider());
-                }
+                coreExtension.ServiceProvider = serviceProvider;
             });
         }
 
@@ -54,43 +48,13 @@ namespace Ozzy.Server.Configuration
             Guard.ArgumentNotNull(action, nameof(action));
             OptionsSetUps.Add(action);
         }
-        public void RegisterOptionService(Action<IServiceCollection> registerAction)
-        {
-            Guard.ArgumentNotNull(registerAction, nameof(registerAction));
-            RegisterOptionService((sp, sc) => registerAction(sc));
-        }
-        public void RegisterOptionService(Action<IServiceProvider, IServiceCollection> registerAction)
-        {
-            Guard.ArgumentNotNull(registerAction, nameof(registerAction));
-            SetUpOptions((serviceProvider, options) =>
-            {
-                return options.UpdateOption<CoreOptionsExtension>(extension =>
-                {
-                    registerAction(serviceProvider, extension.ServiceCollection);
-                });
-            });
-        }
-
-        public OzzyDomainBuilder<TDomain> AddEventLoop<TLoop>(Action<OzzyEventLoopOptionsBuilder<TLoop, TDomain>> optionsAction = null) where TLoop : DomainEventsLoop<TDomain>
-        {
-            if (optionsAction != null)
-            {
-                var builder = new OzzyEventLoopOptionsBuilder<TLoop, TDomain>(this);
-                optionsAction(builder);
-            }
-            Services.TryAddSingleton<TLoop>();
-            return this;
-        }
 
         public OzzyDomainBuilder<TDomain> UseInMemoryFastChannel()
         {
-            Services.AddDomainSpecificSingleton<TDomain, InMemoryDomainEventsPubSub>(sp => new InMemoryDomainEventsPubSub());
-            Services.AddDomainSpecificSingleton<TDomain, IFastEventPublisher>(sp => new InMemoryEventPublisher(sp.GetDomainSpecificService<TDomain, InMemoryDomainEventsPubSub>()));
-            Services.AddDomainSpecificSingleton<TDomain, IFastEventRecieverFactory>(sp => new InMemoryEventRecieverFactory(sp.GetDomainSpecificService<TDomain, InMemoryDomainEventsPubSub>()));
+            Services.TryAddTypeSpecificSingleton<TDomain, InMemoryDomainEventsPubSub>(sp => new InMemoryDomainEventsPubSub());
+            Services.TryAddTypeSpecificSingleton<TDomain, IFastEventPublisher>(sp => new InMemoryEventPublisher(sp.GetTypeSpecificService<TDomain, InMemoryDomainEventsPubSub>()));
+            Services.TryAddTypeSpecificSingleton<TDomain, IFastEventRecieverFactory>(sp => new InMemoryEventRecieverFactory(sp.GetTypeSpecificService<TDomain, InMemoryDomainEventsPubSub>()));
             return this;
-        }
+        }        
     }
-
-
-
 }

@@ -14,7 +14,7 @@ namespace Ozzy.DomainModel
             {
                 ConstructorHandling = ConstructorHandling.AllowNonPublicDefaultConstructor,
                 NullValueHandling = NullValueHandling.Ignore,
-                TypeNameAssemblyFormat = FormatterAssemblyStyle.Simple        
+                //TypeNameAssemblyFormat = FormatterAssemblyStyle.Simple        
             };
             _settings.Converters.Add(new StringEnumConverter());                        
         }

@@ -1,7 +1,7 @@
 ﻿namespace Ozzy.DomainModel
 {
-    public interface IDomainEventHandler
+    public interface IDomainEventsHandler
     {
-        bool HandleEvent(DomainEventRecord record);
+        bool HandleEvent(IDomainEventRecord record);
     }
 }

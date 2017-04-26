@@ -1,8 +1,5 @@
 ﻿using Ozzy.DomainModel;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using Ozzy.Server.EntityFramework;
 
 namespace SampleApplication.Entities
 {

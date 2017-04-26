@@ -3,7 +3,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Linq;
 
-namespace Ozzy.Server.FeatureFlags
+namespace Ozzy.Server
 {
     public class FeatureFlagService : IFeatureFlagService
     {
