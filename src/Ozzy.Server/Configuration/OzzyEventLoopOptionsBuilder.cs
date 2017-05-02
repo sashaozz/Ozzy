@@ -24,20 +24,12 @@ namespace Ozzy.Server.Configuration
 
         public OzzyDomainOptionsBuilder<TDomain> AddProcessor<TProcessor>(Func<IServiceProvider, TProcessor> processorFactory = null) where TProcessor : class, IDomainEventsProcessor
         {
-            if (processorFactory == null)
-            {
-                processorFactory = sp => sp.GetService<TProcessor>();
-            }
             _domainBuilder.Services.TryAddTypeSpecificSingleton<TDomain, TProcessor>(processorFactory);
             return this;
         }
 
         public OzzyDomainOptionsBuilder<TDomain> AddHandler<THandler>(Func<IServiceProvider, THandler> handlerFactory = null) where THandler : class, IDomainEventsHandler
         {
-            if (handlerFactory == null)
-            {
-                handlerFactory = sp => sp.GetService<THandler>();
-            }
             _domainBuilder.Services.TryAddTypeSpecificSingleton<TDomain, THandler>(handlerFactory);
             _domainBuilder.Services.TryAddTypeSpecificSingleton<TDomain, IDomainEventsProcessor>(sp =>
             {
@@ -52,10 +44,6 @@ namespace Ozzy.Server.Configuration
         }
         public OzzyDomainOptionsBuilder<TDomain> AddSagaProcessor<TSaga>(Func<IServiceProvider, TSaga> sagaFactory = null) where TSaga : SagaBase
         {
-            if (sagaFactory == null)
-            {
-                sagaFactory = sp => sp.GetService<TSaga>();
-            }
             _domainBuilder.Services.TryAddTypeSpecificSingleton<TDomain, TSaga>(sagaFactory);
             _domainBuilder.Services.TryAddTypeSpecificSingleton<TDomain, IDomainEventsProcessor>(sp =>
             {

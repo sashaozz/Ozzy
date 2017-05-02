@@ -55,8 +55,8 @@ namespace Ozzy.Server.Configuration
 
             builder.Services.TryAddTypeSpecificSingleton<TDomain, IFastEventPublisher>(NullEventsPublisher.Instance);
             builder.Services.TryAddTypeSpecificSingleton<TDomain, Func<IFastEventPublisher>>(sp => () => NullEventsPublisher.Instance);
-            builder.Services.TryAddTypeSpecificSingleton<TDomain, DefaultSagaFactory>();
-            builder.Services.TryAddTypeSpecificSingleton<TDomain, ISagaFactory>(sp => sp.GetTypeSpecificService<TDomain, DefaultSagaFactory>());
+            builder.Services.TryAddSingleton<DefaultSagaFactory<TDomain>>();
+            builder.Services.TryAddTypeSpecificSingleton<TDomain, ISagaFactory>(sp => sp.GetService<DefaultSagaFactory<TDomain>>());
 
             return builder;
         }

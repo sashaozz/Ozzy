@@ -14,7 +14,7 @@ namespace Ozzy.Server.EntityFramework
             _contextFactory = contextFactory;
         }
 
-        public TSaga CreateNewSaga<TSaga>()
+        public TSaga CreateNewSaga<TSaga>() where TSaga : class
         {
             return _sagaFactory.GetSaga<TSaga>();
         }
