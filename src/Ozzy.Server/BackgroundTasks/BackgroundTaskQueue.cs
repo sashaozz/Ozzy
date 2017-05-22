@@ -1,8 +1,4 @@
-﻿using System;
-using System.Text;
-using Newtonsoft.Json;
-
-namespace Ozzy.Server
+﻿namespace Ozzy.Server
 {
     public class BackgroundJobQueue : JobQueue<BackgroundTaskConfig>
     {
