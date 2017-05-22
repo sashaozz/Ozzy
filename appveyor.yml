@@ -1,0 +1,19 @@
+version: '{build}'
+pull_requests:
+  do_not_increment_build_number: true
+image: Visual Studio 2017
+nuget:
+  disable_publish_on_pr: true
+build_script:
+- ps: .\Build.ps1
+test: off
+artifacts:
+- path: .\artifacts\**\Ozzy*.nupkg
+  name: NuGet
+deploy:
+- provider: NuGet
+  server: https://www.myget.org/F/sashaozz/api/v2/package
+  api_key:
+    secure: wZMeLugNJifxiF566FCqSV6lTSS8aaDSqcykITVudpYEnMSmdCLFM5YcNkAs0lqW
+  on:
+    branch: master

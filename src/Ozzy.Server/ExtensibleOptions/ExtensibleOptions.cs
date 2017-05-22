@@ -15,6 +15,7 @@ namespace Ozzy.Server
     public interface IExtensibleOptions<out T> : IExtensibleOptions
     {
         IExtensibleOptions<T> UpdateOption<TExtension>(Action<TExtension> updateAction) where TExtension : class, IOptionsExtension, new();
+        TService GetTypedService<TService>() where TService : class;
     }
 
     public abstract class ExtensibleOptions : IExtensibleOptions
@@ -88,6 +89,12 @@ namespace Ozzy.Server
             var extension = FindExtension<TExtension>() ?? new TExtension();
             updateAction(extension);
             return WithExtensionInternal(extension);
+        }
+
+        public TService GetTypedService<TService>() where TService : class
+        {
+            var provider = this.GetServiceProvider();
+            return provider.GetTypeSpecificService<T, TService>();
         }
     }
 

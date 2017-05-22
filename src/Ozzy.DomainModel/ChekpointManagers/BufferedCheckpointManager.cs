@@ -43,14 +43,14 @@ namespace Ozzy.DomainModel
             return Math.Max(bufferCheckpoint, targetCheckpoint);
         }
 
-        public void SaveCheckpoint(long checkpoint)
+        public void SaveCheckpoint(long checkpoint, bool idempotent)
         {
             if (!_started)
             {
                 _timer.Start();
                 _started = true;
             }
-            _bufferCheckpointManager.SaveCheckpoint(checkpoint);
+            _bufferCheckpointManager.SaveCheckpoint(checkpoint, idempotent);
         }
 
         private Task SendBufferToTarget(CancellationToken token)

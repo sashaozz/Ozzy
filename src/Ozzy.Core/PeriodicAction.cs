@@ -18,8 +18,7 @@ namespace Ozzy.Core
 
         public int ActionInterval { get; protected set; }
         public bool WaitForFirstInterval { get; protected set; }
-        
-
+        public bool DoingAction => _doingAction == 1;
         protected PeriodicAction(int interval = 5000, bool waitForFirstInterval = false)
         {
             Guard.ArgumentNotNegativeValue(interval, nameof(interval));
@@ -81,7 +80,14 @@ namespace Ozzy.Core
             }
             while (!StopRequested.IsCancellationRequested)
             {
-                await Task.Delay(ActionInterval, StopRequested.Token);
+                try
+                {
+                    await Task.Delay(ActionInterval, StopRequested.Token);
+                }
+                catch (TaskCanceledException)
+                {
+                    return;
+                }
                 await DoActionAsync();
             }
         }
@@ -93,6 +99,10 @@ namespace Ozzy.Core
                 try
                 {
                     await _asyncAction(StopRequested.Token);
+                }
+                catch (TaskCanceledException e)
+                {
+                    //todo : log task was cancelled
                 }
                 catch (Exception e)
                 {

@@ -2,15 +2,17 @@
 using Ozzy.DomainModel;
 using System.Collections.Generic;
 using System.Linq;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
+using System.Runtime.Serialization.Formatters;
+using Newtonsoft.Json.Converters;
 
 namespace Ozzy.Server.Api
 {
     [Route("api/[controller]")]
-    public class GenericDataController<TItem, TId> : Controller where TItem : GenericDataRecord<TId>
-    {
-
+    public class GenericDataController<TItem, TId> : Controller where TItem : class, IEntity<TId>
+    {        
         private IDataRepository<TItem, TId> _repository;
-
         public GenericDataController(IDataRepository<TItem, TId> repository)
         {
             _repository = repository;
@@ -20,8 +22,7 @@ namespace Ozzy.Server.Api
         [HttpGet]
         public IEnumerable<TItem> Get()
         {
-            var flags = _repository.Query().ToList();
-            return flags;
+            return _repository.Query().ToList();                        
         }
 
         // Get item by id

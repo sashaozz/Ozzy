@@ -26,30 +26,21 @@ namespace Ozzy.Server.Configuration
         {
             Guard.ArgumentNotNull(services, nameof(services));
             Services = services;
-
-            // add OzzyDomainOptions<TDomain>
+            
             Services.TryAddSingleton(OzzyDomainOptionsFactory);
         }
 
         private IExtensibleOptions<TDomain> OzzyDomainOptionsFactory(IServiceProvider serviceProvider)
         {
-
             IExtensibleOptions<TDomain> options = new ExtensibleOptions<TDomain>(new Dictionary<Type, IOptionsExtension>());
-            options = options.UpdateOption<CoreOptionsExtension>(o =>
-            {
-                o.ServiceCollection.TryAddSingleton<IFastEventPublisher>(NullEventsPublisher.Instance);
-            });
-
             foreach (var action in OptionsSetUps)
             {
                 options = action?.Invoke(serviceProvider, options);
             }
-            var coreExtension = options.FindExtension<CoreOptionsExtension>();
-            if (coreExtension.ServiceProvider == null)
+            return options.UpdateOption<CoreOptionsExtension>(coreExtension =>
             {
-                coreExtension.ServiceProvider = new OverridingServiceProvider(serviceProvider, coreExtension.ServiceCollection.BuildServiceProvider());
-            }
-            return options;
+                coreExtension.ServiceProvider = serviceProvider;
+            });
         }
 
         public void SetUpOptions(Func<IServiceProvider, IExtensibleOptions<TDomain>, IExtensibleOptions<TDomain>> action)
@@ -58,24 +49,12 @@ namespace Ozzy.Server.Configuration
             OptionsSetUps.Add(action);
         }
 
-        public void RegisterOptionService(Action<IServiceProvider, IServiceCollection> registerAction)
+        public OzzyDomainBuilder<TDomain> UseInMemoryFastChannel()
         {
-            Guard.ArgumentNotNull(registerAction, nameof(registerAction));
-            SetUpOptions((serviceProvider, options) =>
-            {
-                var extension = options.FindExtension<CoreOptionsExtension>();
-                registerAction(serviceProvider, extension.ServiceCollection);
-                return options;
-            });
-        }
-
-        public OzzyDomainBuilder<TDomain> AddEventLoop<TLoop>() where TLoop : DomainEventLoop<TDomain>
-        {
-            Services.AddSingleton<TLoop>();
+            Services.TryAddTypeSpecificSingleton<TDomain, InMemoryDomainEventsPubSub>(sp => new InMemoryDomainEventsPubSub());
+            Services.TryAddTypeSpecificSingleton<TDomain, IFastEventPublisher>(sp => new InMemoryEventPublisher(sp.GetTypeSpecificService<TDomain, InMemoryDomainEventsPubSub>()));
+            Services.TryAddTypeSpecificSingleton<TDomain, IFastEventRecieverFactory>(sp => new InMemoryEventRecieverFactory(sp.GetTypeSpecificService<TDomain, InMemoryDomainEventsPubSub>()));
             return this;
-        }
+        }        
     }
-
-
-
 }

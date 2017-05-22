@@ -14,12 +14,11 @@ namespace Ozzy.Core
     {
         // 0-notstarted, 1-starting, 2-started, 3-stopping
         private int _stage;
-
         protected CancellationTokenSource StopRequested;
         protected Task RunningTask = Task.CompletedTask;
         protected TaskCompletionSource<bool> RunningTaskCompletionSource;
         public bool IsStopped => _stage < 2;
-        public bool IsStarted => _stage > 2;
+        public bool IsStarted => _stage >= 2;
         public bool IsStopping => _stage == 3;
         public bool IsStarting => _stage == 1;
 

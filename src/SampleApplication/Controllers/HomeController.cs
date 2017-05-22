@@ -1,35 +1,29 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Ozzy.Server.BackgroundTasks;
+﻿using Microsoft.AspNetCore.Mvc;
 using SampleApplication.Tasks;
-using Ozzy.Server.Queues;
 using SampleApplication.Queues;
+using Ozzy.Server;
 
 namespace SampleApplication.Controllers
 {
     public class HomeController : Controller
     {
-        ITaskQueueService _backgroundTaskService;
-        IQueueService<SampleQueueItem> _queueService;
+        BackgroundJobQueue _backgroundJobQueue;
+        JobQueue<SampleQueueItem> _queue;
 
-        public HomeController(ITaskQueueService backgroundTaskService, IQueueService<SampleQueueItem> queueService)
+        public HomeController(BackgroundJobQueue backgroundJobQueue, JobQueue<SampleQueueItem> queue)
         {
-            _backgroundTaskService = backgroundTaskService;
-            _queueService = queueService;
+            _backgroundJobQueue = backgroundJobQueue;
+            _queue = queue;
         }
 
         public IActionResult Index()
         {
-            _backgroundTaskService.Add<TestBackgoundTask>("Hello world");
-             var item = _queueService.FetchNext();
+            _backgroundJobQueue.PutJob<TestBackgoundTask>("Hello world");
+            var item = _queue.Fetch();
 
-            if (item != null)
-                _queueService.Acknowledge(item);
+            if (item != null) _queue.Acknowledge(item.Id);
 
-            _queueService.Add(new SampleQueueItem()
+            _queue.Put(new SampleQueueItem()
             {
                 Field1 = "sfddsf",
                 Field2 = 4

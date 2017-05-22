@@ -1,15 +1,12 @@
-﻿using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Ozzy.DomainModel;
-using Ozzy.Server.BackgroundProcesses;
-using Ozzy.Server.FeatureFlags;
+﻿using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Reflection;
+using Ozzy.DomainModel;
 
 namespace Ozzy.Server.Configuration
 {
     public static class OzzyBuilderExtensions
-    {        
+    {
         public static IOzzyBuilder AddBackgroundProcess<T>(this IOzzyBuilder builder) where T : class, IBackgroundProcess
         {
 
@@ -26,19 +23,6 @@ namespace Ozzy.Server.Configuration
 
             return builder;
         }
-
-        public static IOzzyBuilder AddBackgroundMessageLoopProcess<TLoop>(this IOzzyBuilder builder) where TLoop : DomainEventsManager
-        {
-            //todo check types with reflection 
-            //todo walk base types up to loop base type
-            var domainModelType = typeof(TLoop).GetTypeInfo().BaseType.GetGenericArguments()[0];
-            var backgroundProcessType = typeof(MessageLoopProcess<,>).MakeGenericType(typeof(TLoop), domainModelType);
-
-            builder.Services.AddSingleton(typeof(IBackgroundProcess), backgroundProcessType);
-            return builder;
-        }
-
-
         public static IOzzyBuilder AddDomainModel(this IOzzyBuilder builder, string domain)
         {
             return builder;
@@ -82,6 +66,26 @@ namespace Ozzy.Server.Configuration
             {
                 builder.Services.AddSingleton(typeof(IBackgroundProcess), proc);
             }
+            return builder;
+        }
+
+        public static IOzzyBuilder UseInMemoryMonitoring<TDomain>(this IOzzyBuilder builder)
+            where TDomain : IOzzyDomainModel
+        {
+            builder.Services.AddSingleton<IMonitoringRepository, InMemoryMonitoringRepository>();
+            builder.Services.AddSingleton<INodesManager>(sp =>
+            {
+                var repository = sp.GetService<IMonitoringRepository>();
+                var eventsManager = sp.GetTypeSpecificService<TDomain, IDomainEventsManager>();
+                return new NodesManager(repository, eventsManager);
+            });
+            builder.Services.AddTypeSpecificSingleton<TDomain, IDomainEventsProcessor>(sp =>
+            {
+                var checkpointManager = sp.GetTypeSpecificService<NodeMonitoringInfo, ICheckpointManager>();
+                var handler = new MonitoringEventsHandler(sp);
+                return new DomainEventsProcessor(handler, checkpointManager);
+            });
+            builder.AddBackgroundProcess<NodesMonitoringProcess>();
             return builder;
         }
     }

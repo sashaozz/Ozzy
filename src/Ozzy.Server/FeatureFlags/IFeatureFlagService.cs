@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace Ozzy.Server.FeatureFlags
+namespace Ozzy.Server
 {
     public interface IFeatureFlagService
     {        

@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Builder;
 
-namespace Ozzy.Server.Api.Configuration
+namespace Ozzy.Server.Configuration
 {
     public static class OzzyServiceCollectionExtensions
     {

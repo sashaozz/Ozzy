@@ -2,7 +2,7 @@
 using Ozzy.DomainModel;
 using System.Threading.Tasks;
 
-namespace Ozzy.Server.BackgroundProcesses
+namespace Ozzy.Server
 {
     public class SingleInstanceProcess<T> : BackgroundProcessBase where T : IBackgroundProcess
     {
@@ -14,48 +14,58 @@ namespace Ozzy.Server.BackgroundProcesses
         {
             _lockService = lockService;
             _innerProcess = innerProcess;
-            Name = innerProcess.Name;
+            ProcessName = innerProcess.ProcessName;
+            ProcessId = innerProcess.ProcessId;
+        }
+
+        public override string ProcessState
+        {
+            get
+            {
+                string state = IsRunning ? "Started" : "Not Started";
+                state += _innerProcess.IsRunning ? " (Doing Work)" : $" (Not Doing Work - Waiting For Distributed Lock '{ProcessName}')";
+                return state;
+            }
         }
 
         protected override async Task StartInternal()
         {
-            _dlock = await _lockService.CreateLockAsync(this.Name,
-                TimeSpan.FromSeconds(2),
+            using (_dlock = await _lockService.CreateLockAsync(this.ProcessName,
+                TimeSpan.FromSeconds(1),
                 TimeSpan.MaxValue,
-                TimeSpan.FromSeconds(2),
+                TimeSpan.FromSeconds(1),
                 StopRequested.Token,
                 () =>
-                {                    
+                {
                     // if process was not stopped from outside, restart it so it can try to acquire lock again
-                    if (!StopRequested.IsCancellationRequested)                    
+                    if (!StopRequested.IsCancellationRequested)
                     {
                         try
                         {
                             Stop().Wait();
                         }
-                        catch(Exception e)
+                        catch (Exception e)
                         {
                             //todo : log 
                         }
                         Start();
                     }
-                });
-
-            if (_dlock.IsAcquired)
+                }))
             {
-                await _innerProcess.Start();
-                await Stop();
+                if (_dlock != null && _dlock.IsAcquired)
+                {
+                    await _innerProcess.Start();
+                    //await Stop();
+                    return;
+                }
             }
-            else
-            {
-                //todo: log task was not started!
-            }
+            await StartInternal();
         }
 
         protected override void StopInternal()
-        {            
+        {
             _innerProcess.Stop().Wait();
-            _dlock.Dispose();
+            _dlock?.Dispose();
             base.StopInternal();
         }
     }

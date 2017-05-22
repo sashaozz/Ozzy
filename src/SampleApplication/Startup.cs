@@ -1,28 +1,23 @@
-﻿using Microsoft.AspNetCore.Builder;
+﻿using System;
+using System.Diagnostics.Tracing;
+using System.Linq;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Ozzy.Server.Configuration;
-using Microsoft.EntityFrameworkCore;
-using Ozzy.Server.EntityFramework;
-using Ozzy.Server.Api.Configuration;
-using Ozzy.Core.Events;
+using Ozzy;
 using Ozzy.Core;
-using System.Diagnostics.Tracing;
-using System;
-using System.Linq;
+using Ozzy.Core.Events;
 using Ozzy.DomainModel;
 using Ozzy.Server;
+using Ozzy.Server.Configuration;
+using SampleApplication.Sagas;
+using SampleApplication.Tasks;
 using Serilog;
 using Serilog.Events;
 using Serilog.Parsing;
-using Ozzy.Server.Events;
-using EventSourceProxy;
-using Ozzy.Server.BackgroundProcesses;
-using SampleApplication.Tasks;
-using Ozzy.Server.Queues;
-using SampleApplication.Queues;
 
 namespace SampleApplication
 {
@@ -37,8 +32,13 @@ namespace SampleApplication
             var builder = new ConfigurationBuilder()
                 .SetBasePath(env.ContentRootPath)
                 .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
-                .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true)
-                .AddEnvironmentVariables();
+                .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true);
+
+            if (Environment.IsDevelopment())
+            {
+                builder.AddJsonFile($"appsettings.{System.Environment.MachineName}.json", optional: true);
+            }
+            builder.AddEnvironmentVariables();
             Configuration = builder.Build();
         }
 
@@ -51,54 +51,36 @@ namespace SampleApplication
             services.AddMvc();
             services.AddCors();
 
-            services.AddDbContext<SampleDbContext>(options =>
-            {
-                options.UseSqlServer("Data Source=.;Initial Catalog=test;Integrated Security=True;");
-            });
-            services.AddSingleton<Func<SampleDbContext>>(sp => () =>
-            {
-                return new SampleDbContext(sp.GetService<IExtensibleOptions<SampleDbContext>>());
-            });
-            services.AddTransient<TestBackgoundTask>();
-            services.AddTransient<IQueueService<SampleQueueItem>, QueueService<SampleQueueItem>>();
-            //var ozzyOptions = Configuration.GetSection("OzzyOptions");
+            services.AddSingleton<ISerializer, ContractlessMessagePackSerializer>();
+            services.AddSingleton<TestBackgoundTask>();
+            var ozzyOptions = Configuration.GetSection("OzzyOptions");
             //services.ConfigureEntityFrameworkForOzzy(ozzyOptions);
             //services.ConfigureRedisForOzzy(ozzyOptions);
 
-            OzzyDomainBuilder<SampleDbContext> domain = null;
-            if (Environment.IsDevelopment())
+            services
+            .AddOzzyDomain<SampleDbContext>(options =>
             {
-                domain = services
-                .AddEntityFrameworkOzzyDomain<SampleDbContext>()
-                .UseInMemoryFastChannel()
-                .AddEventLoop<SampleEventLoop>();
-            }
-            else
+                options.UseInMemoryFastChannel();
+                options.AddSagaProcessor<ContactFormMessageSaga>();
+            })
+            .UseEntityFramework((options =>
             {
-                domain = services
-                .AddEntityFrameworkOzzyDomain<SampleDbContext>()
-                //.UseRedisFastChannel()
-                .AddEventLoop<SampleEventLoop>();
-            }
+                options.UseSqlServer(Configuration.GetConnectionString("SampleDbContext"));
+            }));
 
-
-            var node = services
-                .AddOzzy()
-                .AddBackgroundProcess<NodeConsoleHeartBeatProcess>()
-                .AddBackgroundProcess<NodeConsoleHeartBeatProcess2>()
-                .AddBackgroundMessageLoopProcess<SampleEventLoop>()
-                .AddBackgroundMessageLoopProcess<OzzyNodeEventLoop<SampleDbContext>>()
+            services.ConfigureOzzyNode<SampleDbContext>()
                 .UseEFDistributedLockService<SampleDbContext>()
                 .UseEFFeatureFlagService<SampleDbContext>()
                 .UseEFBackgroundTaskService<SampleDbContext>()
-                .AddBackgroundProcess<TaskQueueProcess>()
+                .UseInMemoryMonitoring<SampleDbContext>()
+                .AddBackgroundProcess<NodeConsoleHeartBeatProcess>()
                 .AddFeatureFlag<ConsoleLogFeature>()
                 .AddApi();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
-        {           
+        {
             //loggerFactory
             //    .AddConsole(Configuration.GetSection("Logging"))
             //    .AddDebug();
@@ -140,11 +122,6 @@ namespace SampleApplication
             //}
 
             //app.UseStaticFiles();
-
-            //app.UseMessageLoop<SampleEventsLoop>(handlers =>
-            //{
-            //    handlers.Addhandler<SampleEventProcessor>();
-            //});                    
 
             app.UseCors(builder =>
                 builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());

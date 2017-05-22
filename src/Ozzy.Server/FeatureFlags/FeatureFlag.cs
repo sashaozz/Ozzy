@@ -1,22 +1,35 @@
-﻿using Ozzy.Core;
-using System;
+﻿using System;
+using Ozzy.DomainModel;
+using Newtonsoft.Json;
 
-namespace Ozzy.Server.FeatureFlags
+namespace Ozzy.Server
 {
-    public class FeatureFlag
+    public class FeatureFlag : EntityBase<string>
     {
-        public string Id { get; protected set; }
-        public int Version { get;protected set; }
+        [JsonProperty]
         public FeatureFlagConfiguration Configuration { get; private set; }
 
-        public FeatureFlag(string code)
+        [JsonIgnore]
+        public byte[] SerializedConfiguration
         {
-            Guard.ArgumentNotNullOrEmptyString(code, nameof(code));
-            Id = code;
-            Configuration = new FeatureFlagConfiguration(false);
-            Version = 0;
+            get { return ContractlessMessagePackSerializer.Instance.BinarySerialize(Configuration); }
+            protected set
+            {
+                if (value == null) return;
+                Configuration = ContractlessMessagePackSerializer.Instance.BinaryDeSerialize<FeatureFlagConfiguration>(value);
+            }
         }
-        
+
+        public FeatureFlag(string id) : base(id)
+        {
+            Configuration = new FeatureFlagConfiguration(false);
+        }
+
+        //For ORM
+        protected FeatureFlag()
+        {
+        }
+
         public string GetVariation()
         {
             //todo: implement variations

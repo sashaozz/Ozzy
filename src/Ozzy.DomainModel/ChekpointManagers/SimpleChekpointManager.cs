@@ -23,7 +23,7 @@ namespace Ozzy.DomainModel
             return _checkpoint;
         }
 
-        public void SaveCheckpoint(long checkpoint)
+        public void SaveCheckpoint(long checkpoint, bool idempotent = false)
         {
             _checkpoint = checkpoint;
         }

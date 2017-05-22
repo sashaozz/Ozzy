@@ -11,6 +11,6 @@
         /// Публикует доменное событие через "быстрый" канал доставки сообщений
         /// </summary>
         /// <param name="message">Событие для отправки</param>
-        void Publish(DomainEventRecord message);
-    }
+        void Publish(IDomainEventRecord message);
+    }    
 }

@@ -4,7 +4,7 @@ namespace Ozzy.DomainModel
 {    
     public interface IFastEventReciever : IDisposable
     {
-        void Recieve(DomainEventRecord message);
+        void Recieve(IDomainEventRecord message);
         void StartRecieving();
         void StopRecieving();
     }

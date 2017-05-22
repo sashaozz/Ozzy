@@ -1,8 +1,6 @@
-﻿using System;
-using System.Threading;
+﻿using System.Threading;
 using System.Threading.Tasks;
 using Ozzy.Core;
-using Ozzy.Server.FeatureFlags;
 using Ozzy.Server;
 
 namespace SampleApplication
@@ -15,12 +13,13 @@ namespace SampleApplication
         {
             _ffService = ffService;
             ActionInterval = 1000;
-            
+
         }
 
         public bool IsRunning => base.IsStarted;
-
-        public string Name => "process1";
+        public string ProcessName => "Log Process";
+        public string ProcessId { get; } = "Process 1";
+        public string ProcessState => IsRunning ? "Logging" : "Not Logging";
 
         protected override async Task ActionAsync(CancellationToken cts)
         {
@@ -42,8 +41,9 @@ namespace SampleApplication
         }
 
         public bool IsRunning => base.IsStarted;
-
-        public string Name => "process1";
+        public string ProcessName => "Log Process";
+        public string ProcessId { get; } = "Process 2";
+        public string ProcessState => IsRunning ? "Logging" : "Not Logging";
 
         protected override async Task ActionAsync(CancellationToken cts)
         {

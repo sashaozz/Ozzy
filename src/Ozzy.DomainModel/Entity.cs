@@ -1,5 +1,4 @@
 ﻿using System;
-using Ozzy.Core;
 using Newtonsoft.Json;
 
 namespace Ozzy.DomainModel
@@ -9,19 +8,23 @@ namespace Ozzy.DomainModel
     /// </summary>
     public abstract class EntityBase<T> : IEquatable<EntityBase<T>>, IEntity<T>
     {
-        protected EntityBase()
+        protected EntityBase(int version = 0)
         {
             Id = default(T);
+            Version = version;
         }
 
-        protected EntityBase(T id)
+        protected EntityBase(T id, int version = 0)
         {
             Guard.ArgumentNotNull(id, nameof(id));
             Id = id;
+            Version = version;
         }
 
         [JsonProperty]
-        public T Id { get; protected set; }        
+        public T Id { get; protected set; }
+        [JsonProperty]
+        public int Version { get; protected set; }
 
         public override bool Equals(object anotherObject)
         {

@@ -1,18 +1,18 @@
-﻿using Ozzy.Server.BackgroundTasks;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Ozzy.Server;
 
 namespace SampleApplication.Tasks
 {
     public class TestBackgoundTask : BaseBackgroundTask
     {
-        public override async Task Execute()
+        public override Task Execute(object taskConfig)
         {
-            var configuration = this.Content;
+            var configuration = taskConfig;
+            Console.WriteLine(taskConfig.ToString());
             Thread.Sleep(2000);
+            return Task.CompletedTask;                
         }
     }
 }

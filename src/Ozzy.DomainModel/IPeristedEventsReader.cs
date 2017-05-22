@@ -13,7 +13,7 @@ namespace Ozzy.DomainModel
         /// <param name="checkpoint">Будут прочитаны события больше данной контрлоьной точки</param>
         /// <param name="maxEvents">Макисмальное количество событий для получения из персистентного хранилища</param>
         /// <returns></returns>
-        List<DomainEventRecord> GetEvents(long checkpoint, int maxEvents);
+        IEnumerable<IDomainEventRecord> GetEvents(long checkpoint, int maxEvents);
 
         long GetMaxSequence();
     }

@@ -7,20 +7,14 @@ namespace Ozzy.DomainModel
     }
 
     /// <summary>
-    /// Интерфей для всех агрегатов доменной модели
+    /// Интерфейc для всех агрегатов доменной модели
     /// </summary>
     public interface IAggregate : IEntity
-    {       
+    {
         /// <summary>
         /// Список доменных событий, произошедших в агрегате
         /// </summary>
-        List<IDomainEvent> Events { get; }
-
-        /// <summary>
-        /// Создает доменное событие в агрегате
-        /// </summary>
-        /// <typeparam name="TEvent">Тип доменного события</typeparam>
-        /// <param name="event">Доменное событие</param>
-        //void RaiseEvent<TEvent>(TEvent @event) where TEvent : IDomainEvent;
+        IEnumerable<IDomainEvent> GetUndispatchedEvents();
+        void ClearUndispatchedEvents();
     }
 }

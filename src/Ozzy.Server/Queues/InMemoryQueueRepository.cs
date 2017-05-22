@@ -1,46 +1,47 @@
-﻿using Ozzy.DomainModel;
-using Ozzy.DomainModel.Queues;
-using System;
+﻿using System;
 using System.Collections.Concurrent;
-using System.Linq;
 
-namespace Ozzy.Server.Queues
+namespace Ozzy.Server
 {
+    //this implementation is not intended for real use. It doesn't requeue not acknowledged items.
     public class InMemoryQueueRepository : IQueueRepository
     {
-        private ConcurrentDictionary<string, QueueRecord> _store = new ConcurrentDictionary<string, QueueRecord>();
-        private static object _syncLock = new object();
-
-        public void Create(QueueRecord item)
+        public class InMemoryQueue
         {
-            _store.GetOrAdd(item.Id, item);
-        }
-
-        public QueueRecord FetchNext(string queueName)
-        {
-            lock (_syncLock)
+            public ConcurrentQueue<QueueItem> Items { get; private set; } = new ConcurrentQueue<QueueItem>();
+            public ConcurrentDictionary<string, QueueItem> Fetched { get; private set; } = new ConcurrentDictionary<string, QueueItem>();
+            public string QueueName { get; private set; }
+            public InMemoryQueue(string queueName)
             {
-                var record = _store.Values
-                    .Where(q => q.QueueName == queueName)
-                    .OrderBy(v => v.CreatedAt)
-                    .FirstOrDefault();
-
-                record.Status = QueueStatus.Processing;
-
-                return record;
+                QueueName = queueName;
             }
         }
 
-        public IQueryable<QueueRecord> Query()
+        private ConcurrentDictionary<string, InMemoryQueue> _queues = new ConcurrentDictionary<string, InMemoryQueue>();                
+
+        public void Acknowledge(string id, string queueName)
         {
-            return _store.Values.AsQueryable();
+            var queue = _queues.GetOrAdd(queueName, name => new InMemoryQueue(name));
+            queue.Fetched.TryRemove(id, out var item);
         }
 
-
-        public void Acknowledge(string id)
+        public string Put(string queueName, byte[] item)
         {
-            QueueRecord removed;
-            _store.TryRemove(id, out removed);
+            var id = Guid.NewGuid().ToString();
+            var queue = _queues.GetOrAdd(queueName, name => new InMemoryQueue(name));
+            queue.Items.Enqueue(new QueueItem(id, item));
+            return id;
+        }
+
+        public QueueItem Fetch(string queueName)
+        {
+            var queue = _queues.GetOrAdd(queueName, name => new InMemoryQueue(name));
+            if (queue.Items.TryDequeue(out var item))
+            {
+                queue.Fetched.TryAdd(item.Id, item);
+                return item;
+            }
+            else return null;
         }
     }
 }
