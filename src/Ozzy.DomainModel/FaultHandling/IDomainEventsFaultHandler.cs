@@ -1,9 +1,8 @@
-﻿using Ozzy.DomainModel;
-using System;
+﻿using System;
 
-namespace Ozzy.Server
+namespace Ozzy.DomainModel
 {
-    public interface IFaultManager
+    public interface IDomainEventsFaultHandler
     {
         void Handle(Type processorType, IDomainEventRecord record, int retryMaxCount = 5, bool sendToErrorQueue = true);
     }

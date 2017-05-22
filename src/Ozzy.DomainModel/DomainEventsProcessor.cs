@@ -8,18 +8,25 @@ namespace Ozzy.DomainModel
     /// </summary>
     public class DomainEventsProcessor : IDomainEventsProcessor
     {
-        private Func<IDomainEventRecord, bool> _handler;
+        private IDomainEventsFaultHandler _faultHandler;
+        private IDomainEventsHandler _handler;
         protected ICheckpointManager CheckpointManager { get; set; }
-        public DomainEventsProcessor(IDomainEventsHandler handler, ICheckpointManager checkpointManager)
+        public DomainEventsProcessor(IDomainEventsHandler handler, ICheckpointManager checkpointManager, IDomainEventsFaultHandler faultHandler = null)
         {
-            _handler = handler.HandleEvent;
+            Guard.ArgumentNotNull(handler, nameof(handler));
+            Guard.ArgumentNotNull(checkpointManager, nameof(checkpointManager));
+            if (faultHandler == null) faultHandler = new DoNothingFaultHandler();
+            _handler = handler;
+            _faultHandler = faultHandler;
             CheckpointManager = checkpointManager; // ?? new InMemoryCheckpointManager();
         }
 
         protected DomainEventsProcessor(ICheckpointManager checkpointManager)
         {
-            _handler = HandleEvent;
-            CheckpointManager = checkpointManager; // ?? new InMemoryCheckpointManager();
+            Guard.ArgumentNotNull(checkpointManager, nameof(checkpointManager));
+            CheckpointManager = checkpointManager;
+            var handler = this as IDomainEventsHandler;
+            _handler = handler ?? throw new InvalidOperationException("Processor should implement IDomainEventsHandler inteface to be used as Handler");
         }
 
         public virtual bool HandleEvent(IDomainEventRecord record)
@@ -43,7 +50,19 @@ namespace Ozzy.DomainModel
                 return;
             }
             OzzyLogger<IDomainModelTracing>.Log.ProcessDomainEventEntry(record);
-            var isIdempotent = _handler(data);
+            bool isIdempotent = true;
+            try
+            {
+                isIdempotent = _handler.HandleEvent(data);
+            }
+            catch (Exception e)
+            {
+                //todo : should we handle exception better?
+                if (_handler != null)
+                {
+                    _faultHandler.Handle(_handler.GetType(), data);
+                }
+            }
             CheckpointManager.SaveCheckpoint(sequence, isIdempotent);
         }
         public long GetCheckpoint()

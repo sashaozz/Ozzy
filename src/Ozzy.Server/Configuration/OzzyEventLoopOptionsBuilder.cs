@@ -36,9 +36,9 @@ namespace Ozzy.Server.Configuration
                 var options = sp.GetService<IExtensibleOptions<TDomain>>();
                 var handler = sp.GetTypeSpecificService<TDomain, THandler>();
                 var eventsReader = sp.GetTypeSpecificService<TDomain, IPeristedEventsReader>();
-                var faultManager = sp.GetService<IFaultManager>();
+                var faultHandler = sp.GetService<IDomainEventsFaultHandler>();
                 var checkpointManager = new SimpleChekpointManager(eventsReader);
-                return new DomainEventsProcessor(handler, checkpointManager);
+                return new DomainEventsProcessor(handler, checkpointManager, faultHandler);
             });
             return this;
         }
@@ -52,9 +52,9 @@ namespace Ozzy.Server.Configuration
                 var sagaRepository = sp.GetTypeSpecificService<TDomain, ISagaRepository>();
                 var sagaHandler = new SagaDomainEventsHandler<TSaga>(sagaRepository);
                 var eventsReader = sp.GetTypeSpecificService<TDomain, IPeristedEventsReader>();
-                var faultManager = sp.GetService<IFaultManager>();
+                var faultHandler = sp.GetService<IDomainEventsFaultHandler>();
                 var checkpointManager = new SimpleChekpointManager(eventsReader);
-                return new DomainEventsProcessor(sagaHandler, checkpointManager);
+                return new DomainEventsProcessor(sagaHandler, checkpointManager, faultHandler);
             });
             return this;
         }            

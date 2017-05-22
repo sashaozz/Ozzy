@@ -6,19 +6,14 @@ namespace Ozzy.Server
 {
     public class QueueRecord : EntityBase<string>
     {
-        public QueueRecord(string code) : base(code)
+        public QueueRecord() : base(Guid.NewGuid().ToString())
         {
-
+            Status = QueueStatus.Queued;
+            CreatedAt = DateTime.UtcNow;
         }
-        // For ORM
-        [JsonConstructor]
-        protected QueueRecord() { }
-        public string Content { get; set; }
-
+        public byte[] Payload { get; set; }
         public DateTime CreatedAt { get; set; }
         public QueueStatus Status { get; set; }
-
         public string QueueName { get; set; }
-        public string ItemType { get; set; }
     }
 }

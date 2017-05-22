@@ -1,29 +1,21 @@
-﻿using Ozzy.DomainModel;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
+using System;
 
 namespace Ozzy.Server
 {
     public abstract class BaseBackgroundTask
-    {
-        public string Id { get; set; }
-        public abstract Task Execute();
-        public string Content { get; set; }
+    {        
+        public abstract Task Execute(object taskConfig);
     }
 
     public abstract class BaseBackgroundTask<T> : BaseBackgroundTask where T : class
     {
-        public T ContentTyped
+        public override Task Execute(object taskConfig)
         {
-            get
-            {
-                return string.IsNullOrEmpty(Content) ? null : EventSerializer.Deserialize<T>(Content);
-            }
-            set
-            {
-                Content = EventSerializer.Serialize(Content);
-            }
-
+            T config = taskConfig as T;
+            if (config == null) throw new InvalidOperationException("task type mismatch");
+            return Execute(config);
         }
-
+        public abstract Task Execute(T taskConfig);
     }
 }

@@ -25,7 +25,7 @@ namespace Ozzy.Server
 
         public bool Handle(DataRecordUpdatedEvent<FeatureFlag> obj)
         {
-            if (obj.RecordType != typeof(FeatureFlag)) return true;
+            //if (obj.RecordType != typeof(FeatureFlag)) return true;
             var newFlag = obj.RecordValue as FeatureFlag;
             _ffService.SetFlagState(newFlag.Id, newFlag.Configuration, newFlag.Version);
             return false;
@@ -33,7 +33,7 @@ namespace Ozzy.Server
 
         public bool Handle(DataRecordCreatedEvent<FeatureFlag> obj)
         {
-            if (obj.RecordType != typeof(FeatureFlag)) return true;
+            //if (obj.RecordType != typeof(FeatureFlag)) return true;
             var newFlag = obj.RecordValue as FeatureFlag;
             _ffService.SetFlagState(newFlag.Id, newFlag.Configuration, newFlag.Version);
             return false;

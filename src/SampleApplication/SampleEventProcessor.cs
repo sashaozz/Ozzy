@@ -5,7 +5,7 @@ using Ozzy.Server.EntityFramework;
 
 namespace SampleApplication
 {
-    public class SampleEventProcessor : DomainEventsProcessor
+    public class SampleEventProcessor : DomainEventsProcessor, IDomainEventsHandler
     {
         public SampleEventProcessor(IExtensibleOptions<SampleDbContext> options)
             : base(new SimpleChekpointManager(options.GetPersistedEventsReader()))
@@ -27,7 +27,7 @@ namespace SampleApplication
         }
     }
 
-    public class LoggerEventsProcessor : DomainEventsProcessor
+    public class LoggerEventsProcessor : DomainEventsProcessor, IDomainEventsHandler
     {
 
         public LoggerEventsProcessor(IExtensibleOptions<SampleDbContext> options, Func<SampleDbContext> db)

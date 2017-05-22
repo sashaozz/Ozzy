@@ -4,12 +4,12 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using SampleApplication;
-using Ozzy.DomainModel;
+using Ozzy.Server;
 
 namespace SampleApplication.Migrations
 {
     [DbContext(typeof(SampleDbContext))]
-    [Migration("20170426142858_init")]
+    [Migration("20170505063952_init")]
     partial class init
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -18,12 +18,12 @@ namespace SampleApplication.Migrations
                 .HasAnnotation("ProductVersion", "1.1.1")
                 .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
-            modelBuilder.Entity("Ozzy.DomainModel.DomainEventRecord", b =>
+            modelBuilder.Entity("Ozzy.Server.EntityFramework.DomainEventRecord", b =>
                 {
                     b.Property<long>("Sequence")
                         .ValueGeneratedOnAdd();
 
-                    b.Property<string>("EventData");
+                    b.Property<byte[]>("EventData");
 
                     b.Property<string>("EventType");
 
@@ -34,29 +34,7 @@ namespace SampleApplication.Migrations
                     b.ToTable("DomainEvents");
                 });
 
-            modelBuilder.Entity("Ozzy.DomainModel.Queues.QueueRecord", b =>
-                {
-                    b.Property<string>("Id")
-                        .ValueGeneratedOnAdd();
-
-                    b.Property<string>("Content");
-
-                    b.Property<DateTime>("CreatedAt");
-
-                    b.Property<string>("ItemType");
-
-                    b.Property<string>("QueueName");
-
-                    b.Property<int>("Status");
-
-                    b.Property<int>("Version");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Queues");
-                });
-
-            modelBuilder.Entity("Ozzy.Server.EntityFramework.EntityDistributedLockRecord", b =>
+            modelBuilder.Entity("Ozzy.Server.EntityFramework.EfDistributedLockRecord", b =>
                 {
                     b.Property<string>("Name")
                         .ValueGeneratedOnAdd();
@@ -75,12 +53,12 @@ namespace SampleApplication.Migrations
                     b.ToTable("DistributedLocks");
                 });
 
-            modelBuilder.Entity("Ozzy.Server.EntityFramework.Saga.SagaRecord", b =>
+            modelBuilder.Entity("Ozzy.Server.EntityFramework.EfSagaRecord", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd();
 
-                    b.Property<string>("SagaState");
+                    b.Property<byte[]>("SagaState");
 
                     b.Property<int>("SagaVersion")
                         .IsConcurrencyToken();
@@ -106,18 +84,38 @@ namespace SampleApplication.Migrations
                     b.ToTable("Sequences");
                 });
 
-            modelBuilder.Entity("Ozzy.Server.FeatureFlags.FeatureFlag", b =>
+            modelBuilder.Entity("Ozzy.Server.FeatureFlag", b =>
                 {
                     b.Property<string>("Id")
                         .ValueGeneratedOnAdd();
 
-                    b.Property<string>("SerializedConfiguration");
+                    b.Property<byte[]>("SerializedConfiguration");
 
                     b.Property<int>("Version");
 
                     b.HasKey("Id");
 
                     b.ToTable("FeatureFlags");
+                });
+
+            modelBuilder.Entity("Ozzy.Server.QueueRecord", b =>
+                {
+                    b.Property<string>("Id")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<DateTime>("CreatedAt");
+
+                    b.Property<byte[]>("Payload");
+
+                    b.Property<string>("QueueName");
+
+                    b.Property<int>("Status");
+
+                    b.Property<int>("Version");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Queues");
                 });
 
             modelBuilder.Entity("SampleApplication.Entities.ContactFormMessage", b =>

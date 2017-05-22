@@ -15,30 +15,13 @@ namespace SampleApplication.Migrations
                 {
                     Sequence = table.Column<long>(nullable: false)
                         .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
-                    EventData = table.Column<string>(nullable: true),
+                    EventData = table.Column<byte[]>(nullable: true),
                     EventType = table.Column<string>(nullable: true),
                     TimeStamp = table.Column<DateTime>(nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_DomainEvents", x => x.Sequence);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Queues",
-                columns: table => new
-                {
-                    Id = table.Column<string>(nullable: false),
-                    Content = table.Column<string>(nullable: true),
-                    CreatedAt = table.Column<DateTime>(nullable: false),
-                    ItemType = table.Column<string>(nullable: true),
-                    QueueName = table.Column<string>(nullable: true),
-                    Status = table.Column<int>(nullable: false),
-                    Version = table.Column<int>(nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Queues", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -61,7 +44,7 @@ namespace SampleApplication.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(nullable: false),
-                    SagaState = table.Column<string>(nullable: true),
+                    SagaState = table.Column<byte[]>(nullable: true),
                     SagaVersion = table.Column<int>(nullable: false),
                     StateType = table.Column<string>(nullable: true),
                     Version = table.Column<int>(nullable: false)
@@ -88,12 +71,28 @@ namespace SampleApplication.Migrations
                 columns: table => new
                 {
                     Id = table.Column<string>(nullable: false),
-                    SerializedConfiguration = table.Column<string>(nullable: true),
+                    SerializedConfiguration = table.Column<byte[]>(nullable: true),
                     Version = table.Column<int>(nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_FeatureFlags", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Queues",
+                columns: table => new
+                {
+                    Id = table.Column<string>(nullable: false),
+                    CreatedAt = table.Column<DateTime>(nullable: false),
+                    Payload = table.Column<byte[]>(nullable: true),
+                    QueueName = table.Column<string>(nullable: true),
+                    Status = table.Column<int>(nullable: false),
+                    Version = table.Column<int>(nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Queues", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -119,9 +118,6 @@ namespace SampleApplication.Migrations
                 name: "DomainEvents");
 
             migrationBuilder.DropTable(
-                name: "Queues");
-
-            migrationBuilder.DropTable(
                 name: "DistributedLocks");
 
             migrationBuilder.DropTable(
@@ -132,6 +128,9 @@ namespace SampleApplication.Migrations
 
             migrationBuilder.DropTable(
                 name: "FeatureFlags");
+
+            migrationBuilder.DropTable(
+                name: "Queues");
 
             migrationBuilder.DropTable(
                 name: "ContactFormMessages");

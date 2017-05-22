@@ -1,23 +1,15 @@
 ﻿using System;
-using Ozzy.Core;
 using System.Collections.Generic;
+using Ozzy.DomainModel;
 
-namespace Ozzy.DomainModel
-{
-    public interface IDomainEventRecord
-    {
-        long Sequence { get; }
-        DateTime TimeStamp { get; }
-        Dictionary<string, object> MetaData { get; }
-        object GetDomainEvent();
-        T GetDomainEvent<T>();
-        Type GetDomainEventType();
-    }
+namespace Ozzy.Server.EntityFramework
+{    
     public class DomainEventRecord : IDomainEventRecord
     {
+        public static ISerializer Serializer = new ContractlessMessagePackSerializer();
         public long Sequence { get; set; }
         public string EventType { get; set; }
-        public string EventData { get; set; }
+        public byte[] EventData { get; set; }
         public DateTime TimeStamp { get; set; }
 
         public Dictionary<string, object> MetaData { get; set; } = new Dictionary<string, object>();
@@ -27,7 +19,7 @@ namespace Ozzy.DomainModel
             Guard.ArgumentNotNull(@event, nameof(@event));
             EventType = @event.GetType().AssemblyQualifiedName;
             TimeStamp = DateTime.UtcNow;
-            EventData = EventSerializer.Serialize(@event);
+            EventData = Serializer.BinarySerialize(@event, @event.GetType());
         }
         public DomainEventRecord(object @event, long sequence) : this(@event)
         {
@@ -41,11 +33,11 @@ namespace Ozzy.DomainModel
         public object GetDomainEvent()
         {
             var t = Type.GetType(EventType);
-            return EventSerializer.Deserialize(EventData, t);
+            return Serializer.BinaryDeSerialize(EventData, t);
         }
         public T GetDomainEvent<T>()
         {
-            return EventSerializer.Deserialize<T>(EventData);
+            return Serializer.BinaryDeSerialize<T>(EventData);
         }
 
         public Type GetDomainEventType()
@@ -53,5 +45,4 @@ namespace Ozzy.DomainModel
             return Type.GetType(EventType);
         }
     }
-
 }

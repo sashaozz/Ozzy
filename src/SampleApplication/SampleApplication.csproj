@@ -6,7 +6,6 @@
     <UserSecretsId>5ecacf85-35c6-4b4c-8624-a8eca24f6e47</UserSecretsId>
   </PropertyGroup>
   <ItemGroup>
-    <Folder Include="Migrations\" />
     <Folder Include="wwwroot\" />
   </ItemGroup>
   <ItemGroup>
