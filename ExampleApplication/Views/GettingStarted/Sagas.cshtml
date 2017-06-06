@@ -1,5 +1,5 @@
 ﻿@{
-    ViewData["Title"] = "Getting started";
+    ViewData["Title"] = "Walkthrough: Sagas";
 }
 <h2>@ViewData["Title"].</h2>
 <h3>Create your first application with Ozzy</h3>
@@ -56,26 +56,9 @@
     </pre>
 </p>
 <br />
+
 <p>
     <h4>5. Configure Ozzy context</h4>
-    In StartUp.cs in configureServices (requires nugget Microsoft.EntityFrameworkCore.SqlServer) <br />
-    <pre>
-    <code class="C#">public class SampleDbContext : AggregateDbContext
-    {
-        public SampleDbContext(IExtensibleOptions<SampleDbContext> options) : base(options)
-        {
-        }
-
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
-        {
-            base.OnModelCreating(modelBuilder);
-        }
-    }</code>
-    </pre>
-</p>
-<br />
-<p>
-    <h4>6. Configure Ozzy node</h4>
     In StartUp.cs in configureServices (requires nugget Microsoft.EntityFrameworkCore.SqlServer) <br />
     <pre>
     <code class="C#">services.AddOzzyDomain<SampleDbContext>(options =>
@@ -91,9 +74,14 @@
 
 <br />
 <p>
-    <h4>7. Configure Ozzy node</h4>
+    <h4>6. Configure Ozzy node</h4>
     In StartUp.cs in configureServices <br />
     <pre>
     <code class="C#">services.ConfigureOzzyNode<SampleDbContext>();</code>
     </pre>
 </p>
+
+<br />
+
+<h4>Contgratulations, you are all set!</h4>
+<p>Not you can use all of Ozzy built-in functions. To continue, let's create sample saga</p>

@@ -6,14 +6,12 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace ExampleApplication.Controllers
 {
-    public class HomeController : Controller
+    public class GettingStartedController : Controller
     {
         public IActionResult Index()
         {
             return View();
         }
-
-       
 
         public IActionResult Sagas()
         {
