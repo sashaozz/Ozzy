@@ -40,4 +40,4 @@ Currently Ozzy framework can be considered in late alpha stage. However it is al
 Ozzy framework is designed for Scalability and Performance from the ground up. Exact numbers will be provided after excessive performance testing but it is already capable to deliver tens of thousands of mixed read/write operations per second per node.
 
 # Documentation
-The work on documentation just begun. Please see folder [Docs](/sashaozz/Ozzy/tree/master/docs) for first documents with description of the system.
+The work on documentation just begun. Please see folder [Docs](tree/master/docs) for first documents with description of the system.
