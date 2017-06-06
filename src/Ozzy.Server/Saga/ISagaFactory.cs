@@ -2,6 +2,6 @@
 {
     public interface ISagaFactory
     {
-        TSaga GetSaga<TSaga>();
+        TSaga GetSaga<TSaga>() where TSaga : class;
     }
 }

@@ -1,5 +1,4 @@
-﻿using Ozzy.Core;
-using System;
+﻿using System;
 using Ozzy.DomainModel;
 using Newtonsoft.Json;
 
@@ -7,28 +6,26 @@ namespace Ozzy.Server
 {
     public class FeatureFlag : EntityBase<string>
     {
-        //public string Id { get; protected set; }
-        //public int Version { get;protected set; }
+        [JsonProperty]
         public FeatureFlagConfiguration Configuration { get; private set; }
 
         [JsonIgnore]
-        public string SerializedConfiguration
+        public byte[] SerializedConfiguration
         {
-            get { return DefaultSerializer.Serialize(Configuration); }
+            get { return ContractlessMessagePackSerializer.Instance.BinarySerialize(Configuration); }
             protected set
             {
-                if (string.IsNullOrEmpty(value)) return;
-                Configuration = DefaultSerializer.Deserialize<FeatureFlagConfiguration>(value);
+                if (value == null) return;
+                Configuration = ContractlessMessagePackSerializer.Instance.BinaryDeSerialize<FeatureFlagConfiguration>(value);
             }
         }
 
-        public FeatureFlag(string code)
+        public FeatureFlag(string id) : base(id)
         {
-            Guard.ArgumentNotNullOrEmptyString(code, nameof(code));
-            Id = code;
             Configuration = new FeatureFlagConfiguration(false);
-            Version = 0;
         }
+
+        //For ORM
         protected FeatureFlag()
         {
         }

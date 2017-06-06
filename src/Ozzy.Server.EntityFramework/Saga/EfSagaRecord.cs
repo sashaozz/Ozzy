@@ -1,5 +1,4 @@
 ﻿using System;
-using Ozzy.Core;
 
 namespace Ozzy.Server.EntityFramework
 {
@@ -7,9 +6,10 @@ namespace Ozzy.Server.EntityFramework
     {
         public EfSagaRecord(SagaState sagaState) : base(sagaState.SagaId)
         {
+            var sagaStateType = sagaState.State.GetType();
             Guard.ArgumentNotNull(sagaState, nameof(sagaState));
-            StateType = sagaState.State.GetType().AssemblyQualifiedName;
-            SagaState = DefaultSerializer.Serialize(sagaState.State);
+            StateType = sagaStateType.AssemblyQualifiedName;
+            SagaState = ContractlessMessagePackSerializer.Instance.BinarySerialize(sagaState.State, sagaStateType);
             SagaVersion = sagaState.SagaVersion;
             foreach (var message in sagaState.Messages)
             {
@@ -24,12 +24,12 @@ namespace Ozzy.Server.EntityFramework
 
         public int SagaVersion { get; set; }
         public string StateType { get; set; }
-        public string SagaState { get; set; }
+        public byte[] SagaState { get; set; }
 
         public SagaState ToSagaState()
         {
             var type = Type.GetType(StateType);
-            var state = DefaultSerializer.Deserialize(SagaState, type);
+            var state = ContractlessMessagePackSerializer.Instance.BinaryDeSerialize(SagaState, type);
             var sagaState = new SagaState(Id, state);
             sagaState.SagaVersion = SagaVersion;
             return sagaState;

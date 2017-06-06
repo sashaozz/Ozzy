@@ -6,12 +6,12 @@ namespace Ozzy.Server
     {        
         public static IFastEventPublisher GetFastEventPublisher<TDomain>(this IExtensibleOptions<TDomain> options)
         {
-            return options.GetServiceProvider().GetTypeSpecificService<TDomain, IFastEventPublisher>();
+            return options.GetTypedService<IFastEventPublisher>();
         }
 
         public static IPeristedEventsReader GetPersistedEventsReader<TDomain>(this IExtensibleOptions<TDomain> options)
         {
-            return options.GetServiceProvider().GetTypeSpecificService<TDomain,IPeristedEventsReader>();
+            return options.GetTypedService<IPeristedEventsReader>();
         }
     }
 }

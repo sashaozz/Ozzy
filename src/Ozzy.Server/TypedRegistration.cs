@@ -30,13 +30,13 @@ namespace Ozzy.Server
         }
 
         public static void TryAddTypeSpecificSingleton<TType, TService>(this IServiceCollection serviceCollection, Func<IServiceProvider, TService> factory = null)
-                    where TService : class
+            where TService : class
         {
             if (factory == null)
             {
                 serviceCollection.TryAddSingleton<TService>();
                 factory = sp => sp.GetService<TService>();
-            }
+            }                
             serviceCollection.TryAddSingleton(sp => new TypedRegistration<TType, TService>(factory(sp)));
         }
 
@@ -46,8 +46,13 @@ namespace Ozzy.Server
         }
 
         public static void AddTypeSpecificSingleton<TDomain, TService>(this IServiceCollection serviceCollection, Func<IServiceProvider, TService> factory = null)
+            where TService : class
         {
-            if (factory == null) factory = sp => sp.GetService<TService>();
+            if (factory == null)
+            {
+                serviceCollection.AddSingleton<TService>();
+                factory = sp => sp.GetService<TService>();
+            }
             serviceCollection.AddSingleton(sp => new TypedRegistration<TDomain, TService>(factory(sp)));
         }
 

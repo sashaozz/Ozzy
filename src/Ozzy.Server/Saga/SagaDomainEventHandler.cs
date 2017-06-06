@@ -14,7 +14,7 @@ namespace Ozzy.Server
         private Dictionary<Type, Func<TSaga, object, bool>> Handlers { get; set; } = new Dictionary<Type, Func<TSaga, object, bool>>();
         private ISagaRepository _sagaRepository;
         public Type SagaType = typeof(TSaga);
-        
+
         public SagaDomainEventsHandler(ISagaRepository sagaRepository)
         {
             _handler = HandleEvent;
@@ -71,19 +71,10 @@ namespace Ozzy.Server
                 _sagaRepository.GetSagaById<TSaga>((message as SagaCommand).SagaId)
                 : _sagaRepository.CreateNewSaga<TSaga>();
             var handler = Handlers.GetValueOrDefault(messageType);
-            var idempotent = false;
-            try
-            {
-                idempotent = handler.Invoke(saga, message);
-                saga.SagaState.SagaVersion++;
-                _sagaRepository.SaveSaga(saga);
-            }
-            catch (Exception e)
-            {
-
-                //_faultManager.Handle(this.GetType(), record, 5, true);
-                //todo handle retry
-            }
+            var idempotent = handler.Invoke(saga, message);
+            saga.SagaState.SagaVersion++;
+            //todo : better handle transient faults
+            _sagaRepository.SaveSaga(saga);
             return idempotent;
         }
     }

@@ -24,10 +24,10 @@ namespace Ozzy.Server.Configuration
         {
             services.AddSingleton<OzzyNode>();
             services.AddSingleton<IFeatureFlagService, FeatureFlagService>();
-            services.AddSingleton<ITaskQueueService, TaskQueueService>();
-            services.AddSingleton<IFaultManager, FaultManager>();
+            services.AddSingleton<BackgroundJobQueue>();
+            services.AddSingleton<IDomainEventsFaultHandler, DispatchToBackgroundTaskQueueFaultHandler>();
             services.AddTransient<RetryEventTask>();
-            services.AddTransient<IQueueService<FaultInfo>>(x => new QueueService<FaultInfo>(x.GetService<IQueueRepository>(), "deadLetter"));
+            services.AddSingleton(typeof(JobQueue<>));
 
             var builder = new OzzyBuilder(services);
             return builder;
@@ -55,8 +55,8 @@ namespace Ozzy.Server.Configuration
 
             builder.Services.TryAddTypeSpecificSingleton<TDomain, IFastEventPublisher>(NullEventsPublisher.Instance);
             builder.Services.TryAddTypeSpecificSingleton<TDomain, Func<IFastEventPublisher>>(sp => () => NullEventsPublisher.Instance);
-            builder.Services.TryAddTypeSpecificSingleton<TDomain, DefaultSagaFactory>();
-            builder.Services.TryAddTypeSpecificSingleton<TDomain, ISagaFactory>(sp => sp.GetTypeSpecificService<TDomain, DefaultSagaFactory>());
+            builder.Services.TryAddSingleton<DefaultSagaFactory<TDomain>>();
+            builder.Services.TryAddTypeSpecificSingleton<TDomain, ISagaFactory>(sp => sp.GetService<DefaultSagaFactory<TDomain>>());
 
             return builder;
         }

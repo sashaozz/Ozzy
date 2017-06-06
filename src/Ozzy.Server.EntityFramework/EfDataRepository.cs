@@ -28,7 +28,7 @@ namespace Ozzy.Server.EntityFramework
                 dbSet.Add(item);
                 db.AddDomainEvent(new DataRecordCreatedEvent<TItem>()
                 {
-                    RecordType = item.GetType(),
+                    //RecordType = item.GetType(),
                     RecordValue = item
                 });
                 db.SaveChanges();
@@ -70,7 +70,7 @@ namespace Ozzy.Server.EntityFramework
                 db.Entry(existingItem).CurrentValues.SetValues(item);
                 db.AddDomainEvent(new DataRecordUpdatedEvent<TItem>()
                 {
-                    RecordType = item.GetType(),
+                    //RecordType = item.GetType(),
                     RecordValue = item
                 });
 

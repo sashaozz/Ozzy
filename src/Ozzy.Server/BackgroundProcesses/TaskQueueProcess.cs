@@ -1,28 +1,28 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Ozzy.Server
 {
     public class TaskQueueProcess : PeriodicActionProcess
     {
-        private ITaskQueueService _backgroundTaskService;
+        BackgroundJobQueue _backgroundTaskQueue;
+        private IServiceProvider _serviceProvider;
 
-        public TaskQueueProcess(ITaskQueueService backgroundTaskService)
+        public TaskQueueProcess(BackgroundJobQueue backgroundTaskQueue, IServiceProvider serviceProvider)
         {
-            _backgroundTaskService = backgroundTaskService;
+            _backgroundTaskQueue = backgroundTaskQueue;
+            _serviceProvider = serviceProvider;
         }
 
         protected override async Task ActionAsync(CancellationToken cts)
         {
-            var nextTask = _backgroundTaskService.FetchNext();
-            while (nextTask != null)
+            while (_backgroundTaskQueue.FetchJob(out var taskConfig, out var queueItem))
             {
-                await nextTask.Item.Execute();
-
-                _backgroundTaskService.Acknowledge(nextTask);
-
-                nextTask = _backgroundTaskService.FetchNext();
-            }
+                var task = _serviceProvider.GetService(queueItem.Item.GetTaskType()) as BaseBackgroundTask;
+                await task.Execute(taskConfig);
+                _backgroundTaskQueue.Acknowledge(queueItem.Id);
+            }            
         }
     }
 }

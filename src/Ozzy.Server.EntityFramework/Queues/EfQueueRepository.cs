@@ -1,6 +1,4 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Ozzy.Core;
-using Ozzy.DomainModel;
 using System;
 using System.Linq;
 
@@ -18,9 +16,44 @@ namespace Ozzy.Server.EntityFramework
             _dbFactory = dbFactory;
             _dbSetProvider = dbSetProvider;
 
+        }        
+
+        public string Put(string queueName, byte[] item)
+        {
+            var record = new QueueRecord()
+            {
+                Payload = item,
+                QueueName = queueName                
+            };
+            using (var db = _dbFactory())
+            {
+                var dbSet = _dbSetProvider(db);
+                dbSet.Add(record);
+                db.SaveChanges();
+            }
+            return record.Id;
         }
 
-        public virtual void Acknowledge(string id)
+        public QueueItem Fetch(string queueName)
+        {
+            using (var db = _dbFactory())
+            {
+                var dbSet = _dbSetProvider(db);
+
+                var item = dbSet
+                    .Where(s => s.QueueName == queueName)
+                    .Where(s => s.Status == QueueStatus.Queued)
+                    .OrderBy(i => i.CreatedAt)
+                    .FirstOrDefault();
+                if (item == null) return null;
+                item.Status = QueueStatus.Fetched;
+
+                db.SaveChanges();
+                return new QueueItem(item.Id, item.Payload);
+            }
+        }
+
+        public void Acknowledge(string id, string queueName)
         {
             using (var db = _dbFactory())
             {
@@ -30,45 +63,5 @@ namespace Ozzy.Server.EntityFramework
                 db.SaveChanges();
             }
         }
-
-        public virtual void Create(QueueRecord item)
-        {
-            using (var db = _dbFactory())
-            {
-                var dbSet = _dbSetProvider(db);
-                dbSet.Add(item);
-                db.AddDomainEvent(new DataRecordCreatedEvent<QueueRecord>()
-                {
-                    RecordType = item.GetType(),
-                    RecordValue = item
-                });
-                db.SaveChanges();
-            }
-        }
-
-        public virtual QueueRecord FetchNext(string queueName)
-        {
-            using (var db = _dbFactory())
-            {
-                var dbSet = _dbSetProvider(db);
-
-                var item = dbSet
-                    .Where(s => s.QueueName == queueName)
-                    .Where(s => s.Status == QueueStatus.Awaiting)
-                    .OrderBy(i => i.CreatedAt)
-                    .FirstOrDefault();
-
-                item.Status = QueueStatus.Processing;
-
-                db.SaveChanges();
-                return item;
-            }
-        }
-
-        public virtual IQueryable<QueueRecord> Query()
-        {
-            return _dbSetProvider(_dbFactory()).AsNoTracking();
-        }
-
     }
 }

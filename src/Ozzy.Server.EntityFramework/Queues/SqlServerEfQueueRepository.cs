@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Ozzy.Server.EntityFramework
 {
-    public class SqlServerEfQueueRepository : EfQueueRepository, IQueueRepository
+    public class SqlServerEfQueueRepository : EfQueueRepository
     {
         private string _fetchNextItemSql = @"
         UPDATE [dbo].[Queues] 
@@ -26,11 +26,12 @@ namespace Ozzy.Server.EntityFramework
             _dbFactory = dbFactory;
         }
 
-        public override QueueRecord FetchNext(string queueName)
+        public new QueueItem Fetch(string queueName)
         {
             using (var db = _dbFactory())
             {
-                return db.Queues.FromSql(_fetchNextItemSql, queueName).FirstOrDefault();
+                var record = db.Queues.FromSql(_fetchNextItemSql, queueName).FirstOrDefault();
+                return new QueueItem(record.Id, record.Payload);
             }
         }
     }

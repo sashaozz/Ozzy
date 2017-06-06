@@ -1,24 +1,23 @@
-﻿using Microsoft.AspNetCore.Builder;
+﻿using System;
+using System.Diagnostics.Tracing;
+using System.Linq;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Ozzy.Server.Configuration;
-using Microsoft.EntityFrameworkCore;
-using Ozzy.Server.Api.Configuration;
-using Ozzy.Core.Events;
+using Ozzy;
 using Ozzy.Core;
-using System.Diagnostics.Tracing;
-using System;
-using System.Linq;
+using Ozzy.Core.Events;
 using Ozzy.DomainModel;
+using Ozzy.Server;
+using Ozzy.Server.Configuration;
+using SampleApplication.Sagas;
+using SampleApplication.Tasks;
 using Serilog;
 using Serilog.Events;
 using Serilog.Parsing;
-using SampleApplication.Tasks;
-using SampleApplication.Queues;
-using SampleApplication.Sagas;
-using Ozzy.Server;
 
 namespace SampleApplication
 {
@@ -52,8 +51,8 @@ namespace SampleApplication
             services.AddMvc();
             services.AddCors();
 
-            services.AddTransient<TestBackgoundTask>();
-            services.AddTransient<IQueueService<SampleQueueItem>, QueueService<SampleQueueItem>>();
+            services.AddSingleton<ISerializer, ContractlessMessagePackSerializer>();
+            services.AddSingleton<TestBackgoundTask>();
             var ozzyOptions = Configuration.GetSection("OzzyOptions");
             //services.ConfigureEntityFrameworkForOzzy(ozzyOptions);
             //services.ConfigureRedisForOzzy(ozzyOptions);
@@ -73,8 +72,6 @@ namespace SampleApplication
                 .UseEFDistributedLockService<SampleDbContext>()
                 .UseEFFeatureFlagService<SampleDbContext>()
                 .UseEFBackgroundTaskService<SampleDbContext>()
-                //.UseRedis(ozzyOptions)
-                //.UseRedisMonitoring()
                 .UseInMemoryMonitoring<SampleDbContext>()
                 .AddBackgroundProcess<NodeConsoleHeartBeatProcess>()
                 .AddFeatureFlag<ConsoleLogFeature>()

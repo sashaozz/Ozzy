@@ -24,38 +24,26 @@ namespace Ozzy.Server.Configuration
 
         public OzzyDomainOptionsBuilder<TDomain> AddProcessor<TProcessor>(Func<IServiceProvider, TProcessor> processorFactory = null) where TProcessor : class, IDomainEventsProcessor
         {
-            if (processorFactory == null)
-            {
-                processorFactory = sp => sp.GetService<TProcessor>();
-            }
             _domainBuilder.Services.TryAddTypeSpecificSingleton<TDomain, TProcessor>(processorFactory);
             return this;
         }
 
         public OzzyDomainOptionsBuilder<TDomain> AddHandler<THandler>(Func<IServiceProvider, THandler> handlerFactory = null) where THandler : class, IDomainEventsHandler
         {
-            if (handlerFactory == null)
-            {
-                handlerFactory = sp => sp.GetService<THandler>();
-            }
             _domainBuilder.Services.TryAddTypeSpecificSingleton<TDomain, THandler>(handlerFactory);
             _domainBuilder.Services.TryAddTypeSpecificSingleton<TDomain, IDomainEventsProcessor>(sp =>
             {
                 var options = sp.GetService<IExtensibleOptions<TDomain>>();
                 var handler = sp.GetTypeSpecificService<TDomain, THandler>();
                 var eventsReader = sp.GetTypeSpecificService<TDomain, IPeristedEventsReader>();
-                var faultManager = sp.GetService<IFaultManager>();
+                var faultHandler = sp.GetService<IDomainEventsFaultHandler>();
                 var checkpointManager = new SimpleChekpointManager(eventsReader);
-                return new DomainEventsProcessor(handler, checkpointManager);
+                return new DomainEventsProcessor(handler, checkpointManager, faultHandler);
             });
             return this;
         }
         public OzzyDomainOptionsBuilder<TDomain> AddSagaProcessor<TSaga>(Func<IServiceProvider, TSaga> sagaFactory = null) where TSaga : SagaBase
         {
-            if (sagaFactory == null)
-            {
-                sagaFactory = sp => sp.GetService<TSaga>();
-            }
             _domainBuilder.Services.TryAddTypeSpecificSingleton<TDomain, TSaga>(sagaFactory);
             _domainBuilder.Services.TryAddTypeSpecificSingleton<TDomain, IDomainEventsProcessor>(sp =>
             {
@@ -64,9 +52,9 @@ namespace Ozzy.Server.Configuration
                 var sagaRepository = sp.GetTypeSpecificService<TDomain, ISagaRepository>();
                 var sagaHandler = new SagaDomainEventsHandler<TSaga>(sagaRepository);
                 var eventsReader = sp.GetTypeSpecificService<TDomain, IPeristedEventsReader>();
-                var faultManager = sp.GetService<IFaultManager>();
+                var faultHandler = sp.GetService<IDomainEventsFaultHandler>();
                 var checkpointManager = new SimpleChekpointManager(eventsReader);
-                return new DomainEventsProcessor(sagaHandler, checkpointManager);
+                return new DomainEventsProcessor(sagaHandler, checkpointManager, faultHandler);
             });
             return this;
         }            

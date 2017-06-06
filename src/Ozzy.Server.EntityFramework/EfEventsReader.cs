@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using Ozzy.DomainModel;
-using Ozzy.Core;
 
 namespace Ozzy.Server.EntityFramework
 {
@@ -28,7 +27,7 @@ namespace Ozzy.Server.EntityFramework
                     .AsNoTracking()
                     .Where(e => e.Sequence > checkpoint)
                     .OrderBy(e => e.Sequence)
-                    .Take(maxEvents)
+                    .Take(maxEvents)                    
                     .ToList();
             }
         }
@@ -40,5 +39,5 @@ namespace Ozzy.Server.EntityFramework
                 return context.DomainEvents.Max(de => de.Sequence);
             }
         }
-    }
+    }   
 }

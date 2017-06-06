@@ -52,6 +52,7 @@ namespace SampleApplication.Sagas
             //_mediator = mediator;
         }
 
+        //[]
         public bool Handle(ContactFormMessageRecieved message)
         {
             State.Message = message.Message;
@@ -69,7 +70,7 @@ namespace SampleApplication.Sagas
             {
                 To = State.From,
                 From = "admin@ozzy.com",
-                Message = $"Thank you for your contact. We will be in touch Id of your request is {State.MessageId}"
+                Message = $"Thank you for your contact. We will be in touch. Id of your request is {State.MessageId}"
             };
 
             throw new InvalidOperationException("Test");
