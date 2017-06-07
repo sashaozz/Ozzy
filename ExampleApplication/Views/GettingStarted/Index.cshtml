@@ -3,7 +3,8 @@
 }
 <h2>@ViewData["Title"].</h2>
 <h3>Create your first application with Ozzy</h3>
-
+<p>During this walkthough we are going to use Sql Server via Enity Framwork as persistence mechanism</p>
+<p>Entities will be saved in tables as in classic approach</p>
 <p>To start you will need to follow these steps:</p>
 <br />
 <p>
@@ -77,8 +78,14 @@
     <h4>6. Configure Ozzy node</h4>
     In StartUp.cs in configureServices <br />
     <pre>
-    <code class="C#">services.ConfigureOzzyNode<SampleDbContext>();</code>
+    <code class="C#">services.ConfigureOzzyNode&lt;SampleDbContext&gt;();</code>
     </pre>
+
+    In StartUp.cs in Configure<br />
+    <pre>
+    <code class="C#">app.UseOzzy().Start();</code>
+    </pre>
+
 </p>
 
 <br />

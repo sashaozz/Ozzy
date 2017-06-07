@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using ExampleApplication.Models;
+using Microsoft.EntityFrameworkCore;
 using Ozzy.Server;
 using Ozzy.Server.EntityFramework;
 using System;
@@ -14,8 +15,12 @@ namespace ExampleApplication
         {
         }
 
+        public DbSet<ContactFormMessage> ContactFormMessages { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            modelBuilder.Entity<ContactFormMessage>().HasKey(c => c.Id);
+
             base.OnModelCreating(modelBuilder);
         }
     }

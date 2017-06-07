@@ -4,84 +4,188 @@
 <h2>@ViewData["Title"].</h2>
 <h3>Create your first application with Ozzy</h3>
 
-<p>To start you will need to follow these steps:</p>
+<p>In this module we will create a simple saga:</p>
+<ul>
+    <li>User fills feedback form on a website</li>
+    <li>System sends notifications about new feedback to administrator and message to the customer</li>
+    <li>Operator processes the feedback and marks it as processed</li>
+</ul>
+<p>In this walkthorough we will not be covering front end aspects of the site since they are not important</p>
+<br />
+<p>In order to create a new saga, you will need to follow these steps:</p>
 <br />
 <p>
-    <h4>1. Setup database</h4>
-    Get it from backup or use EF migrations.
-    TODO: How to run migations?
-</p>
-
-<br />
-<p>
-    <h4>2. Install nuggets</h4>
-    Application consists of the following nuggets:
-    <ul>
-        <li><b>Ozzy.Server</b> - all primary functionality</li>
-        <li><b>Ozzy.Server.EntityFramework</b> - Integration with database</li>
-        <li><b>Ozzy.Server.Redis</b> - Integration with Redis</li>
-        <li><b>Ozzy.Backoffice</b> - Backoffice application</li>
-    </ul>
-</p>
-
-<br />
-<p>
-    <h4>3. Setup appSettings.config</h4>
-    Setup your connection string to database. <br />
-    If you are using Redis add
-    <pre>
-        <code class="json">"OzzyOptions": {
-    "RedisConnection": {
-        "ConnectionString": "localhost"
-    }
-}</code>
-    </pre>
-</p>
-<br />
-<p>
-    <h4>4. Setup database context</h4>
-    Add EF database context. <br />
-    <pre>
-    <code class="C#">public class SampleDbContext : AggregateDbContext
+    <h4>1. Create saga data</h4>
+    It will be primary source of saga state. 
+    <pre><code class="C#">public class ContactFormSagaData
     {
-        public SampleDbContext(IExtensibleOptions<SampleDbContext> options) : base(options)
+        public string Message { get; set; }
+        public string From { get; set; }
+        public int MessageId { get; set; }
+        public bool GreetingEmailSent { get; set; }
+        public bool AdminEmailSent { get; set; }
+        public bool IsComplete { get; set; }
+    }</code></pre>
+</p>
+
+<br />
+<p>
+    <h4>2. Create initial domain event</h4>
+    Saga will be started by domain event ContactFormMessageRecieved - it will be triggered after user submitted contact form
+    <pre><code class="C#">public class ContactFormMessageRecieved : IDomainEvent
+    {
+        public string From { get; set; }
+        public string Message { get; set; }
+        public int MessageId { get; set; }
+    }</code></pre>
+</p>
+<br />
+<p>
+    <h4>3. Create saga commands</h4>
+    <b>SendGreetingEmail</b> - send email back to the user that his request was accepted <br />
+    <b>SendNotificationToAdministrator</b> - send email to administrator with text from customer<br />
+    <pre><code class="C#">public class SendGreetingEmail : SagaCommand
+    {
+        public SendGreetingEmail(SagaBase saga) : base(saga)
         {
         }
 
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        public SendGreetingEmail()
         {
-            base.OnModelCreating(modelBuilder);
+        }
+    }
+
+    public class SendNotificationToAdministrator : SagaCommand
+    {
+        public SendNotificationToAdministrator(SagaBase saga) : base(saga)
+        {
+        }
+
+        public SendNotificationToAdministrator()
+        {
+        }
+    }</code></pre>
+</p>
+<br />
+<p>
+    <h4>4. Add saga class</h4>
+    <b>SagaBase&lt;ContactFormSagaData&gt;</b> - each saga must inherit from SagaBase. ContactFormSagaData - State of the saga <br />
+    <b>IHandleEvent</b> - marker that this saga handles certain events. <br />
+    <b>SendSagaCommand</b> - triggers manually command of the saga <br />
+
+    <br />
+    <pre>
+    <code class="C#"> public class ContactFormSaga : SagaBase<ContactFormSagaData>,
+        IHandleEvent&lt;ContactFormMessageRecieved&gt;,
+        IHandleEvent&lt;SendGreetingEmail&gt;,
+        IHandleEvent&lt;SendNotificationToAdministrator&gt;
+    {
+        public bool Handle(ContactFormMessageRecieved message)
+        {
+            State.Message = message.Message;
+            State.From = message.From;
+            State.MessageId = message.MessageId;
+
+            SendSagaCommand(new SendGreetingEmail(this));
+            SendSagaCommand(new SendNotificationToAdministrator(this));
+            return false;
+        }
+
+        public bool Handle(SendGreetingEmail message)
+        {
+            //TODO: Add call to smtpClient
+            State.GreetingEmailSent = true;
+            return false;
+        }
+
+        public bool Handle(SendNotificationToAdministrator message)
+        {
+            //TODO: Add call to smtpClient
+            State.AdminEmailSent = true;
+            return false;
         }
     }</code>
     </pre>
 </p>
 <br />
-
 <p>
-    <h4>5. Configure Ozzy context</h4>
-    In StartUp.cs in configureServices (requires nugget Microsoft.EntityFrameworkCore.SqlServer) <br />
-    <pre>
-    <code class="C#">services.AddOzzyDomain<SampleDbContext>(options =>
-            {
-                options.UseInMemoryFastChannel();
-            })
-            .UseEntityFramework((options =>
-            {
-                options.UseSqlServer(Configuration.GetConnectionString("SampleDbContext"));
-            }));</code>
-    </pre>
+    <h4>5. Create aggregate</h4>
+    Create new domain aggregate. Initialization of domain aggregate will trigger the domain event that will start the saga
+    <pre><code class="C#">public class ContactFormMessage : AggregateBase<int>
+    {
+        public string From { get; protected set; }
+        public string Message { get; protected set; }
+        public bool MessageSent { get; protected set; }
+
+        public ContactFormMessage(string from, string message)
+        {
+            From = from;
+            Message = message;
+            this.RaiseEvent(new ContactFormMessageRecieved { From = from, Message = message, MessageId = Id });
+        }
+    }</code></pre>
 </p>
 
 <br />
 <p>
-    <h4>6. Configure Ozzy node</h4>
-    In StartUp.cs in configureServices <br />
-    <pre>
-    <code class="C#">services.ConfigureOzzyNode<SampleDbContext>();</code>
-    </pre>
+    <h4>6. Register saga in StartUp.cs</h4>
+    <pre><code class="C#">services.AddOzzyDomain&lt;SampleDbContext&gt;(options =>
+            {
+                options.UseInMemoryFastChannel();
+                options.AddSagaProcessor&lt;ContactFormSaga&gt;();
+            })
+            .UseEntityFramework((options =>
+            {
+                options.UseSqlServer(Configuration.GetConnectionString("SampleDbContext"));
+            }));</code></pre>
+</p>
+
+<br />
+
+<p>
+    <h4>7. Setup controller for creating new feedbacks</h4>
+    <pre><code class="C#">public class SagaController : Controller
+    {
+        private Func<SampleDbContext> _dbFactory;
+
+        public SagaController(Func<SampleDbContext> dbFactory)
+        {
+            _dbFactory = dbFactory;
+        }
+
+        public IActionResult Index()
+        {
+            using (var dbContext = _dbFactory())
+            {
+                var data = dbContext.ContactFormMessages.ToList();
+                return View(data);
+            }
+        }
+
+        [HttpPost]
+        public IActionResult Index(FeedbackDataView model)
+        {
+            using (var dbContext = _dbFactory())
+            {
+                var message = new ContactFormMessage(model.From, model.Message);
+                dbContext.ContactFormMessages.Add(message);
+                dbContext.SaveChanges();
+                message.MessageReceived();
+                dbContext.SaveChanges();
+            }
+
+            return Redirect("/Saga");
+        }
+    }
+    
+    public class FeedbackDataView
+    {
+        public string From { get; set; }
+        public string Message { get; set; }
+    }</code></pre>
 </p>
 
 <br />
 
 <h4>Contgratulations, you are all set!</h4>
-<p>Not you can use all of Ozzy built-in functions. To continue, let's create sample saga</p>
+<p>Now let's try the <a href="/Saga">demo</a></p>

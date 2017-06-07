@@ -5,6 +5,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Ozzy.Server.Configuration;
 using Microsoft.EntityFrameworkCore;
+using ExampleApplication.Sagas.ContactForm;
+using Ozzy;
 
 namespace ExampleApplication
 {
@@ -27,18 +29,22 @@ namespace ExampleApplication
         {
             // Add framework services.
             services.AddMvc();
+            services.AddSingleton<ISerializer, ContractlessMessagePackSerializer>();
 
             services
             .AddOzzyDomain<SampleDbContext>(options =>
             {
                 options.UseInMemoryFastChannel();
+                options.AddSagaProcessor<ContactFormSaga>();
             })
             .UseEntityFramework((options =>
             {
                 options.UseSqlServer(Configuration.GetConnectionString("SampleDbContext"));
             }));
 
-            services.ConfigureOzzyNode<SampleDbContext>();
+            services.ConfigureOzzyNode<SampleDbContext>()
+                .UseEFDistributedLockService<SampleDbContext>()
+                .UseEFBackgroundTaskService<SampleDbContext>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -65,6 +71,8 @@ namespace ExampleApplication
                     name: "default",
                     template: "{controller=Home}/{action=Index}/{id?}");
             });
+
+            app.UseOzzy().Start();
         }
     }
 }
