@@ -1,22 +1,16 @@
 ﻿using Ozzy.Server.Saga;
 using System;
-using System.Collections.Generic;
 
 namespace Ozzy.Server
 {
     public abstract class SagaBase
     {
         public Guid SagaId { get; protected set; }
-        public virtual SagaState SagaState { get; protected set; }
-        public List<SagaKey> SagaKeys { get; set; } = new List<SagaKey>();
+        public virtual SagaState SagaState { get; protected set; }        
         public abstract void LoadSagaData(SagaState data);
         public void SendSagaCommand<T>(T command) where T : SagaCommand
         {
             SagaState.SendSagaCommand(command);
-        }
-        public virtual void ConfigureEventMappings(SagaEventMapper mapper)
-        {
-
         }
     }
 
@@ -33,6 +27,10 @@ namespace Ozzy.Server
             SagaState = data;
             SagaId = data.SagaId;
             State = (TState)data.State;
+        }
+
+        public virtual void ConfigureCorrelationMappings(SagaEventCorrelationsMapper<TState> mapper)
+        {
         }
     }
 }

@@ -6,10 +6,10 @@ namespace Ozzy.Server
 {
     public class TaskQueueProcess : PeriodicActionProcess
     {
-        BackgroundJobQueue _backgroundTaskQueue;
+        BackgroundTaskQueue _backgroundTaskQueue;
         private IServiceProvider _serviceProvider;
 
-        public TaskQueueProcess(BackgroundJobQueue backgroundTaskQueue, IServiceProvider serviceProvider)
+        public TaskQueueProcess(BackgroundTaskQueue backgroundTaskQueue, IServiceProvider serviceProvider)
         {
             _backgroundTaskQueue = backgroundTaskQueue;
             _serviceProvider = serviceProvider;

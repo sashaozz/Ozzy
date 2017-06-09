@@ -7,10 +7,10 @@ namespace SampleApplication.Controllers
 {
     public class HomeController : Controller
     {
-        BackgroundJobQueue _backgroundJobQueue;
+        BackgroundTaskQueue _backgroundJobQueue;
         JobQueue<SampleQueueItem> _queue;
 
-        public HomeController(BackgroundJobQueue backgroundJobQueue, JobQueue<SampleQueueItem> queue)
+        public HomeController(BackgroundTaskQueue backgroundJobQueue, JobQueue<SampleQueueItem> queue)
         {
             _backgroundJobQueue = backgroundJobQueue;
             _queue = queue;

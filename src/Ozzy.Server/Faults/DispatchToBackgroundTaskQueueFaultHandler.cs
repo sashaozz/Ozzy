@@ -5,10 +5,10 @@ namespace Ozzy.Server
 {
     public class DispatchToBackgroundTaskQueueFaultHandler : IDomainEventsFaultHandler
     {
-        private BackgroundJobQueue _backgroundJobQueue;
+        private BackgroundTaskQueue _backgroundJobQueue;
         private JobQueue<FaultInfo> _faultQueueService;
 
-        public DispatchToBackgroundTaskQueueFaultHandler(BackgroundJobQueue backgroundJobQueue, JobQueue<FaultInfo> faultQueueService)
+        public DispatchToBackgroundTaskQueueFaultHandler(BackgroundTaskQueue backgroundJobQueue, JobQueue<FaultInfo> faultQueueService)
         {
             _backgroundJobQueue = backgroundJobQueue;
             _faultQueueService = faultQueueService;

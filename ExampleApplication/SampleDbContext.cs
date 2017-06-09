@@ -2,10 +2,6 @@
 using Microsoft.EntityFrameworkCore;
 using Ozzy.Server;
 using Ozzy.Server.EntityFramework;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace ExampleApplication
 {
@@ -15,11 +11,11 @@ namespace ExampleApplication
         {
         }
 
-        public DbSet<ContactFormMessage> ContactFormMessages { get; set; }
+        public DbSet<LoanApplication> LoanApplications { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<ContactFormMessage>().HasKey(c => c.Id);
+            modelBuilder.Entity<LoanApplication>().HasKey(c => c.Id);
 
             base.OnModelCreating(modelBuilder);
         }

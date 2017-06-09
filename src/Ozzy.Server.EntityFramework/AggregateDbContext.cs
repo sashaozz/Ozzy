@@ -52,7 +52,7 @@ namespace Ozzy.Server.EntityFramework
         public DbSet<FeatureFlag> FeatureFlags { get; set; }
         public DbSet<QueueRecord> Queues { get; set; }
         public DbSet<EfSagaRecord> Sagas { get; set; }
-        public DbSet<EfSagaKey> SagaKeys { get; set; }
+        public DbSet<EfSagaCorrelationId> SagaCorrelationIds { get; set; }
         /// <summary>
         /// Слушатели событий в данном контексте и номера их последних обработанных сообщений
         /// </summary>
@@ -66,7 +66,7 @@ namespace Ozzy.Server.EntityFramework
             modelBuilder.Entity<DomainEventRecord>().Ignore(r => r.MetaData);
 
             modelBuilder.Entity<Sequence>().HasKey(c => c.Name);
-            modelBuilder.Entity<Sequence>().Property(c => c.Name).IsRequired();            
+            modelBuilder.Entity<Sequence>().Property(c => c.Name).IsRequired();
             modelBuilder.Entity<FeatureFlag>().HasKey(r => r.Id);
             modelBuilder.Entity<FeatureFlag>().Ignore(r => r.Configuration);
 
@@ -75,8 +75,8 @@ namespace Ozzy.Server.EntityFramework
             modelBuilder.Entity<EfSagaRecord>().HasKey(r => r.Id);
             modelBuilder.Entity<EfSagaRecord>().Property(r => r.SagaVersion).IsConcurrencyToken();
 
-            modelBuilder.Entity<EfSagaKey>().HasKey(k => k.Id);
-            modelBuilder.Entity<EfSagaKey>().HasOne(k => k.Saga).WithMany(s => s.SagaKeys).IsRequired();
+            modelBuilder.Entity<EfSagaCorrelationId>().HasKey(k => new { k.Name, k.SagaType, k.SagaId});
+            modelBuilder.Entity<EfSagaCorrelationId>().HasOne(k => k.Saga).WithMany(s => s.CorrelationIds).IsRequired();
             base.OnModelCreating(modelBuilder);
         }
 

@@ -29,9 +29,10 @@ namespace Ozzy.Server.Configuration
                 var contextFactory = sp.GetService<Func<TDomain>>();
                 var sagaFactory = sp.GetTypeSpecificService<TDomain, ISagaFactory>();
                 return new EfSagaRepository<TDomain>(contextFactory, sagaFactory);
-            });
+            });            
 
-            builder.Services.AddTypeSpecificSingleton<NodeMonitoringInfo, ICheckpointManager>(sp => new SimpleChekpointManager(new EfEventsReader<TDomain>(sp.GetService<Func<TDomain>>())));
+            builder.Services.AddTypeSpecificSingleton<TDomain, IDistributedLockService>(sp => new EfDistributedLockService(sp.GetService<Func<TDomain>>()));
+            builder.Services.AddTypeSpecificSingleton<TDomain, IQueueRepository>(sp => new EfQueueRepository(sp.GetService<Func<TDomain>>(), db => db.Queues));
 
             return builder;
         }

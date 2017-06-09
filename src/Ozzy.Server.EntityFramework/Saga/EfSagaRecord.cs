@@ -7,7 +7,7 @@ namespace Ozzy.Server.EntityFramework
 {
     public class EfSagaRecord : AggregateBase<Guid>
     {
-        public EfSagaRecord(SagaState sagaState, List<SagaKey> sagaKeys) : base(sagaState.SagaId)
+        public EfSagaRecord(SagaState sagaState, List<SagaCorrelationId> sagaCorrelationIds) : base(sagaState.SagaId)
         {
             var sagaStateType = sagaState.State.GetType();
             Guard.ArgumentNotNull(sagaState, nameof(sagaState));
@@ -18,7 +18,14 @@ namespace Ozzy.Server.EntityFramework
             {
                 this.RaiseEvent(message);
             }
-            SagaKeys = sagaKeys.Select(s => new EfSagaKey() { Value = s.Value, Id = s.Id }).ToList();
+            sagaState.Messages.Clear();
+            CorrelationIds = sagaCorrelationIds.Select(id => new EfSagaCorrelationId() {
+                SagaType = id.SagaType.Name,
+                Name = id.PropertyName,
+                Value = id.Value,
+                SagaId = Id,
+                Saga = this
+            }).ToList();
         }
 
         // For ORM
@@ -29,8 +36,7 @@ namespace Ozzy.Server.EntityFramework
         public int SagaVersion { get; set; }
         public string StateType { get; set; }
         public byte[] SagaState { get; set; }
-
-        public ICollection<EfSagaKey> SagaKeys { get; set; }
+        public ICollection<EfSagaCorrelationId> CorrelationIds { get; set; }
 
         public SagaState ToSagaState()
         {

@@ -1,10 +1,9 @@
-﻿using Ozzy.DomainModel;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Ozzy.Server.EntityFramework
 {
-    public static class EfOzzyDomainOptionsExtensions
+    public static class EfOzzyExtensibleOptionsExtensions
     {
         public static DbContextOptions GetDbContextOptions(this IExtensibleOptions options)
         {

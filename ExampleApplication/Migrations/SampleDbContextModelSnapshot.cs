@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using ExampleApplication;
+using ExampleApplication.Models;
 using Ozzy.Server;
 
 namespace ExampleApplication.Migrations
@@ -17,24 +18,28 @@ namespace ExampleApplication.Migrations
                 .HasAnnotation("ProductVersion", "1.1.2")
                 .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
-            modelBuilder.Entity("ExampleApplication.Models.ContactFormMessage", b =>
+            modelBuilder.Entity("ExampleApplication.Models.LoanApplication", b =>
                 {
-                    b.Property<string>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd();
+
+                    b.Property<string>("Amount");
+
+                    b.Property<string>("Description");
 
                     b.Property<string>("From");
 
-                    b.Property<string>("Message");
+                    b.Property<string>("Name");
 
-                    b.Property<bool>("MessageProcessed");
-
-                    b.Property<bool>("MessageSent");
+                    b.Property<int>("Status");
 
                     b.Property<int>("Version");
 
+                    b.Property<bool>("WelcomeMessageSent");
+
                     b.HasKey("Id");
 
-                    b.ToTable("ContactFormMessages");
+                    b.ToTable("LoanApplications");
                 });
 
             modelBuilder.Entity("Ozzy.Server.EntityFramework.DomainEventRecord", b =>
@@ -72,20 +77,21 @@ namespace ExampleApplication.Migrations
                     b.ToTable("DistributedLocks");
                 });
 
-            modelBuilder.Entity("Ozzy.Server.EntityFramework.EfSagaKey", b =>
+            modelBuilder.Entity("Ozzy.Server.EntityFramework.EfSagaCorrelationId", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd();
+                    b.Property<string>("Name");
 
-                    b.Property<Guid?>("SagaId");
+                    b.Property<string>("SagaType");
+
+                    b.Property<Guid>("SagaId");
 
                     b.Property<string>("Value");
 
-                    b.HasKey("Id");
+                    b.HasKey("Name", "SagaType", "SagaId");
 
                     b.HasIndex("SagaId");
 
-                    b.ToTable("SagaKeys");
+                    b.ToTable("SagaCorrelationIds");
                 });
 
             modelBuilder.Entity("Ozzy.Server.EntityFramework.EfSagaRecord", b =>
@@ -153,11 +159,12 @@ namespace ExampleApplication.Migrations
                     b.ToTable("Queues");
                 });
 
-            modelBuilder.Entity("Ozzy.Server.EntityFramework.EfSagaKey", b =>
+            modelBuilder.Entity("Ozzy.Server.EntityFramework.EfSagaCorrelationId", b =>
                 {
                     b.HasOne("Ozzy.Server.EntityFramework.EfSagaRecord", "Saga")
-                        .WithMany("SagaKeys")
-                        .HasForeignKey("SagaId");
+                        .WithMany("CorrelationIds")
+                        .HasForeignKey("SagaId")
+                        .OnDelete(DeleteBehavior.Cascade);
                 });
         }
     }

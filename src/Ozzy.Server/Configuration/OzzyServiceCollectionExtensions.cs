@@ -1,9 +1,9 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using System;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Ozzy.DomainModel;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using System;
+using Ozzy.DomainModel;
 using Ozzy.Server.Saga;
 
 namespace Ozzy.Server.Configuration
@@ -21,18 +21,43 @@ namespace Ozzy.Server.Configuration
             return starter;
         }
 
-        public static IOzzyBuilder ConfigureOzzyNode<TDomain>(this IServiceCollection services) where TDomain : IOzzyDomainModel
+        public static void AddOzzyNode<TDomain>(this IServiceCollection services, Action<OzzyNodeOptionsBuilder<TDomain>> configureOptions) where TDomain : IOzzyDomainModel
         {
-            services.AddSingleton<OzzyNode>();
-            services.AddSingleton<IFeatureFlagService, FeatureFlagService>();
-            services.AddSingleton<BackgroundJobQueue>();
-            services.AddSingleton<IDomainEventsFaultHandler, DispatchToBackgroundTaskQueueFaultHandler>();
+            var builder = new OzzyNodeOptionsBuilder<TDomain>(services);
+            configureOptions(builder);
+
+            if (!services.IsServiceRegistered<IQueueRepository>())
+            {
+                if (services.IsTypeSpecificServiceRegistered<TDomain, IQueueRepository>())
+                {
+                    services.AddSingleton(sp => sp.GetTypeSpecificService<TDomain, IQueueRepository>());
+                }
+                else
+                {
+                    //TODO: throw as IQueueRepository is required;
+                }
+            }
+
+            if (!services.IsServiceRegistered<IDistributedLockService>())
+            {
+                if (services.IsTypeSpecificServiceRegistered<TDomain, IDistributedLockService>())
+                {
+                    services.AddSingleton(sp => sp.GetTypeSpecificService<TDomain, IDistributedLockService>());
+                }
+                else
+                {
+                    //TODO: throw as IDistributedLockService is required;
+                }
+            }
+            services.TryAddSingleton<OzzyNode>();
+
+            //TODO : better handle service dependencies... E.g. we can check is queue repository is registered and do not register JobQueues if not or throw... Same for FeatureFlags and else.
+            services.TryAddSingleton(typeof(JobQueue<>));            
+            services.TryAddSingleton<IFeatureFlagService, FeatureFlagService>();
+            services.TryAddSingleton<IDomainEventsFaultHandler, DoNothingFaultHandler>();
             services.AddTransient<RetryEventTask>();
             services.AddSingleton(typeof(JobQueue<>));
-            services.AddSingleton<SagaEventMapper>();
-
-            var builder = new OzzyBuilder(services);
-            return builder;
+            services.AddSingleton<SagaCorrelationsMapper>();
         }
 
         public static OzzyDomainBuilder<TDomain> AddOzzyDomain<TDomain>(this IServiceCollection services, Action<OzzyDomainOptionsBuilder<TDomain>> configureOptions) where TDomain : IOzzyDomainModel
@@ -41,7 +66,6 @@ namespace Ozzy.Server.Configuration
             var optionsBuilder = new OzzyDomainOptionsBuilder<TDomain>(builder);
             configureOptions(optionsBuilder);
 
-            //todo : maybe move it to the end of pipeline so other extensions could register implementations first?                   
             builder.Services.TryAddTypeSpecificSingleton<TDomain, DomainEventsLoop>(sp =>
             {
                 var reader = sp.GetTypeSpecificService<TDomain, IPeristedEventsReader>();
