@@ -33,7 +33,18 @@ namespace ExampleApplication.Controllers
                 var message = new ContactFormMessage(model.From, model.Message);
                 dbContext.ContactFormMessages.Add(message);
                 dbContext.SaveChanges();
-                message.MessageReceived();
+            }
+
+            return Redirect("/Saga");
+        }
+
+        [HttpPost]
+        public IActionResult Process(ProcessMessageDataView model)
+        {
+            using (var dbContext = _dbFactory())
+            {
+                var message = dbContext.ContactFormMessages.First(m => m.Id == model.MessageId);
+                message.ProcessMessage();
                 dbContext.SaveChanges();
             }
 
@@ -45,5 +56,9 @@ namespace ExampleApplication.Controllers
     {
         public string From { get; set; }
         public string Message { get; set; }
+    }
+    public class ProcessMessageDataView
+    {
+        public string MessageId { get; set; }
     }
 }

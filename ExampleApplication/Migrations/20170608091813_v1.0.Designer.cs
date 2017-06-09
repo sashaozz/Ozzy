@@ -9,8 +9,8 @@ using Ozzy.Server;
 namespace ExampleApplication.Migrations
 {
     [DbContext(typeof(SampleDbContext))]
-    [Migration("20170607102046_v1.1")]
-    partial class v11
+    [Migration("20170608091813_v1.0")]
+    partial class v10
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -20,12 +20,14 @@ namespace ExampleApplication.Migrations
 
             modelBuilder.Entity("ExampleApplication.Models.ContactFormMessage", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<string>("Id")
                         .ValueGeneratedOnAdd();
 
                     b.Property<string>("From");
 
                     b.Property<string>("Message");
+
+                    b.Property<bool>("MessageProcessed");
 
                     b.Property<bool>("MessageSent");
 
@@ -69,6 +71,22 @@ namespace ExampleApplication.Migrations
                     b.HasKey("Name");
 
                     b.ToTable("DistributedLocks");
+                });
+
+            modelBuilder.Entity("Ozzy.Server.EntityFramework.EfSagaKey", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<Guid?>("SagaId");
+
+                    b.Property<string>("Value");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SagaId");
+
+                    b.ToTable("SagaKeys");
                 });
 
             modelBuilder.Entity("Ozzy.Server.EntityFramework.EfSagaRecord", b =>
@@ -134,6 +152,13 @@ namespace ExampleApplication.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Queues");
+                });
+
+            modelBuilder.Entity("Ozzy.Server.EntityFramework.EfSagaKey", b =>
+                {
+                    b.HasOne("Ozzy.Server.EntityFramework.EfSagaRecord", "Saga")
+                        .WithMany("SagaKeys")
+                        .HasForeignKey("SagaId");
                 });
         }
     }

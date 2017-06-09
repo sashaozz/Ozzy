@@ -16,4 +16,7 @@
     <ProjectReference Include="..\Ozzy.DomainModel\Ozzy.DomainModel.csproj" />
     <ProjectReference Include="..\Ozzy.Core\Ozzy.Core.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <Reference Include="Microsoft.CSharp" />
+  </ItemGroup>
 </Project>

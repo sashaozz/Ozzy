@@ -10,6 +10,22 @@ namespace ExampleApplication.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
+                name: "ContactFormMessages",
+                columns: table => new
+                {
+                    Id = table.Column<string>(nullable: false),
+                    From = table.Column<string>(nullable: true),
+                    Message = table.Column<string>(nullable: true),
+                    MessageProcessed = table.Column<bool>(nullable: false),
+                    MessageSent = table.Column<bool>(nullable: false),
+                    Version = table.Column<int>(nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ContactFormMessages", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "DomainEvents",
                 columns: table => new
                 {
@@ -94,10 +110,38 @@ namespace ExampleApplication.Migrations
                 {
                     table.PrimaryKey("PK_Queues", x => x.Id);
                 });
+
+            migrationBuilder.CreateTable(
+                name: "SagaKeys",
+                columns: table => new
+                {
+                    Id = table.Column<int>(nullable: false)
+                        .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
+                    SagaId = table.Column<Guid>(nullable: true),
+                    Value = table.Column<string>(nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_SagaKeys", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_SagaKeys_Sagas_SagaId",
+                        column: x => x.SagaId,
+                        principalTable: "Sagas",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SagaKeys_SagaId",
+                table: "SagaKeys",
+                column: "SagaId");
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropTable(
+                name: "ContactFormMessages");
+
             migrationBuilder.DropTable(
                 name: "DomainEvents");
 
@@ -105,7 +149,7 @@ namespace ExampleApplication.Migrations
                 name: "DistributedLocks");
 
             migrationBuilder.DropTable(
-                name: "Sagas");
+                name: "SagaKeys");
 
             migrationBuilder.DropTable(
                 name: "Sequences");
@@ -115,6 +159,9 @@ namespace ExampleApplication.Migrations
 
             migrationBuilder.DropTable(
                 name: "Queues");
+
+            migrationBuilder.DropTable(
+                name: "Sagas");
         }
     }
 }

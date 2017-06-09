@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Microsoft.EntityFrameworkCore;
+using System;
+using System.Linq;
 
 namespace Ozzy.Server.EntityFramework
 {
@@ -24,7 +26,10 @@ namespace Ozzy.Server.EntityFramework
         {
             using (var db = _contextFactory())
             {
-                var existingSagaRecord = db.Sagas.Find(id);
+                var existingSagaRecord = db.Sagas
+                    .Include(s => s.SagaKeys)
+                    .FirstOrDefault(s => s.Id == id);
+
                 if (existingSagaRecord == null) return null;
 
                 var saga = _sagaFactory.GetSaga<TSaga>();
@@ -35,8 +40,24 @@ namespace Ozzy.Server.EntityFramework
                 else
                 {
                     saga.LoadSagaData(existingSagaRecord.ToSagaState());
+                    saga.SagaKeys = existingSagaRecord.SagaKeys
+                        .Select(k => new Saga.SagaKey(k.Id, k.Value))
+                        .ToList();
                 }
                 return saga;
+            }
+        }
+
+        public TSaga GetSagaByKey<TSaga>(string key) where TSaga : SagaBase
+        {
+            using (var db = _contextFactory())
+            {
+                var sagaKey = db.SagaKeys
+                    .Include(s => s.Saga)
+                    .FirstOrDefault(s => s.Value == key);
+                if (sagaKey == null) return null;
+
+                return GetSagaById<TSaga>(sagaKey.Saga.Id);
             }
         }
 
@@ -45,7 +66,7 @@ namespace Ozzy.Server.EntityFramework
         {
             using (var db = _contextFactory())
             {
-                var record = new EfSagaRecord(saga.SagaState);
+                var record = new EfSagaRecord(saga.SagaState, saga.SagaKeys);
                 if (record.SagaVersion == 1)
                 {
                     db.Sagas.Add(record);

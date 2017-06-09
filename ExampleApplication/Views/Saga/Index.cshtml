@@ -11,6 +11,7 @@
         <th>From</th>
         <th>Message</th>
         <th>MessageSent</th>
+        <th></th>
     </tr>
     @foreach (var message in Model)
     {
@@ -19,11 +20,20 @@
             <td>@message.From</td>
             <td>@message.Message</td>
             <td>@message.MessageSent</td>
+            <td>
+                @if (!message.MessageProcessed)
+                {
+                    <form action="/Saga/Process" method="post">
+                        <input type="hidden" name="MessageId" value="@message.Id" />
+                        <button type="submit" class="btn btn-default">Processed</button>
+                    </form>
+                }
+            </td>
         </tr>
     }
 
 </table>
-<br/><br />
+<br /><br />
 <form action="/Saga" method="post">
     <div class="form-group">
         <label for="email">Email address:</label>

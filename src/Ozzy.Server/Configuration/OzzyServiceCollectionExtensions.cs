@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Hosting;
 using Ozzy.DomainModel;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using System;
+using Ozzy.Server.Saga;
 
 namespace Ozzy.Server.Configuration
 {
@@ -28,6 +29,7 @@ namespace Ozzy.Server.Configuration
             services.AddSingleton<IDomainEventsFaultHandler, DispatchToBackgroundTaskQueueFaultHandler>();
             services.AddTransient<RetryEventTask>();
             services.AddSingleton(typeof(JobQueue<>));
+            services.AddSingleton<SagaEventMapper>();
 
             var builder = new OzzyBuilder(services);
             return builder;

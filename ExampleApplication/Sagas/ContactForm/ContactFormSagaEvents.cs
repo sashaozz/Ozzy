@@ -1,4 +1,5 @@
 ﻿using Ozzy.DomainModel;
+using Ozzy.Server.Saga;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,8 +9,17 @@ namespace ExampleApplication.Sagas.ContactForm
 {
     public class ContactFormMessageRecieved : IDomainEvent
     {
+        public ContactFormMessageRecieved()
+        {
+
+        }
         public string From { get; set; }
         public string Message { get; set; }
-        public int MessageId { get; set; }
+        public string MessageId { get; set; }
+    }
+
+    public class ContactFormMessageProcessed : IDomainEvent
+    {
+        public string MessageId { get; set; }
     }
 }

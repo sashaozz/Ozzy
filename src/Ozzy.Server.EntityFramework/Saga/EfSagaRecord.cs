@@ -1,10 +1,13 @@
-﻿using System;
+﻿using Ozzy.Server.Saga;
+using System;
+using System.Linq;
+using System.Collections.Generic;
 
 namespace Ozzy.Server.EntityFramework
 {
     public class EfSagaRecord : AggregateBase<Guid>
     {
-        public EfSagaRecord(SagaState sagaState) : base(sagaState.SagaId)
+        public EfSagaRecord(SagaState sagaState, List<SagaKey> sagaKeys) : base(sagaState.SagaId)
         {
             var sagaStateType = sagaState.State.GetType();
             Guard.ArgumentNotNull(sagaState, nameof(sagaState));
@@ -15,6 +18,7 @@ namespace Ozzy.Server.EntityFramework
             {
                 this.RaiseEvent(message);
             }
+            SagaKeys = sagaKeys.Select(s => new EfSagaKey() { Value = s.Value, Id = s.Id }).ToList();
         }
 
         // For ORM
@@ -25,6 +29,8 @@ namespace Ozzy.Server.EntityFramework
         public int SagaVersion { get; set; }
         public string StateType { get; set; }
         public byte[] SagaState { get; set; }
+
+        public ICollection<EfSagaKey> SagaKeys { get; set; }
 
         public SagaState ToSagaState()
         {

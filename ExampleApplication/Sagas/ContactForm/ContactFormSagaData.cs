@@ -9,7 +9,7 @@ namespace ExampleApplication.Sagas.ContactForm
     {
         public string Message { get; set; }
         public string From { get; set; }
-        public int MessageId { get; set; }
+        public string MessageId { get; set; }
         public bool GreetingEmailSent { get; set; }
         public bool AdminEmailSent { get; set; }
         public bool IsComplete { get; set; }
