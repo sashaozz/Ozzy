@@ -18,25 +18,23 @@ namespace Ozzy.Server
             _ffService = ffService;            
         }       
 
-        public bool Handle(DataRecordDeletedEvent<FeatureFlag> obj)
+        public void Handle(DataRecordDeletedEvent<FeatureFlag> obj)
         {
             throw new NotImplementedException();
         }
 
-        public bool Handle(DataRecordUpdatedEvent<FeatureFlag> obj)
+        public void Handle(DataRecordUpdatedEvent<FeatureFlag> obj)
         {
             //if (obj.RecordType != typeof(FeatureFlag)) return true;
             var newFlag = obj.RecordValue as FeatureFlag;
             _ffService.SetFlagState(newFlag.Id, newFlag.Configuration, newFlag.Version);
-            return false;
         }
 
-        public bool Handle(DataRecordCreatedEvent<FeatureFlag> obj)
+        public void Handle(DataRecordCreatedEvent<FeatureFlag> obj)
         {
             //if (obj.RecordType != typeof(FeatureFlag)) return true;
             var newFlag = obj.RecordValue as FeatureFlag;
             _ffService.SetFlagState(newFlag.Id, newFlag.Configuration, newFlag.Version);
-            return false;
         }
     }
 }

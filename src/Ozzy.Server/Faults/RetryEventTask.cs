@@ -71,8 +71,15 @@ namespace Ozzy.Server
                 }
                 catch (Exception ex)
                 {
-                    var faultHandler = _serviceProvider.GetService<IDomainEventsFaultHandler>();
-                    faultHandler.Handle(type, taskConfig.Record);
+                    IDomainEventsFaultHandler faultHandler = null;
+                    try
+                    {
+                        faultHandler = _serviceProvider.GetService<IDomainEventsFaultHandler>();
+                    }
+                    catch
+                    {
+                    }                    
+                    faultHandler?.Handle(type, taskConfig.Record);
                     //Events processor will add a retry
                 }
             }

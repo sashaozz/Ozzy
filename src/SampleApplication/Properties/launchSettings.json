@@ -16,7 +16,7 @@
       }
     },
     "SampleApplication": {
-      "commandName": "Project",
+      "commandName": "IISExpress",
       "launchUrl": "http://localhost:5000",
       "environmentVariables": {
         "ASPNETCORE_URLS": "http://*:5000",

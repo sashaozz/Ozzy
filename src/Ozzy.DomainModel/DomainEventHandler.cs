@@ -9,7 +9,7 @@ namespace Ozzy.DomainModel
     public class DomainEventsHandler : IDomainEventsHandler
     {
         private Func<IDomainEventRecord, bool> _handler;
-        protected Dictionary<Type, Func<object, bool>> Handlers { get; set; } = new Dictionary<Type, Func<object, bool>>();
+        protected Dictionary<Type, Action<object>> Handlers { get; set; } = new Dictionary<Type, Action<object>>();
         protected DomainEventsHandler()
         {
             _handler = HandleEvent;
@@ -37,16 +37,16 @@ namespace Ozzy.DomainModel
             }
         }
 
-        protected void RegisterHandler<TMessage>(Func<object, bool> handler)
+        protected void RegisterHandler<TMessage>(Action<object> handler)
         {
             Handlers.Add(typeof(TMessage), handler);
         }
 
-        protected bool Dispatch<TMessage>(object message)
+        protected void Dispatch<TMessage>(object message)
         {
             var handler = this as IHandleEvent<TMessage>;
             TMessage data = (TMessage)message;
-            return handler.Handle(data);
+            handler.Handle(data);
         }
         public virtual bool CanHandleMessage(Type messageType)
         {
@@ -55,10 +55,11 @@ namespace Ozzy.DomainModel
         public virtual bool HandleEvent(IDomainEventRecord record)
         {
             var messageType = record.GetDomainEventType();
-            if (!CanHandleMessage(messageType)) return true;
+            if (!CanHandleMessage(messageType)) return false;
             var message = record.GetDomainEvent();
             var handler = Handlers.GetValueOrDefault(messageType);
-            return handler.Invoke(message);
+            handler.Invoke(message);
+            return true;
         }
     }
 }

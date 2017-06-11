@@ -5,24 +5,26 @@ using Microsoft.EntityFrameworkCore.Metadata;
 
 namespace ExampleApplication.Migrations
 {
-    public partial class v10 : Migration
+    public partial class init : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "ContactFormMessages",
+                name: "LoanApplications",
                 columns: table => new
                 {
-                    Id = table.Column<string>(nullable: false),
+                    Id = table.Column<Guid>(nullable: false),
+                    Amount = table.Column<string>(nullable: true),
+                    Description = table.Column<string>(nullable: true),
                     From = table.Column<string>(nullable: true),
-                    Message = table.Column<string>(nullable: true),
-                    MessageProcessed = table.Column<bool>(nullable: false),
-                    MessageSent = table.Column<bool>(nullable: false),
-                    Version = table.Column<int>(nullable: false)
+                    Name = table.Column<string>(nullable: true),
+                    Status = table.Column<int>(nullable: false),
+                    Version = table.Column<int>(nullable: false),
+                    WelcomeMessageSent = table.Column<bool>(nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_ContactFormMessages", x => x.Id);
+                    table.PrimaryKey("PK_LoanApplications", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -112,35 +114,35 @@ namespace ExampleApplication.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "SagaKeys",
+                name: "SagaCorrelationIds",
                 columns: table => new
                 {
-                    Id = table.Column<int>(nullable: false)
-                        .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
-                    SagaId = table.Column<Guid>(nullable: true),
-                    Value = table.Column<string>(nullable: true)
+                    PropertyName = table.Column<string>(nullable: false),
+                    SagaType = table.Column<string>(nullable: false),
+                    SagaId = table.Column<Guid>(nullable: false),
+                    PropertyValue = table.Column<string>(nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_SagaKeys", x => x.Id);
+                    table.PrimaryKey("PK_SagaCorrelationIds", x => new { x.PropertyName, x.SagaType, x.SagaId });
                     table.ForeignKey(
-                        name: "FK_SagaKeys_Sagas_SagaId",
+                        name: "FK_SagaCorrelationIds_Sagas_SagaId",
                         column: x => x.SagaId,
                         principalTable: "Sagas",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_SagaKeys_SagaId",
-                table: "SagaKeys",
+                name: "IX_SagaCorrelationIds_SagaId",
+                table: "SagaCorrelationIds",
                 column: "SagaId");
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "ContactFormMessages");
+                name: "LoanApplications");
 
             migrationBuilder.DropTable(
                 name: "DomainEvents");
@@ -149,7 +151,7 @@ namespace ExampleApplication.Migrations
                 name: "DistributedLocks");
 
             migrationBuilder.DropTable(
-                name: "SagaKeys");
+                name: "SagaCorrelationIds");
 
             migrationBuilder.DropTable(
                 name: "Sequences");

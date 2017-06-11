@@ -1,6 +1,8 @@
-﻿using Microsoft.EntityFrameworkCore;
-using System;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using Microsoft.EntityFrameworkCore;
+using Ozzy.Server.Saga;
 
 namespace Ozzy.Server.EntityFramework
 {
@@ -8,7 +10,7 @@ namespace Ozzy.Server.EntityFramework
         where TDomain : AggregateDbContext
     {
         private ISagaFactory _sagaFactory;
-        private Func<TDomain> _contextFactory;        
+        private Func<TDomain> _contextFactory;
 
         public EfSagaRepository(Func<TDomain> contextFactory, ISagaFactory sagaFactory)
         {
@@ -27,7 +29,6 @@ namespace Ozzy.Server.EntityFramework
             using (var db = _contextFactory())
             {
                 var existingSagaRecord = db.Sagas
-                    .Include(s => s.SagaKeys)
                     .FirstOrDefault(s => s.Id == id);
 
                 if (existingSagaRecord == null) return null;
@@ -40,33 +41,41 @@ namespace Ozzy.Server.EntityFramework
                 else
                 {
                     saga.LoadSagaData(existingSagaRecord.ToSagaState());
-                    saga.SagaKeys = existingSagaRecord.SagaKeys
-                        .Select(k => new Saga.SagaKey(k.Id, k.Value))
-                        .ToList();
                 }
                 return saga;
             }
         }
 
-        public TSaga GetSagaByKey<TSaga>(string key) where TSaga : SagaBase
+        public TSaga GetSagaByCorrelationId<TSaga>(SagaCorrelationProperty id) where TSaga : SagaBase
         {
+            var sagaType = typeof(TSaga).Name;
             using (var db = _contextFactory())
             {
-                var sagaKey = db.SagaKeys
+                var sagaCorrelationId = db
+                    .SagaCorrelationIds
                     .Include(s => s.Saga)
-                    .FirstOrDefault(s => s.Value == key);
-                if (sagaKey == null) return null;
+                    .FirstOrDefault(s => s.PropertyValue == id.PropertyValue && s.PropertyName == id.PropertyName && s.SagaType == sagaType);
+                if (sagaCorrelationId == null) return null;
+                var saga = _sagaFactory.GetSaga<TSaga>();
+                if (saga == null)
+                {
+                    //todo: throw
+                }
+                else
+                {
+                    saga.LoadSagaData(sagaCorrelationId.Saga.ToSagaState());
+                }
 
-                return GetSagaById<TSaga>(sagaKey.Saga.Id);
+                return saga;
             }
         }
 
         // here we need to attach Saga 
-        public void SaveSaga(SagaBase saga)
+        public void SaveSaga(SagaBase saga, List<SagaCorrelationProperty> correlationIds)
         {
             using (var db = _contextFactory())
             {
-                var record = new EfSagaRecord(saga.SagaState, saga.SagaKeys);
+                var record = new EfSagaRecord(saga, correlationIds);
                 if (record.SagaVersion == 1)
                 {
                     db.Sagas.Add(record);

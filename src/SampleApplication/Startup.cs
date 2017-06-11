@@ -68,14 +68,16 @@ namespace SampleApplication
                 options.UseSqlServer(Configuration.GetConnectionString("SampleDbContext"));
             }));
 
-            services.ConfigureOzzyNode<SampleDbContext>()
-                .UseEFDistributedLockService<SampleDbContext>()
-                .UseEFFeatureFlagService<SampleDbContext>()
-                .UseEFBackgroundTaskService<SampleDbContext>()
-                .UseInMemoryMonitoring<SampleDbContext>()
-                .AddBackgroundProcess<NodeConsoleHeartBeatProcess>()
-                .AddFeatureFlag<ConsoleLogFeature>()
-                .AddApi();
+            services.AddOzzyNode<SampleDbContext>(options =>
+            {
+                options.UseSqlServerQueues();
+                options.UseEFFeatureFlagService();
+                options.UseInMemoryMonitoring();
+                options.AddBackgroundProcess<NodeConsoleHeartBeatProcess>();
+                options.AddFeatureFlag<ConsoleLogFeature>();
+            });
+            //TODO : fix Api
+            //.AddApi();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

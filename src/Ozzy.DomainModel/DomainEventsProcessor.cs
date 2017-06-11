@@ -46,24 +46,26 @@ namespace Ozzy.DomainModel
             if (data == null || data is EmptyEventRecord)
             {
                 OzzyLogger<IDomainModelTracing>.Log.TraceVerboseEvent($"Processing empty domain record at sequence {sequence}");
-                CheckpointManager.SaveCheckpoint(sequence, true);
+                //We are not saving checkpoint here because it is safe to process it again
+                //CheckpointManager.SaveCheckpoint(sequence);
                 return;
             }
             OzzyLogger<IDomainModelTracing>.Log.ProcessDomainEventEntry(record);
-            bool isIdempotent = true;
+            bool isHandled = false;
             try
             {
-                isIdempotent = _handler.HandleEvent(data);
+                isHandled = _handler.HandleEvent(data);
             }
             catch (Exception e)
             {
                 //todo : should we handle exception better?
-                if (_handler != null)
+                if (_faultHandler != null)
                 {
                     _faultHandler.Handle(_handler.GetType(), data);
                 }
             }
-            CheckpointManager.SaveCheckpoint(sequence, isIdempotent);
+            // 
+            if (isHandled) CheckpointManager.SaveCheckpoint(sequence);
         }
         public long GetCheckpoint()
         {

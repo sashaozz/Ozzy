@@ -1,7 +1,6 @@
-﻿using Ozzy.Core;
-using Ozzy.DomainModel;
-using System;
+﻿using System;
 using System.Linq;
+using Ozzy.DomainModel;
 
 namespace Ozzy.Server.EntityFramework
 {
@@ -40,11 +39,8 @@ namespace Ozzy.Server.EntityFramework
             }
         }
 
-        public void SaveCheckpoint(long checkpoint, bool idempotent = false)
+        public void SaveCheckpoint(long checkpoint)
         {
-            //do not write to database if idempotent - it is safe to run this sequence again if its lost
-            if (idempotent) return;
-
             using (var context = _contextFactory())
             {
                 var seq = context.Sequences.SingleOrDefault(s => s.Name == _serviceName);

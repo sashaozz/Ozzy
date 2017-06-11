@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using Ozzy.DomainModel;
 using Ozzy.DomainModel.Configuration;
 using Ozzy.Server.Redis;
 using Ozzy.Server.Redis.Monitoring;
@@ -25,7 +26,8 @@ namespace Ozzy.Server.Configuration
             return builder;
         }
 
-        public static IOzzyBuilder UseRedisMonitoring(this IOzzyBuilder builder)
+        public static OzzyNodeOptionsBuilder<TDomain> UseRedisMonitoring<TDomain>(this OzzyNodeOptionsBuilder<TDomain> builder)
+            where TDomain : IOzzyDomainModel
         {
             //todo : fix
             //builder.Services.AddSingleton<MonitoringEventsProcessor>();

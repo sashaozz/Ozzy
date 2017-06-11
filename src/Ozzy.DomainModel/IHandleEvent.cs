@@ -2,6 +2,6 @@
 {
     public interface IHandleEvent<T>
     {
-        bool Handle(T message);
+        void Handle(T message);
     }
 }

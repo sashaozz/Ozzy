@@ -1,0 +1,65 @@
+﻿@using ExampleApplication.Models;
+@model List<LoanApplication>
+
+@{
+    ViewData["Title"] = "LoanApplicationSaga : demo";
+}
+<h2>@ViewData["Title"].</h2>
+
+<table class="table">
+    <tr>
+        <th>Id</th>
+        <th>Name</th>
+        <th>From</th>
+        <th>Amount</th>
+        <th>Description</th>
+        <th>WelcomeMessageSent</th>
+        <th>Status</th>
+        <th>Approve</th>
+        <th>Reject</th>
+    </tr>
+    @foreach (var application in Model)
+    {
+        <tr>
+            <td>@application.Id</td>
+            <td>@application.Name</td>
+            <td>@application.From</td>
+            <td>@application.Amount</td>
+            <td>@application.Description</td>
+            <td>@application.WelcomeMessageSent</td>
+            <td>@application.Status</td>
+            <td><button type="submit" class="btn btn-success" @if (application.Status != LoanApplicationStatus.New) { <text>disabled</text> } onclick="approve('@application.Id');">Approve</button></td>
+            <td><button type="submit" class="btn btn-danger" @if (application.Status != LoanApplicationStatus.New) { <text>disabled</text> } onclick="reject('@application.Id');">Reject</button></td>            
+        </tr>
+    }
+</table>
+
+<script language="javascript">
+    function approve(id) {
+        location.href = "/LoanApplications/Approve?id=" + id;
+    }
+    function reject(id) {
+        location.href = "/LoanApplications/Reject?id=" + id;
+    }
+</script>
+
+<br /><br />
+<form action="/LoanApplications" method="post">
+    <div class="form-group">
+        <label for="Name">Name:</label>
+        <input type="text" class="form-control" id="Name" name="Name" />
+    </div>
+    <div class="form-group">
+        <label for="From">Email address:</label>
+        <input type="text" class="form-control" id="From" name="From" />
+    </div>
+    <div class="form-group">
+        <label for="Amount">Amount:</label>
+        <input type="text" class="form-control" id="Amount" name="Amount" />
+    </div>
+    <div class="form-group">
+        <label for="Description">Description:</label>
+        <input type="text" class="form-control" id="Description" name="Description" />
+    </div>
+    <button type="submit" class="btn btn-default">Submit</button>
+</form>

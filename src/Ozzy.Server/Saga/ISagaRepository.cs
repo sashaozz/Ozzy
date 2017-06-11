@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Ozzy.Server.Saga;
+using System;
+using System.Collections.Generic;
 
 namespace Ozzy.Server
 {
@@ -6,7 +8,7 @@ namespace Ozzy.Server
     {
         TSaga GetSagaById<TSaga>(Guid id) where TSaga : SagaBase;
         TSaga CreateNewSaga<TSaga>() where TSaga : class;
-        void SaveSaga(SagaBase saga);
-        TSaga GetSagaByKey<TSaga>(string key) where TSaga : SagaBase;
+        void SaveSaga(SagaBase saga, List<SagaCorrelationProperty> correlationIds);
+        TSaga GetSagaByCorrelationId<TSaga>(SagaCorrelationProperty id) where TSaga : SagaBase;
     }
 }

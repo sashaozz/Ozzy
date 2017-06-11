@@ -9,6 +9,7 @@ namespace Ozzy.Server
         private IServiceProvider _serviceProvider;
         public DefaultSagaFactory(IServiceProvider serviceProvider)
         {
+            Guard.ArgumentNotNull(serviceProvider, nameof(serviceProvider));
             _serviceProvider = serviceProvider;
         }
         public TSaga GetSaga<TSaga>() where TSaga : class
@@ -23,6 +24,7 @@ namespace Ozzy.Server
         private IServiceProvider _serviceProvider;
         public DefaultSagaFactory(IServiceProvider serviceProvider)
         {
+            Guard.ArgumentNotNull(serviceProvider, nameof(serviceProvider));
             _serviceProvider = serviceProvider;
         }
         public TSaga GetSaga<TSaga>() where TSaga : class
