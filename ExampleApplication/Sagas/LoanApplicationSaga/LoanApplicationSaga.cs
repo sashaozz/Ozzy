@@ -69,25 +69,12 @@ namespace ExampleApplication.Sagas.ContactForm
 
         public bool Handle(LoanApplicationApproved message)
         {
-            SendSagaCommand(new SendWelcomeEmail(this)
-            {
-
-            });
-            SendSagaCommand(new SendNotificationToAdministrator(this)
-            {
-            });
+            State.ApplicationId = default(Guid);
             return false;
         }
 
         public bool Handle(LoanApplicationRejected message)
         {
-            SendSagaCommand(new SendWelcomeEmail(this)
-            {
-
-            });
-            SendSagaCommand(new SendNotificationToAdministrator(this)
-            {
-            });
             return false;
         }
     }

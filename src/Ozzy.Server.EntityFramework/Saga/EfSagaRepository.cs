@@ -1,8 +1,8 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Ozzy.Server.Saga;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.EntityFrameworkCore;
+using Ozzy.Server.Saga;
 
 namespace Ozzy.Server.EntityFramework
 {
@@ -28,7 +28,7 @@ namespace Ozzy.Server.EntityFramework
         {
             using (var db = _contextFactory())
             {
-                var existingSagaRecord = db.Sagas                    
+                var existingSagaRecord = db.Sagas
                     .FirstOrDefault(s => s.Id == id);
 
                 if (existingSagaRecord == null) return null;
@@ -46,13 +46,15 @@ namespace Ozzy.Server.EntityFramework
             }
         }
 
-        public TSaga GetSagaByCorrelationId<TSaga>(SagaCorrelationId id) where TSaga : SagaBase
+        public TSaga GetSagaByCorrelationId<TSaga>(SagaCorrelationProperty id) where TSaga : SagaBase
         {
+            var sagaType = typeof(TSaga).Name;
             using (var db = _contextFactory())
             {
-                var sagaCorrelationId = db.SagaCorrelationIds
+                var sagaCorrelationId = db
+                    .SagaCorrelationIds
                     .Include(s => s.Saga)
-                    .FirstOrDefault(s => s.Value == id.Value && s.Name == id.PropertyName && s.SagaType == id.SagaType.Name);
+                    .FirstOrDefault(s => s.PropertyValue == id.PropertyValue && s.PropertyName == id.PropertyName && s.SagaType == sagaType);
                 if (sagaCorrelationId == null) return null;
                 var saga = _sagaFactory.GetSaga<TSaga>();
                 if (saga == null)
@@ -69,11 +71,11 @@ namespace Ozzy.Server.EntityFramework
         }
 
         // here we need to attach Saga 
-        public void SaveSaga(SagaBase saga, List<SagaCorrelationId> correlationIds)
+        public void SaveSaga(SagaBase saga, List<SagaCorrelationProperty> correlationIds)
         {
             using (var db = _contextFactory())
             {
-                var record = new EfSagaRecord(saga.SagaState, correlationIds);
+                var record = new EfSagaRecord(saga, correlationIds);
                 if (record.SagaVersion == 1)
                 {
                     db.Sagas.Add(record);

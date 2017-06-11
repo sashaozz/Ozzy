@@ -9,10 +9,12 @@ namespace Ozzy.Server
 
         public SagaCommand(SagaBase saga)
         {
+            Guard.ArgumentNotNull(saga, nameof(saga));
+
             SagaId = saga.SagaId;
         }
-
-        public SagaCommand()
+        
+        protected SagaCommand()
         {
         }
     }

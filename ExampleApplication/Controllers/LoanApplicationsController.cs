@@ -2,7 +2,6 @@ using System;
 using System.Linq;
 using Microsoft.AspNetCore.Mvc;
 using ExampleApplication.Models;
-using Ozzy.Server;
 
 namespace ExampleApplication.Controllers
 {

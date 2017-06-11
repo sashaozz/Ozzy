@@ -117,14 +117,14 @@ namespace ExampleApplication.Migrations
                 name: "SagaCorrelationIds",
                 columns: table => new
                 {
-                    Name = table.Column<string>(nullable: false),
+                    PropertyName = table.Column<string>(nullable: false),
                     SagaType = table.Column<string>(nullable: false),
                     SagaId = table.Column<Guid>(nullable: false),
-                    Value = table.Column<string>(nullable: true)
+                    PropertyValue = table.Column<string>(nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_SagaCorrelationIds", x => new { x.Name, x.SagaType, x.SagaId });
+                    table.PrimaryKey("PK_SagaCorrelationIds", x => new { x.PropertyName, x.SagaType, x.SagaId });
                     table.ForeignKey(
                         name: "FK_SagaCorrelationIds_Sagas_SagaId",
                         column: x => x.SagaId,

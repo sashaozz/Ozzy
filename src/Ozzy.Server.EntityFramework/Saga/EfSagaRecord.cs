@@ -1,16 +1,23 @@
-﻿using Ozzy.Server.Saga;
-using System;
+﻿using System;
 using System.Linq;
 using System.Collections.Generic;
+using Ozzy.Server.Saga;
 
 namespace Ozzy.Server.EntityFramework
 {
     public class EfSagaRecord : AggregateBase<Guid>
     {
-        public EfSagaRecord(SagaState sagaState, List<SagaCorrelationId> sagaCorrelationIds) : base(sagaState.SagaId)
+        public int SagaVersion { get; protected set; }
+        public string StateType { get; protected set; }
+        public byte[] SagaState { get; protected set; }
+        public ICollection<EfSagaCorrelationId> CorrelationIds { get; protected set; }
+
+        public EfSagaRecord(SagaBase saga, List<SagaCorrelationProperty> sagaCorrelationIds) : base(saga.SagaId)
         {
+            Guard.ArgumentNotNull(saga, nameof(saga));
+            Guard.ArgumentNotNull(sagaCorrelationIds, nameof(sagaCorrelationIds));
+            var sagaState = saga.SagaState;
             var sagaStateType = sagaState.State.GetType();
-            Guard.ArgumentNotNull(sagaState, nameof(sagaState));
             StateType = sagaStateType.AssemblyQualifiedName;
             SagaState = ContractlessMessagePackSerializer.Instance.BinarySerialize(sagaState.State, sagaStateType);
             SagaVersion = sagaState.SagaVersion;
@@ -19,24 +26,13 @@ namespace Ozzy.Server.EntityFramework
                 this.RaiseEvent(message);
             }
             sagaState.Messages.Clear();
-            CorrelationIds = sagaCorrelationIds.Select(id => new EfSagaCorrelationId() {
-                SagaType = id.SagaType.Name,
-                Name = id.PropertyName,
-                Value = id.Value,
-                SagaId = Id,
-                Saga = this
-            }).ToList();
+            CorrelationIds = sagaCorrelationIds.Select(id => new EfSagaCorrelationId(Id, saga.GetType().Name, id.PropertyName, id.PropertyValue)).ToList();
         }
 
         // For ORM
         protected EfSagaRecord()
         {
         }
-
-        public int SagaVersion { get; set; }
-        public string StateType { get; set; }
-        public byte[] SagaState { get; set; }
-        public ICollection<EfSagaCorrelationId> CorrelationIds { get; set; }
 
         public SagaState ToSagaState()
         {

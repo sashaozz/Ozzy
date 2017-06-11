@@ -1,5 +1,5 @@
-﻿using Ozzy.Server.Saga;
-using System;
+﻿using System;
+using Ozzy.Server.Saga;
 
 namespace Ozzy.Server
 {
@@ -10,6 +10,7 @@ namespace Ozzy.Server
         public abstract void LoadSagaData(SagaState data);
         public void SendSagaCommand<T>(T command) where T : SagaCommand
         {
+            Guard.ArgumentNotNull(command, nameof(command));
             SagaState.SendSagaCommand(command);
         }
     }
@@ -24,6 +25,8 @@ namespace Ozzy.Server
         }
         public override void LoadSagaData(SagaState data)
         {
+            Guard.ArgumentNotNull(data, nameof(data));
+
             SagaState = data;
             SagaId = data.SagaId;
             State = (TState)data.State;
@@ -31,6 +34,7 @@ namespace Ozzy.Server
 
         public virtual void ConfigureCorrelationMappings(SagaEventCorrelationsMapper<TState> mapper)
         {
+            //it should be overidden
         }
     }
 }

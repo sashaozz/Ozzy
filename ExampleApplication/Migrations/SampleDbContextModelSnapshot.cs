@@ -79,15 +79,15 @@ namespace ExampleApplication.Migrations
 
             modelBuilder.Entity("Ozzy.Server.EntityFramework.EfSagaCorrelationId", b =>
                 {
-                    b.Property<string>("Name");
+                    b.Property<string>("PropertyName");
 
                     b.Property<string>("SagaType");
 
                     b.Property<Guid>("SagaId");
 
-                    b.Property<string>("Value");
+                    b.Property<string>("PropertyValue");
 
-                    b.HasKey("Name", "SagaType", "SagaId");
+                    b.HasKey("PropertyName", "SagaType", "SagaId");
 
                     b.HasIndex("SagaId");
 

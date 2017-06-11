@@ -75,7 +75,7 @@ namespace Ozzy.Server.EntityFramework
             modelBuilder.Entity<EfSagaRecord>().HasKey(r => r.Id);
             modelBuilder.Entity<EfSagaRecord>().Property(r => r.SagaVersion).IsConcurrencyToken();
 
-            modelBuilder.Entity<EfSagaCorrelationId>().HasKey(k => new { k.Name, k.SagaType, k.SagaId});
+            modelBuilder.Entity<EfSagaCorrelationId>().HasKey(k => new { k.PropertyName, k.SagaType, k.SagaId});
             modelBuilder.Entity<EfSagaCorrelationId>().HasOne(k => k.Saga).WithMany(s => s.CorrelationIds).IsRequired();
             base.OnModelCreating(modelBuilder);
         }

@@ -1,11 +1,9 @@
-﻿using Ozzy.Core;
-using Ozzy.DomainModel;
-using System;
-using System.Linq;
+﻿using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Linq.Expressions;
 using System.Reflection;
+using Ozzy.Core;
+using Ozzy.DomainModel;
 
 namespace Ozzy.Server.Saga
 {
@@ -49,29 +47,38 @@ namespace Ozzy.Server.Saga
             EventMappings = new Dictionary<Type, SagaEventCorrelationConfiguration>();
         }
 
-        public SagaCorrelationId GetCorrelationIdFromEvent(IDomainEvent domainEvent)
+        public SagaCorrelationProperty GetCorrelationIdFromEvent(IDomainEvent domainEvent)
         {
             var eventType = domainEvent.GetType();
             if (EventMappings.TryGetValue(eventType, out var configuration))
             {
                 var idValue = configuration.EventPropertyFunc(domainEvent);
                 if (idValue == null) throw new InvalidOperationException($"Correlated Id for saga {SagaType.Name} cannot be null");
-                var correlationId = new SagaCorrelationId(SagaType, configuration.SagaPropertyName, idValue.ToString());
-                return correlationId;
+                return new SagaCorrelationProperty(configuration.SagaPropertyName, idValue.ToString());
             }
             return null;
         }
 
-        public List<SagaCorrelationId> GetCorrelationIdsFromSaga(SagaBase saga)
+        public List<SagaCorrelationProperty> GetCorrelationIdsFromSaga(SagaBase saga)
         {
             if (saga.GetType() != SagaType) throw new InvalidOperationException("Wrong Saga Type");
-            List<SagaCorrelationId> result = new List<SagaCorrelationId>();
+            List<SagaCorrelationProperty> result = new List<SagaCorrelationProperty>();
             foreach (var config in EventMappings.Values.DistinctBy(v => v.SagaPropertyName))
             {
                 var value = config.SagaPropertyFunc(saga.SagaState.State);
-                result.Add(new SagaCorrelationId(SagaType, config.SagaPropertyName, value?.ToString() ?? ""));
+                if (value == null || object.Equals(GetDefault(value.GetType()), value)) continue;
+                result.Add(new SagaCorrelationProperty(config.SagaPropertyName, value.ToString()));
             }
             return result;
+        }
+
+        static object GetDefault(Type type)
+        {
+            if (type.GetTypeInfo().IsValueType)
+            {
+                return Activator.CreateInstance(type);
+            }
+            return null;
         }
     }
 
