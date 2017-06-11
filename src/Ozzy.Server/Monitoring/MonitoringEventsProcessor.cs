@@ -16,32 +16,24 @@ namespace Ozzy.Server
             _serviceProvider = serviceProvider;
         }       
 
-        public bool Handle(BackgroundProcessStarted obj)
+        public void Handle(BackgroundProcessStarted obj)
         {
             var node = _serviceProvider.GetService<OzzyNode>();
 
-            if (obj.NodeId != node.NodeId)
-                return true; //event came to wrong node, ignore it
+            if (obj.NodeId != node.NodeId) return; //event came to wrong node, ignore it
 
             var process = node.BackgroundProcesses.FirstOrDefault(b => b.ProcessId == obj.ProcessId);
-            if (process != null)
-                process.Start();
-
-            return false;
+            if (process != null) process.Start();
         }
 
-        public bool Handle(BackgroundProcessStopped obj)
+        public void Handle(BackgroundProcessStopped obj)
         {
             var node = _serviceProvider.GetService<OzzyNode>();
 
-            if (obj.NodeId != node.NodeId)
-                return true; //event came to wrong node, ignore it
+            if (obj.NodeId != node.NodeId) return; //event came to wrong node, ignore it
 
             var process = node.BackgroundProcesses.FirstOrDefault(b => b.ProcessId == obj.ProcessId);
-            if (process != null)
-                process.Stop();
-
-            return false;
+            if (process != null) process.Stop();
         }
     }
 }

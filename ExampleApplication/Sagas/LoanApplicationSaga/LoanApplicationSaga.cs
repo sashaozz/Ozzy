@@ -28,7 +28,7 @@ namespace ExampleApplication.Sagas.ContactForm
             mapper.ConfigureCorrelationId<LoanApplicationRejected>(e => e.ApplicationId, s => s.ApplicationId);
         }
 
-        public bool Handle(LoanApplicationRecieved message)
+        public void Handle(LoanApplicationRecieved message)
         {
             State.ApplicationId = message.ApplicationId;
 
@@ -44,10 +44,9 @@ namespace ExampleApplication.Sagas.ContactForm
             {
                 Amount = message.Amount
             });
-            return false;
         }
 
-        public bool Handle(SendWelcomeEmail message)
+        public void Handle(SendWelcomeEmail message)
         {
             //TODO: Add call to smtpClient            
             using (var dbContext = _dbFactory())
@@ -57,25 +56,21 @@ namespace ExampleApplication.Sagas.ContactForm
                 dbContext.SaveChanges();
             }
             State.WelcomeEmailSent = true;
-            return false;
         }
 
-        public bool Handle(SendNotificationToAdministrator message)
+        public void Handle(SendNotificationToAdministrator message)
         {
             //TODO: Add call to smtpClient
             State.ApproveEmailSent = true;
-            return false;
         }
 
-        public bool Handle(LoanApplicationApproved message)
+        public void Handle(LoanApplicationApproved message)
         {
             State.ApplicationId = default(Guid);
-            return false;
         }
 
-        public bool Handle(LoanApplicationRejected message)
-        {
-            return false;
+        public void Handle(LoanApplicationRejected message)
+        {            
         }
     }
 }

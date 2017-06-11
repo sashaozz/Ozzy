@@ -11,9 +11,7 @@ namespace Ozzy.Server
     public class SagaDomainEventsHandler<TSaga> : IDomainEventsHandler
         where TSaga : SagaBase
     {
-        private Func<IDomainEventRecord, bool> _handler;
-        private Dictionary<Type, Func<TSaga, object, bool>> Handlers { get; set; } = new Dictionary<Type, Func<TSaga, object, bool>>();
-        private Dictionary<Type, Func<TSaga, object, bool>> EventMappers { get; set; } = new Dictionary<Type, Func<TSaga, object, bool>>();
+        private Dictionary<Type, Action<TSaga, object>> Handlers { get; set; } = new Dictionary<Type, Action<TSaga, object>>();
 
         private ISagaRepository _sagaRepository;
         public Type SagaType = typeof(TSaga);
@@ -21,7 +19,6 @@ namespace Ozzy.Server
 
         public SagaDomainEventsHandler(ISagaRepository sagaRepository, SagaCorrelationsMapper mapper)
         {
-            _handler = HandleEvent;
             _sagaRepository = sagaRepository;
             _sagaEventMapper = mapper;
 
@@ -55,15 +52,15 @@ namespace Ozzy.Server
             sagaMapperMethod.Invoke(tempSaga, new[] { sagaMapper });
         }
 
-        private void RegisterSagaHandler<TMessage>(Func<TSaga, object, bool> handler)
+        private void RegisterSagaHandler<TMessage>(Action<TSaga, object> handler)
         {
             this.Handlers.Add(typeof(TMessage), handler);
         }
 
-        private bool DispatchEventToSaga<TMessage>(TSaga saga, object message)
+        private void DispatchEventToSaga<TMessage>(TSaga saga, object message)
         {
             var handler = saga as IHandleEvent<TMessage>;
-            return handler.Handle((TMessage)message);
+            handler.Handle((TMessage)message);
         }
 
         public bool CanHandleMessage(Type messageType)
@@ -74,7 +71,7 @@ namespace Ozzy.Server
         public bool HandleEvent(IDomainEventRecord record)
         {
             var messageType = record.GetDomainEventType();
-            if (!CanHandleMessage(messageType)) return true;
+            if (!CanHandleMessage(messageType)) return false;
             TSaga saga = null;
             var message = record.GetDomainEvent() as IDomainEvent;
             var sagaMapper = _sagaEventMapper.GetMapper<TSaga>();
@@ -92,12 +89,12 @@ namespace Ozzy.Server
             if (saga == null) saga = _sagaRepository.CreateNewSaga<TSaga>();
 
             var handler = Handlers.GetValueOrDefault(messageType);
-            var idempotent = handler.Invoke(saga, message);
+            handler.Invoke(saga, message);
             saga.SagaState.SagaVersion++;
             //todo : better handle transient faults
             var sagaCorrelationIds = sagaMapper.GetCorrelationIdsFromSaga(saga);
             _sagaRepository.SaveSaga(saga, sagaCorrelationIds);
-            return idempotent;
+            return true;
         }
     }
 }

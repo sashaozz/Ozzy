@@ -17,7 +17,7 @@
             return _checkpoint;
         }
 
-        public void SaveCheckpoint(long checkpoint, bool idempotent)
+        public void SaveCheckpoint(long checkpoint)
         {
             _checkpoint = checkpoint;
         }
