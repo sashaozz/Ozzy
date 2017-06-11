@@ -40,6 +40,17 @@ namespace Ozzy.Server
             serviceCollection.TryAddSingleton(sp => new TypedRegistration<TType, TService>(factory(sp)));
         }
 
+        public static void TryAddTypeSpecificTransient<TType, TService>(this IServiceCollection serviceCollection, Func<IServiceProvider, TService> factory = null)
+           where TService : class
+        {
+            if (factory == null)
+            {
+                serviceCollection.TryAddTransient<TService>();
+                factory = sp => sp.GetService<TService>();
+            }
+            serviceCollection.TryAddTransient(sp => new TypedRegistration<TType, TService>(factory(sp)));
+        }
+
         public static void AddTypeSpecificSingleton<TDomain, TService>(this IServiceCollection serviceCollection, TService instance)
         {
             serviceCollection.AddSingleton(sp => new TypedRegistration<TDomain, TService>(instance));

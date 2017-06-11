@@ -4,6 +4,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using Ozzy.Core;
 using Ozzy.DomainModel;
+using Ozzy.Server.Saga;
 
 namespace Ozzy.Server
 {
@@ -12,13 +13,18 @@ namespace Ozzy.Server
     {
         private Func<IDomainEventRecord, bool> _handler;
         private Dictionary<Type, Func<TSaga, object, bool>> Handlers { get; set; } = new Dictionary<Type, Func<TSaga, object, bool>>();
+
+        private Dictionary<Type, Func<TSaga, object, bool>> EventMappers { get; set; } = new Dictionary<Type, Func<TSaga, object, bool>>();
+
         private ISagaRepository _sagaRepository;
         public Type SagaType = typeof(TSaga);
+        private SagaEventMapper _sagaEventMapper { get; set; }
 
-        public SagaDomainEventsHandler(ISagaRepository sagaRepository)
+        public SagaDomainEventsHandler(ISagaRepository sagaRepository, SagaEventMapper mapper)
         {
             _handler = HandleEvent;
             _sagaRepository = sagaRepository;
+            _sagaEventMapper = mapper;
 
             var interfaces = SagaType.GetTypeInfo().GetInterfaces();
             var handleType = typeof(IHandleEvent<>);
@@ -43,6 +49,9 @@ namespace Ozzy.Server
                     reflectedRegisterMethodWithParameter.Invoke(this, new[] { compiledLambdaExpression });
                 }
             }
+
+            var sampleSaga = _sagaRepository.CreateNewSaga<TSaga>(); //Йа костыль :'(
+            sampleSaga.ConfigureEventMappings(_sagaEventMapper);
         }
 
         private void RegisterSagaHandler<TMessage>(Func<TSaga, object, bool> handler)
@@ -65,11 +74,21 @@ namespace Ozzy.Server
         {
             var messageType = record.GetDomainEventType();
             if (!CanHandleMessage(messageType)) return true;
-
+            TSaga saga = null;
             var message = record.GetDomainEvent();
-            var saga = (message is SagaCommand) ?
-                _sagaRepository.GetSagaById<TSaga>((message as SagaCommand).SagaId)
-                : _sagaRepository.CreateNewSaga<TSaga>();
+
+            if (message is SagaCommand)
+                saga = _sagaRepository.GetSagaById<TSaga>((message as SagaCommand).SagaId);
+            else
+            {
+                var sagaExternalKey = _sagaEventMapper.GetSagaIdFromEvent<TSaga>(record.GetDomainEvent() as IDomainEvent);
+                if (!string.IsNullOrEmpty(sagaExternalKey))
+                {
+                    saga = _sagaRepository.GetSagaByKey<TSaga>(sagaExternalKey);
+                }
+            }
+            if (saga == null) saga = _sagaRepository.CreateNewSaga<TSaga>();
+
             var handler = Handlers.GetValueOrDefault(messageType);
             var idempotent = handler.Invoke(saga, message);
             saga.SagaState.SagaVersion++;

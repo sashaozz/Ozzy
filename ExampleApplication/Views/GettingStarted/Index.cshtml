@@ -1,0 +1,94 @@
+﻿@{
+    ViewData["Title"] = "Walkthrough: Getting started";
+}
+<h2>@ViewData["Title"].</h2>
+<h3>Create your first application with Ozzy</h3>
+<p>During this walkthough we are going to use Sql Server via Enity Framwork as persistence mechanism</p>
+<p>Entities will be saved in tables as in classic approach</p>
+<p>To start you will need to follow these steps:</p>
+<br />
+<p>
+    <h4>1. Setup database</h4>
+    Get it from backup or use EF migrations.
+    TODO: How to run migations?
+</p>
+
+<br />
+<p>
+    <h4>2. Install nuggets</h4>
+    Application consists of the following nuggets:
+    <ul>
+        <li><b>Ozzy.Server</b> - all primary functionality</li>
+        <li><b>Ozzy.Server.EntityFramework</b> - Integration with database</li>
+        <li><b>Ozzy.Server.Redis</b> - Integration with Redis</li>
+        <li><b>Ozzy.Backoffice</b> - Backoffice application</li>
+    </ul>
+</p>
+
+<br />
+<p>
+    <h4>3. Setup appSettings.config</h4>
+    Setup your connection string to database. <br />
+    If you are using Redis add
+    <pre>
+    <code class="json">"OzzyOptions": {
+    "RedisConnection": {
+        "ConnectionString": "localhost"
+    }
+}</code>
+    </pre>
+</p>
+<br />
+<p>
+    <h4>4. Setup database context</h4>
+    Add EF database context. <br />
+    <pre>
+    <code class="C#">public class SampleDbContext : AggregateDbContext
+    {
+        public SampleDbContext(IExtensibleOptions<SampleDbContext> options) : base(options)
+        {
+        }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+        }
+    }</code>
+    </pre>
+</p>
+<br />
+
+<p>
+    <h4>5. Configure Ozzy context</h4>
+    In StartUp.cs in configureServices (requires nugget Microsoft.EntityFrameworkCore.SqlServer) <br />
+    <pre>
+    <code class="C#">services.AddOzzyDomain<SampleDbContext>(options =>
+            {
+                options.UseInMemoryFastChannel();
+            })
+            .UseEntityFramework((options =>
+            {
+                options.UseSqlServer(Configuration.GetConnectionString("SampleDbContext"));
+            }));</code>
+    </pre>
+</p>
+
+<br />
+<p>
+    <h4>6. Configure Ozzy node</h4>
+    In StartUp.cs in configureServices <br />
+    <pre>
+    <code class="C#">services.ConfigureOzzyNode&lt;SampleDbContext&gt;();</code>
+    </pre>
+
+    In StartUp.cs in Configure<br />
+    <pre>
+    <code class="C#">app.UseOzzy().Start();</code>
+    </pre>
+
+</p>
+
+<br />
+
+<h4>Contgratulations, you are all set!</h4>
+<p>Now you can use all of Ozzy built-in functions. To continue, let's <a href="/GettingStarted/Sagas">Create sample saga</a></p>

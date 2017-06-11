@@ -1,6 +1,7 @@
 ﻿using System;
 using Microsoft.Extensions.DependencyInjection;
 using Ozzy.DomainModel;
+using Ozzy.Server.Saga;
 
 namespace Ozzy.Server.Configuration
 {
@@ -44,13 +45,13 @@ namespace Ozzy.Server.Configuration
         }
         public OzzyDomainOptionsBuilder<TDomain> AddSagaProcessor<TSaga>(Func<IServiceProvider, TSaga> sagaFactory = null) where TSaga : SagaBase
         {
-            _domainBuilder.Services.TryAddTypeSpecificSingleton<TDomain, TSaga>(sagaFactory);
+            _domainBuilder.Services.TryAddTypeSpecificTransient<TDomain, TSaga>(sagaFactory);
             _domainBuilder.Services.TryAddTypeSpecificSingleton<TDomain, IDomainEventsProcessor>(sp =>
             {
                 var options = sp.GetService<IExtensibleOptions<TDomain>>();
                 var sagaName = typeof(TSaga).FullName;
                 var sagaRepository = sp.GetTypeSpecificService<TDomain, ISagaRepository>();
-                var sagaHandler = new SagaDomainEventsHandler<TSaga>(sagaRepository);
+                var sagaHandler = new SagaDomainEventsHandler<TSaga>(sagaRepository, sp.GetService<SagaEventMapper>());
                 var eventsReader = sp.GetTypeSpecificService<TDomain, IPeristedEventsReader>();
                 var faultHandler = sp.GetService<IDomainEventsFaultHandler>();
                 var checkpointManager = new SimpleChekpointManager(eventsReader);

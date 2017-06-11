@@ -1,0 +1,47 @@
+﻿@model List<ExampleApplication.Models.ContactFormMessage>
+
+@{
+    ViewData["Title"] = "Sagas: demo";
+}
+<h2>@ViewData["Title"].</h2>
+
+<table class="table">
+    <tr>
+        <th>Id</th>
+        <th>From</th>
+        <th>Message</th>
+        <th>MessageSent</th>
+        <th></th>
+    </tr>
+    @foreach (var message in Model)
+    {
+        <tr>
+            <td>@message.Id</td>
+            <td>@message.From</td>
+            <td>@message.Message</td>
+            <td>@message.MessageSent</td>
+            <td>
+                @if (!message.MessageProcessed)
+                {
+                    <form action="/Saga/Process" method="post">
+                        <input type="hidden" name="MessageId" value="@message.Id" />
+                        <button type="submit" class="btn btn-default">Processed</button>
+                    </form>
+                }
+            </td>
+        </tr>
+    }
+
+</table>
+<br /><br />
+<form action="/Saga" method="post">
+    <div class="form-group">
+        <label for="email">Email address:</label>
+        <input type="text" class="form-control" id="From" name="From" />
+    </div>
+    <div class="form-group">
+        <label for="pwd">Message:</label>
+        <input type="text" class="form-control" id="Message" name="Message" />
+    </div>
+    <button type="submit" class="btn btn-default">Submit</button>
+</form>

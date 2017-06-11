@@ -52,6 +52,7 @@ namespace Ozzy.Server.EntityFramework
         public DbSet<FeatureFlag> FeatureFlags { get; set; }
         public DbSet<QueueRecord> Queues { get; set; }
         public DbSet<EfSagaRecord> Sagas { get; set; }
+        public DbSet<EfSagaKey> SagaKeys { get; set; }
         /// <summary>
         /// Слушатели событий в данном контексте и номера их последних обработанных сообщений
         /// </summary>
@@ -74,6 +75,8 @@ namespace Ozzy.Server.EntityFramework
             modelBuilder.Entity<EfSagaRecord>().HasKey(r => r.Id);
             modelBuilder.Entity<EfSagaRecord>().Property(r => r.SagaVersion).IsConcurrencyToken();
 
+            modelBuilder.Entity<EfSagaKey>().HasKey(k => k.Id);
+            modelBuilder.Entity<EfSagaKey>().HasOne(k => k.Saga).WithMany(s => s.SagaKeys).IsRequired();
             base.OnModelCreating(modelBuilder);
         }
 
