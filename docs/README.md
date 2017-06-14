@@ -1,2 +1,2 @@
-[Architecture](Architecture.md) 
-[Getting Started WalkThrough](GettingStarted.md) 
+* [Architecture](Architecture.md)
+* [Getting Started WalkThrough](GettingStarted.md) 
