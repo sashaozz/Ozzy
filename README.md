@@ -41,3 +41,5 @@ Ozzy framework is designed for Scalability and Performance from the ground up. E
 
 # Documentation
 The work on documentation just begun. Please see folder [Docs](https://github.com/sashaozz/Ozzy/tree/master/docs) for first documents with description of the system.
+* [Architecture](docs/Architecture.md) 
+* [Getting Started WalkThrough](docs/GettingStarted.md) 
