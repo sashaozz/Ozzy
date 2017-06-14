@@ -9,7 +9,7 @@ namespace ExampleApplication.Controllers
     {
         private Func<SampleDbContext> _dbFactory;
 
-        public LoanApplicationsController(Func<SampleDbContext> dbFactory)//, ISagaRepository sagaRepository)
+        public LoanApplicationsController(Func<SampleDbContext> dbFactory)
         {
             _dbFactory = dbFactory;
         }

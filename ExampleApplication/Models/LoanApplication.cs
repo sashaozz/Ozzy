@@ -10,6 +10,7 @@ namespace ExampleApplication.Models
         Approved,
         Rejected
     }
+
     public class LoanApplication : AggregateBase<Guid>
     {
         public string Name { get; protected set; }
@@ -28,7 +29,7 @@ namespace ExampleApplication.Models
             Description = description;
             Status = LoanApplicationStatus.New;
 
-            this.RaiseEvent(new LoanApplicationRecieved
+            this.RaiseEvent(new LoanApplicationReceived
             {                
                 ApplicationId = Id,
                 Name = Name,

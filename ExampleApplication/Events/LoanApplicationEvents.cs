@@ -3,7 +3,7 @@ using System;
 
 namespace ExampleApplication.Events
 {
-    public class LoanApplicationRecieved : IDomainEvent
+    public class LoanApplicationReceived : IDomainEvent
     {
         public Guid ApplicationId { get; set; }
 

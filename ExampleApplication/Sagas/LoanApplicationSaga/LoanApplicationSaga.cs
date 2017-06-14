@@ -8,7 +8,7 @@ using Ozzy.Server.Saga;
 namespace ExampleApplication.Sagas.ContactForm
 {
     public class LoanApplicationSaga : SagaBase<LoanApplicationSagaData>,
-        IHandleEvent<LoanApplicationRecieved>,
+        IHandleEvent<LoanApplicationReceived>,
         IHandleEvent<SendWelcomeEmail>,
         IHandleEvent<SendNotificationToAdministrator>,
         IHandleEvent<LoanApplicationApproved>,
@@ -28,7 +28,7 @@ namespace ExampleApplication.Sagas.ContactForm
             mapper.ConfigureCorrelationId<LoanApplicationRejected>(e => e.ApplicationId, s => s.ApplicationId);
         }
 
-        public void Handle(LoanApplicationRecieved message)
+        public void Handle(LoanApplicationReceived message)
         {
             State.ApplicationId = message.ApplicationId;
 
@@ -61,16 +61,17 @@ namespace ExampleApplication.Sagas.ContactForm
         public void Handle(SendNotificationToAdministrator message)
         {
             //TODO: Add call to smtpClient
-            State.ApproveEmailSent = true;
+            State.AdminNotificationEmailSent = true;
         }
 
         public void Handle(LoanApplicationApproved message)
         {
-            State.ApplicationId = default(Guid);
+            State.IsComplete = true;
         }
 
         public void Handle(LoanApplicationRejected message)
-        {            
+        {
+            State.IsComplete = true;
         }
     }
 }
