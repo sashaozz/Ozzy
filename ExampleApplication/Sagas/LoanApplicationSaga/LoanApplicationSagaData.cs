@@ -7,7 +7,7 @@ namespace ExampleApplication.Sagas.ContactForm
         public Guid ApplicationId { get; set; }
         
         public bool WelcomeEmailSent { get; set; }
-        public bool ApproveEmailSent { get; set; }
+        public bool AdminNotificationEmailSent { get; set; }
         public bool IsComplete { get; set; }
     }
 }

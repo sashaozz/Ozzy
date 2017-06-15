@@ -33,7 +33,6 @@ namespace ExampleApplication
 
             services.AddOzzyDomain<SampleDbContext>(options =>
             {
-
                 options.UseInMemoryFastChannel();
                 options.AddSagaProcessor<LoanApplicationSaga>();
 
