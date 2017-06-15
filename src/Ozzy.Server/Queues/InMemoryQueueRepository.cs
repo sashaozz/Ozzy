@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Linq;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 
 namespace Ozzy.Server
 {
@@ -39,9 +41,25 @@ namespace Ozzy.Server
             if (queue.Items.TryDequeue(out var item))
             {
                 queue.Fetched.TryAdd(item.Id, item);
+                item.FetchedAt = DateTime.Now;
                 return item;
             }
             else return null;
+        }
+
+        public List<QueueItem> GetFetched(string queueName)
+        {
+            return _queues[queueName]?.Fetched.Select(x => x.Value).ToList() ?? new List<QueueItem>();
+        }
+
+        public void RequeueItem(string queueName, QueueItem item)
+        {
+            var queue = _queues.GetOrAdd(queueName, name => new InMemoryQueue(name));
+            if (queue.Fetched.TryRemove(item.Id, out var removedItem))
+            {
+                queue.Items.Enqueue(item);
+            }
+            // else throw ?
         }
     }
 }

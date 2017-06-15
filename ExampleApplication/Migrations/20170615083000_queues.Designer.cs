@@ -10,9 +10,10 @@ using Ozzy.Server;
 namespace ExampleApplication.Migrations
 {
     [DbContext(typeof(SampleDbContext))]
-    partial class SampleDbContextModelSnapshot : ModelSnapshot
+    [Migration("20170615083000_queues")]
+    partial class queues
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
             modelBuilder
                 .HasAnnotation("ProductVersion", "1.1.2")

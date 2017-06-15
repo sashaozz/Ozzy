@@ -2,9 +2,11 @@
 using SampleApplication.Tasks;
 using SampleApplication.Queues;
 using Ozzy.Server;
+using System;
 
 namespace SampleApplication.Controllers
 {
+    [Route("/[controller]")]
     public class HomeController : Controller
     {
         BackgroundTaskQueue _backgroundJobQueue;
@@ -22,6 +24,12 @@ namespace SampleApplication.Controllers
             var item = _queue.Fetch();
 
             if (item != null) _queue.Acknowledge(item.Id);
+            _queue.SetQueueFaultSettings(new QueueFaultSettings()
+            {
+                QueueItemTimeout = TimeSpan.FromSeconds(10),
+                ResendItemToQueue = true,
+                RetryTimes = 2
+            });
 
             _queue.Put(new SampleQueueItem()
             {

@@ -1,11 +1,13 @@
-﻿namespace Ozzy.Server
+﻿using Ozzy.Server.Queues;
+
+namespace Ozzy.Server
 {
     public class BackgroundTaskQueue : JobQueue<BackgroundTaskConfig>
     {
-        public BackgroundTaskQueue(ISerializer serializer, IQueueRepository queueRepository) : this(serializer, queueRepository, null)
+        public BackgroundTaskQueue(ISerializer serializer, IQueueRepository queueRepository, QueuesFaultManager queuesFaultManager) : this(serializer, queueRepository, queuesFaultManager, null)
         {
         }
-        public BackgroundTaskQueue(ISerializer serializer, IQueueRepository queueRepository, string queueName) : base(serializer, queueRepository, queueName)
+        public BackgroundTaskQueue(ISerializer serializer, IQueueRepository queueRepository, QueuesFaultManager queuesFaultManager, string queueName) : base(serializer, queueRepository, queuesFaultManager, queueName)
         {
         }
 

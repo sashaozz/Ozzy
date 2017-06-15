@@ -13,6 +13,8 @@ namespace Ozzy.Server
         }
         public byte[] Payload { get; set; }
         public DateTime CreatedAt { get; set; }
+        public int RetryCount { get; set; }
+        public DateTime? FetchedAt { get; set; }
         public QueueStatus Status { get; set; }
         public string QueueName { get; set; }
     }

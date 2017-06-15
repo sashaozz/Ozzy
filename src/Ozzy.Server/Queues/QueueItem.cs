@@ -1,4 +1,5 @@
 ﻿using Ozzy.Core;
+using System;
 
 namespace Ozzy.Server
 {
@@ -13,6 +14,10 @@ namespace Ozzy.Server
         }
         public string Id { get; private set; }
         public byte[] Payload { get; private set; }
+
+        public int RetryCount { get; set; }
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime? FetchedAt { get; set; }
     }
     public class QueueItem<T>
     {

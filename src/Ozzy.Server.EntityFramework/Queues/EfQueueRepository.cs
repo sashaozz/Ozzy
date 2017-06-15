@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System;
 using System.Linq;
+using System.Collections.Generic;
 
 namespace Ozzy.Server.EntityFramework
 {
@@ -47,9 +48,15 @@ namespace Ozzy.Server.EntityFramework
                     .FirstOrDefault();
                 if (item == null) return null;
                 item.Status = QueueStatus.Fetched;
+                item.FetchedAt = DateTime.UtcNow;
 
                 db.SaveChanges();
-                return new QueueItem(item.Id, item.Payload);
+                return new QueueItem(item.Id, item.Payload)
+                {
+                    CreatedAt = item.CreatedAt,
+                    FetchedAt = item.FetchedAt,
+                    RetryCount = item.RetryCount
+                };
             }
         }
 
@@ -60,6 +67,45 @@ namespace Ozzy.Server.EntityFramework
                 var dbSet = _dbSetProvider(db);
                 var dbItem = dbSet.Single(i => i.Id.Equals(id));
                 dbSet.Remove(dbItem);
+                db.SaveChanges();
+            }
+        }
+
+        public List<QueueItem> GetFetched(string queueName)
+        {
+            using (var db = _dbFactory())
+            {
+                var dbSet = _dbSetProvider(db);
+
+                var items = dbSet
+                    .Where(s => s.QueueName == queueName)
+                    .Where(s => s.Status == QueueStatus.Fetched)
+                    .OrderBy(i => i.CreatedAt)
+                    .ToList();
+
+                return items.Select(i => new QueueItem(i.Id, i.Payload)
+                {
+                    CreatedAt = i.CreatedAt,
+                    FetchedAt = i.FetchedAt,
+                    RetryCount = i.RetryCount
+                }).ToList();
+
+            }
+        }
+
+        public void RequeueItem(string queueName, QueueItem item)
+        {
+            using (var db = _dbFactory())
+            {
+                var dbSet = _dbSetProvider(db);
+                var dbItem = dbSet.Single(i => i.Id.Equals(item.Id));
+
+                dbItem.CreatedAt = item.CreatedAt;
+                dbItem.FetchedAt = item.FetchedAt;
+                dbItem.Payload = item.Payload;
+                dbItem.RetryCount = item.RetryCount;
+                dbItem.Status = QueueStatus.Queued;
+
                 db.SaveChanges();
             }
         }
