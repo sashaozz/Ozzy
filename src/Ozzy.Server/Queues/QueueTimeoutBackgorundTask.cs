@@ -29,7 +29,7 @@ namespace Ozzy.Server.Queues
 
         protected override Task ActionAsync(CancellationToken cts)
         {
-            _queuesFaultManager.ProcessFetchedItems();
+            _queuesFaultManager.ProcessTimeoutedItems();
             return Task.CompletedTask;
         }
     }

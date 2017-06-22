@@ -28,6 +28,23 @@ namespace ExampleApplication.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "DeadLetters",
+                columns: table => new
+                {
+                    Id = table.Column<string>(nullable: false),
+                    CreatedAt = table.Column<DateTime>(nullable: false),
+                    MaxRetries = table.Column<int>(nullable: false),
+                    Payload = table.Column<byte[]>(nullable: true),
+                    QueueItemId = table.Column<string>(nullable: true),
+                    QueueName = table.Column<string>(nullable: true),
+                    Version = table.Column<int>(nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_DeadLetters", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "DomainEvents",
                 columns: table => new
                 {
@@ -103,9 +120,12 @@ namespace ExampleApplication.Migrations
                 {
                     Id = table.Column<string>(nullable: false),
                     CreatedAt = table.Column<DateTime>(nullable: false),
+                    MaxRetries = table.Column<int>(nullable: false),
                     Payload = table.Column<byte[]>(nullable: true),
                     QueueName = table.Column<string>(nullable: true),
+                    RetryCount = table.Column<int>(nullable: false),
                     Status = table.Column<int>(nullable: false),
+                    TimeoutAt = table.Column<DateTime>(nullable: true),
                     Version = table.Column<int>(nullable: false)
                 },
                 constraints: table =>
@@ -143,6 +163,9 @@ namespace ExampleApplication.Migrations
         {
             migrationBuilder.DropTable(
                 name: "LoanApplications");
+
+            migrationBuilder.DropTable(
+                name: "DeadLetters");
 
             migrationBuilder.DropTable(
                 name: "DomainEvents");

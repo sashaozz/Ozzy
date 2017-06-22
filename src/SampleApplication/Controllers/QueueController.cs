@@ -6,7 +6,7 @@ using SampleApplication.Queues;
 
 namespace SampleApplication.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/[controller]/[action]")]
     public class QueueController : Controller
     {
         JobQueue<SampleQueueItem> _queue;
@@ -20,14 +20,21 @@ namespace SampleApplication.Controllers
         {
             var item = _queue.Fetch();
 
-          //  if (item != null) _queue.Acknowledge(item.Id);
-            _queue.SetQueueFaultSettings(new QueueFaultSettings()
+            _queue.Put(new SampleQueueItem()
             {
-                QueueItemTimeout = TimeSpan.FromSeconds(10),
-                ResendItemToQueue = true,
-                RetryTimes = 2
+                Field1 = "sfddsf",
+                Field2 = 4
             });
+        }
 
+        public void Fetch()
+        {
+            var item = _queue.Fetch();
+
+        }
+
+        public void Put()
+        {
             _queue.Put(new SampleQueueItem()
             {
                 Field1 = "sfddsf",

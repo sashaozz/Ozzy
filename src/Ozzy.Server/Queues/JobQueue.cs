@@ -8,6 +8,8 @@ namespace Ozzy.Server
         private IQueueRepository _queueRepository;
         private QueuesFaultManager _queuesFaultManager;
         protected ISerializer Serializer;
+        private TimeSpan _timeout;
+        private int _retryTimes;
 
         public string QueueName { get; private set; }
 
@@ -22,6 +24,10 @@ namespace Ozzy.Server
             Serializer = serializer;
             if (string.IsNullOrEmpty(queueName)) queueName = this.GetType().FullName;
             QueueName = queueName;
+
+            var sampleItem = Activator.CreateInstance(typeof(T)) as IQueueFaultSettings;
+            _timeout = sampleItem?.QueueItemTimeout ?? new TimeSpan(0, 0, 10);
+            _retryTimes = sampleItem?.RetryTimes ?? 5;
         }
 
         public void Acknowledge(string id)
@@ -32,28 +38,15 @@ namespace Ozzy.Server
         public string Put(T item)
         {
             var payload = Serializer.BinarySerialize(item);
-            return _queueRepository.Put(QueueName, payload);
+            return _queueRepository.Put(QueueName, payload, _retryTimes);
         }
 
         public QueueItem<T> Fetch()
         {
-            var queueItem = _queueRepository.Fetch(QueueName);
+            var queueItem = _queueRepository.Fetch(QueueName, (long)_timeout.TotalSeconds);
             if (queueItem == null) return null;
             var result = Serializer.BinaryDeSerialize<T>(queueItem.Payload);
             return new QueueItem<T>(queueItem.Id, result);
         }
-
-        public void SetQueueFaultSettings(QueueFaultSettings settings)
-        {
-            _queuesFaultManager.AddQueueFaultSettings(this.QueueName, settings);
-        }
-
-    }
-
-    public class QueueFaultSettings
-    {
-        public bool ResendItemToQueue { get; set; }
-        public TimeSpan QueueItemTimeout { get; set; }
-        public int RetryTimes { get; set; }
     }
 }

@@ -3,12 +3,15 @@
 namespace Ozzy.Server
 {
     public interface IQueueRepository
-    {       
-        string Put(string queueName, byte[] item);
-        QueueItem Fetch(string queueName);
-        void Acknowledge(string id, string queueName);
+    {
+        string Put(string queueName, byte[] item, int maxRetries = 5);
 
-        List<QueueItem> GetFetched(string queueName);
-        void RequeueItem(string queueName, QueueItem item);
+        QueueItem Fetch(string queueName, long acknowledgeTimeOut = 60);
+        void Acknowledge(string id, string queueName);
+        List<QueueItem> GetTimeoutedItems();
+
+        void RequeueItem(QueueItem item, int retryCount = 5);
+        void MoveToDeadMessageQueue(QueueItem item);
+        void Purge(QueueItem item);
     }
 }

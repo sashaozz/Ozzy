@@ -32,7 +32,7 @@ namespace Ozzy.Server.Configuration
             });            
 
             builder.Services.AddTypeSpecificSingleton<TDomain, IDistributedLockService>(sp => new EfDistributedLockService(sp.GetService<Func<TDomain>>()));
-            builder.Services.AddTypeSpecificSingleton<TDomain, IQueueRepository>(sp => new EfQueueRepository(sp.GetService<Func<TDomain>>(), db => db.Queues));
+            builder.Services.AddTypeSpecificSingleton<TDomain, IQueueRepository>(sp => new EfQueueRepository(sp.GetService<Func<TDomain>>(), db => db.Queues, db => db.DeadLetters));
 
             return builder;
         }

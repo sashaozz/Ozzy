@@ -19,14 +19,14 @@ namespace Ozzy.Server.Configuration
         public static OzzyNodeOptionsBuilder<TDomain> UseEFQueues<TDomain>(this OzzyNodeOptionsBuilder<TDomain> builder)
            where TDomain : AggregateDbContext
         {
-            builder.Services.TryAddSingleton<IQueueRepository>(sp => new EfQueueRepository(sp.GetService<Func<TDomain>>(), db => db.Queues));
+            builder.Services.TryAddSingleton<IQueueRepository>(sp => new EfQueueRepository(sp.GetService<Func<TDomain>>(), db => db.Queues, db => db.DeadLetters));
             return builder;
         }
 
         public static OzzyNodeOptionsBuilder<TDomain> UseSqlServerQueues<TDomain>(this OzzyNodeOptionsBuilder<TDomain> builder)
            where TDomain : AggregateDbContext
         {
-            builder.Services.TryAddSingleton<IQueueRepository>(sp => new SqlServerEfQueueRepository(sp.GetService<Func<TDomain>>(), db => db.Queues));
+            builder.Services.TryAddSingleton<IQueueRepository>(sp => new SqlServerEfQueueRepository(sp.GetService<Func<TDomain>>(), db => db.Queues, db => db.DeadLetters));
             return builder;
         }
 

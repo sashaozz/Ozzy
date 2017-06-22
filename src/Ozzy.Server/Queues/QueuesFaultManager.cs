@@ -14,39 +14,29 @@ namespace Ozzy.Server.Queues
             _queueRepository = queueRepository;
         }
 
-        private Dictionary<string, QueueFaultSettings> _queueFaultSettings { get; set; } = new Dictionary<string, Server.QueueFaultSettings>();
-
-        public void AddQueueFaultSettings(string queueName, QueueFaultSettings settings)
+        public void ProcessTimeoutedItems()
         {
-            _queueFaultSettings[queueName] = settings;
-        }
-
-        public void ProcessFetchedItems()
-        {
-            foreach (var queueName in _queueFaultSettings.Keys)
+            var timeoutedItems = _queueRepository.GetTimeoutedItems();
+            foreach (var timeOutItem in timeoutedItems)
             {
-                var fetchedItems = _queueRepository.GetFetched(queueName);
-                foreach (var fetchedItem in fetchedItems)
+                if (timeOutItem.RetryCount < timeOutItem.MaxRetries)
                 {
-                    if (ShouldBeRequeued(fetchedItem, _queueFaultSettings[queueName]))
-                    {
-                        fetchedItem.FetchedAt = null;
-                        fetchedItem.RetryCount++;
-                        _queueRepository.RequeueItem(queueName, fetchedItem);
-                    }
+                    timeOutItem.TimeoutAt = null;
+                    timeOutItem.RetryCount++;
+
+                    _queueRepository.RequeueItem(timeOutItem, timeOutItem.RetryCount);
+                }
+                else
+                {
+                    _queueRepository.MoveToDeadMessageQueue(timeOutItem); //TODO: Deserialize payload
                 }
             }
         }
+    }
 
-        private bool ShouldBeRequeued(QueueItem item, QueueFaultSettings settings)
-        {
-            if (settings.ResendItemToQueue == false || settings.RetryTimes == 0)
-                return false;
-
-            if (item.FetchedAt == null || DateTime.UtcNow - item.FetchedAt < settings.QueueItemTimeout)
-                return false;
-
-            return item.RetryCount < settings.RetryTimes;
-        }
+    public interface IQueueFaultSettings
+    {
+        TimeSpan QueueItemTimeout { get; }
+        int RetryTimes { get; }
     }
 }
