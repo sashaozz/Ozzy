@@ -42,6 +42,28 @@ namespace ExampleApplication.Migrations
                     b.ToTable("LoanApplications");
                 });
 
+            modelBuilder.Entity("Ozzy.Server.DeadLetter", b =>
+                {
+                    b.Property<string>("Id")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<DateTime>("CreatedAt");
+
+                    b.Property<int>("MaxRetries");
+
+                    b.Property<byte[]>("Payload");
+
+                    b.Property<string>("QueueItemId");
+
+                    b.Property<string>("QueueName");
+
+                    b.Property<int>("Version");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("DeadLetters");
+                });
+
             modelBuilder.Entity("Ozzy.Server.EntityFramework.DomainEventRecord", b =>
                 {
                     b.Property<long>("Sequence")
@@ -146,11 +168,17 @@ namespace ExampleApplication.Migrations
 
                     b.Property<DateTime>("CreatedAt");
 
+                    b.Property<int>("MaxRetries");
+
                     b.Property<byte[]>("Payload");
 
                     b.Property<string>("QueueName");
 
+                    b.Property<int>("RetryCount");
+
                     b.Property<int>("Status");
+
+                    b.Property<DateTime?>("TimeoutAt");
 
                     b.Property<int>("Version");
 

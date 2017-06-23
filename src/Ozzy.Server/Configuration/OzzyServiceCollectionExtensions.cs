@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Ozzy.DomainModel;
 using Ozzy.Server.Saga;
+using Ozzy.Server.Queues;
 
 namespace Ozzy.Server.Configuration
 {
@@ -58,6 +59,8 @@ namespace Ozzy.Server.Configuration
             services.AddTransient<RetryEventTask>();
             services.AddSingleton(typeof(JobQueue<>));
             services.AddSingleton<SagaCorrelationsMapper>();
+            services.AddSingleton<QueuesFaultManager>();
+            builder.AddBackgroundProcess<QueueTimeoutBackgroundProcess>();
         }
 
         public static OzzyDomainBuilder<TDomain> AddOzzyDomain<TDomain>(this IServiceCollection services, Action<OzzyDomainOptionsBuilder<TDomain>> configureOptions) where TDomain : IOzzyDomainModel
@@ -83,7 +86,6 @@ namespace Ozzy.Server.Configuration
             builder.Services.TryAddTypeSpecificSingleton<TDomain, Func<IFastEventPublisher>>(sp => () => NullEventsPublisher.Instance);
             builder.Services.TryAddSingleton<DefaultSagaFactory<TDomain>>();
             builder.Services.TryAddTypeSpecificSingleton<TDomain, ISagaFactory>(sp => sp.GetService<DefaultSagaFactory<TDomain>>());
-
             return builder;
         }
     }
