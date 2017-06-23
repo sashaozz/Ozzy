@@ -53,9 +53,9 @@ namespace Ozzy.Server.Configuration
             services.TryAddSingleton<OzzyNode>();
 
             //TODO : better handle service dependencies... E.g. we can check is queue repository is registered and do not register JobQueues if not or throw... Same for FeatureFlags and else.
-            services.TryAddSingleton(typeof(JobQueue<>));            
+            services.TryAddSingleton(typeof(JobQueue<>));
             services.TryAddSingleton<IFeatureFlagService, FeatureFlagService>();
-            services.TryAddSingleton<IDomainEventsFaultHandler, DoNothingFaultHandler>();
+            services.TryAddSingleton<IDomainEventsFaultHandler>(DoNothingFaultHandler.Instance);
             services.AddTransient<RetryEventTask>();
             services.AddSingleton(typeof(JobQueue<>));
             services.AddSingleton<SagaCorrelationsMapper>();

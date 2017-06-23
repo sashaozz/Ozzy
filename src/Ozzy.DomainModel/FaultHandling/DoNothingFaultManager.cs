@@ -8,5 +8,7 @@ namespace Ozzy.DomainModel
         {
             //noop
         }
+
+        public static DoNothingFaultHandler Instance = new DoNothingFaultHandler();
     }
 }

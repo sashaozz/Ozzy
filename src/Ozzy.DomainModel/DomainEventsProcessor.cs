@@ -10,12 +10,12 @@ namespace Ozzy.DomainModel
     {
         private IDomainEventsFaultHandler _faultHandler;
         private IDomainEventsHandler _handler;
-        protected ICheckpointManager CheckpointManager { get; set; }
+        public ICheckpointManager CheckpointManager { get; protected set; }
         public DomainEventsProcessor(IDomainEventsHandler handler, ICheckpointManager checkpointManager, IDomainEventsFaultHandler faultHandler = null)
         {
             Guard.ArgumentNotNull(handler, nameof(handler));
             Guard.ArgumentNotNull(checkpointManager, nameof(checkpointManager));
-            if (faultHandler == null) faultHandler = new DoNothingFaultHandler();
+            if (faultHandler == null) faultHandler = DoNothingFaultHandler.Instance;
             _handler = handler;
             _faultHandler = faultHandler;
             CheckpointManager = checkpointManager; // ?? new InMemoryCheckpointManager();
