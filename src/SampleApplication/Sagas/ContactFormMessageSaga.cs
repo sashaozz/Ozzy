@@ -37,7 +37,6 @@ namespace SampleApplication.Sagas
         public int MessageId { get; set; }
         public bool GreetingEmailSent { get; set; }
         public bool AdminEmailSent { get; set; }
-        public bool IsComplete { get; set; }
     }
 
     public class ContactFormMessageSaga : SagaBase<ContactFormMessageSagaData>,
@@ -51,7 +50,7 @@ namespace SampleApplication.Sagas
         {
             //_mediator = mediator;
         }
-
+        public override SagaCompletetionAction SagaCompletetionAction =>  SagaCompletetionAction.MoveToHistory;
         //[]
         public void Handle(ContactFormMessageRecieved message)
         {
@@ -72,9 +71,6 @@ namespace SampleApplication.Sagas
                 Message = $"Thank you for your contact. We will be in touch. Id of your request is {State.MessageId}"
             };
 
-            throw new InvalidOperationException("Test");
-
-            //_mediator.Send(command);
             State.GreetingEmailSent = true;
             CheckSagaComplete();
         }
@@ -88,7 +84,6 @@ namespace SampleApplication.Sagas
                 Message = State.Message
             };
 
-            //_mediator.Send(command);
             State.AdminEmailSent = true;
             CheckSagaComplete();
         }
@@ -97,7 +92,7 @@ namespace SampleApplication.Sagas
         {
             if (State.GreetingEmailSent && State.AdminEmailSent)
             {
-                State.IsComplete = true;
+                MarkSagaComplete();
             }
         }
     }

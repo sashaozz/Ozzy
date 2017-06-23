@@ -10,5 +10,6 @@ namespace Ozzy.Server
         TSaga CreateNewSaga<TSaga>() where TSaga : class;
         void SaveSaga(SagaBase saga, List<SagaCorrelationProperty> correlationIds);
         TSaga GetSagaByCorrelationId<TSaga>(SagaCorrelationProperty id) where TSaga : SagaBase;
+        void DeleteSaga(SagaBase saga, bool saveSagaHistory);
     }
 }
