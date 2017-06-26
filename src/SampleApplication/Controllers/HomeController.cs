@@ -2,9 +2,11 @@
 using SampleApplication.Tasks;
 using SampleApplication.Queues;
 using Ozzy.Server;
+using System;
 
 namespace SampleApplication.Controllers
 {
+    [Route("/[controller]")]
     public class HomeController : Controller
     {
         BackgroundTaskQueue _backgroundJobQueue;

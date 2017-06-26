@@ -51,6 +51,7 @@ namespace Ozzy.Server.EntityFramework
         public DbSet<EfDistributedLockRecord> DistributedLocks { get; set; }
         public DbSet<FeatureFlag> FeatureFlags { get; set; }
         public DbSet<QueueRecord> Queues { get; set; }
+        public DbSet<DeadLetter> DeadLetters { get; set; }
         public DbSet<EfSagaRecord> Sagas { get; set; }
         public DbSet<EfSagaLogEntry> SagaLogs { get; set; }
         public DbSet<EfSagaCorrelationId> SagaCorrelationIds { get; set; }

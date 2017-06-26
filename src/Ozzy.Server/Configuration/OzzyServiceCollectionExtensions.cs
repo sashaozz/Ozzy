@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Ozzy.DomainModel;
 using Ozzy.Server.Saga;
+using Ozzy.Server.Queues;
 
 namespace Ozzy.Server.Configuration
 {
@@ -52,12 +53,14 @@ namespace Ozzy.Server.Configuration
             services.TryAddSingleton<OzzyNode>();
 
             //TODO : better handle service dependencies... E.g. we can check is queue repository is registered and do not register JobQueues if not or throw... Same for FeatureFlags and else.
-            services.TryAddSingleton(typeof(JobQueue<>));            
+            services.TryAddSingleton(typeof(JobQueue<>));
             services.TryAddSingleton<IFeatureFlagService, FeatureFlagService>();
-            services.TryAddSingleton<IDomainEventsFaultHandler, DoNothingFaultHandler>();
+            services.TryAddSingleton<IDomainEventsFaultHandler>(DoNothingFaultHandler.Instance);
             services.AddTransient<RetryEventTask>();
             services.AddSingleton(typeof(JobQueue<>));
             services.AddSingleton<SagaCorrelationsMapper>();
+            services.AddSingleton<QueuesFaultManager>();
+            builder.AddBackgroundProcess<QueueTimeoutBackgroundProcess>();
         }
 
         public static OzzyDomainBuilder<TDomain> AddOzzyDomain<TDomain>(this IServiceCollection services, Action<OzzyDomainOptionsBuilder<TDomain>> configureOptions) where TDomain : IOzzyDomainModel
@@ -83,7 +86,6 @@ namespace Ozzy.Server.Configuration
             builder.Services.TryAddTypeSpecificSingleton<TDomain, Func<IFastEventPublisher>>(sp => () => NullEventsPublisher.Instance);
             builder.Services.TryAddSingleton<DefaultSagaFactory<TDomain>>();
             builder.Services.TryAddTypeSpecificSingleton<TDomain, ISagaFactory>(sp => sp.GetService<DefaultSagaFactory<TDomain>>());
-
             return builder;
         }
     }
