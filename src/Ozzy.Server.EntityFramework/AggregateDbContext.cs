@@ -53,6 +53,7 @@ namespace Ozzy.Server.EntityFramework
         public DbSet<QueueRecord> Queues { get; set; }
         public DbSet<DeadLetter> DeadLetters { get; set; }
         public DbSet<EfSagaRecord> Sagas { get; set; }
+        public DbSet<EfSagaLogEntry> SagaLogs { get; set; }
         public DbSet<EfSagaCorrelationId> SagaCorrelationIds { get; set; }
         /// <summary>
         /// Слушатели событий в данном контексте и номера их последних обработанных сообщений

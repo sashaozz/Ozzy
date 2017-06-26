@@ -94,6 +94,10 @@ namespace Ozzy.Server
             //todo : better handle transient faults
             var sagaCorrelationIds = sagaMapper.GetCorrelationIdsFromSaga(saga);
             _sagaRepository.SaveSaga(saga, sagaCorrelationIds);
+
+            if (message is SagaCompleteCommand)
+                _sagaRepository.DeleteSaga(saga, saga.SagaCompletetionAction == SagaCompletetionAction.MoveToHistory);
+
             return true;
         }
     }

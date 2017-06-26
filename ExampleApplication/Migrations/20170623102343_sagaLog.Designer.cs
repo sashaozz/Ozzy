@@ -10,9 +10,10 @@ using Ozzy.Server;
 namespace ExampleApplication.Migrations
 {
     [DbContext(typeof(SampleDbContext))]
-    partial class SampleDbContextModelSnapshot : ModelSnapshot
+    [Migration("20170623102343_sagaLog")]
+    partial class sagaLog
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
             modelBuilder
                 .HasAnnotation("ProductVersion", "1.1.2")
@@ -40,28 +41,6 @@ namespace ExampleApplication.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("LoanApplications");
-                });
-
-            modelBuilder.Entity("Ozzy.Server.DeadLetter", b =>
-                {
-                    b.Property<string>("Id")
-                        .ValueGeneratedOnAdd();
-
-                    b.Property<DateTime>("CreatedAt");
-
-                    b.Property<int>("MaxRetries");
-
-                    b.Property<byte[]>("Payload");
-
-                    b.Property<string>("QueueItemId");
-
-                    b.Property<string>("QueueName");
-
-                    b.Property<int>("Version");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("DeadLetters");
                 });
 
             modelBuilder.Entity("Ozzy.Server.EntityFramework.DomainEventRecord", b =>
@@ -186,17 +165,11 @@ namespace ExampleApplication.Migrations
 
                     b.Property<DateTime>("CreatedAt");
 
-                    b.Property<int>("MaxRetries");
-
                     b.Property<byte[]>("Payload");
 
                     b.Property<string>("QueueName");
 
-                    b.Property<int>("RetryCount");
-
                     b.Property<int>("Status");
-
-                    b.Property<DateTime?>("TimeoutAt");
 
                     b.Property<int>("Version");
 

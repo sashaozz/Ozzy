@@ -88,5 +88,30 @@ namespace Ozzy.Server.EntityFramework
                 db.SaveChanges();
             }
         }
+
+        public void DeleteSaga(SagaBase saga, bool saveSagaHistory)
+        {
+            using (var db = _contextFactory())
+            {
+                var record = db.Sagas.FirstOrDefault(s => s.Id == saga.SagaId);
+                if (record != null)
+                {
+                    db.Sagas.Remove(record);
+                }
+
+                if(saveSagaHistory)
+                {
+                    db.SagaLogs.Add(new EfSagaLogEntry()
+                    {
+                        SagaId = record.Id,
+                        ClosedAt = DateTime.UtcNow,
+                        SagaState = record.SagaState,
+                        StateType = record.StateType
+                    });
+                }
+
+                db.SaveChanges();
+            }
+        }
     }
 }
